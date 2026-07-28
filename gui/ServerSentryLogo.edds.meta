@@ -1,0 +1,16 @@
+MetaFileClass {
+ Name "{C889FA56A826DEB9}ServerSentry/ServerSentryServer/gui/ServerSentryLogo.edds"
+ Author "dkrios-gaming-p"
+ ChangeDate 1916089538
+ Configurations {
+  PNGResourceClass PC {
+   SourceFile "ServerSentryLogo.png"
+  }
+  PNGResourceClass XBOX_ONE : PC {
+  }
+  PNGResourceClass PS4 : PC {
+  }
+  PNGResourceClass LINUX : PC {
+  }
+ }
+}

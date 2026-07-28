@@ -1,0 +1,159 @@
+FrameWidgetClass rootFrame {
+ size 0.35 0.467
+ halign center_ref
+ valign center_ref
+ hexactpos 0
+ vexactpos 0
+ hexactsize 0
+ vexactsize 0
+ {
+  PanelWidgetClass Main {
+   ignorepointer 1
+   position 0 0.002
+   size 1 1
+   halign center_ref
+   valign center_ref
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   style rover_sim_black
+   {
+    PanelWidgetClass Header {
+     ignorepointer 1
+     position 0 0
+     size 1 0.089
+     halign center_ref
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     style rover_sim_black
+     {
+      ButtonWidgetClass CloseBtn {
+       color 0.502 0 0 1
+       position 0.015 0.047
+       size 0.043 0.684
+       halign right_ref
+       valign center_ref
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Colorable
+       text "X"
+       font "gui/fonts/metron22"
+      }
+      TextWidgetClass HeaderLbl {
+       ignorepointer 1
+       position 0.09 0.04
+       size 0.787 0.8
+       valign center_ref
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "SUPPORT MENU "
+       font "gui/fonts/amorserifpro28"
+       "size to text h" 1
+       "size to text v" 1
+       "text halign" center
+       "text valign" center
+      }
+      ImageWidgetClass Logo {
+       ignorepointer 1
+       position 0.02 0
+       size 0.055 0.766
+       valign center_ref
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       imageTexture "{B9718DA855602A9D}ServerSentryMod/gui/ServerSentryLogo.edds"
+       mode blend
+       "src alpha" 1
+       "clamp mode" invalid
+       "stretch mode" stretch_w_h
+      }
+     }
+    }
+    PanelWidgetClass Outline {
+     ignorepointer 1
+     color 0.157 0.624 0.624 1
+     size 1 1
+     halign center_ref
+     valign center_ref
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     style Outline
+    }
+    TextWidgetClass PlayerName {
+     ignorepointer 1
+     position 0 0.13
+     size 0.947 0.102
+     halign center_ref
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     text "Welcome: Krypton91"
+     font "gui/fonts/metron28"
+     "size to text h" 0
+     "size to text v" 0
+     "text halign" center
+     "text valign" center
+    }
+    TextWidgetClass Note {
+     ignorepointer 1
+     position 0.03 -0.14
+     size 0.107 0.071
+     valign center_ref
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     text "Reason:"
+     font "gui/fonts/metron22"
+     "size to text h" 1
+     "size to text v" 1
+     "text valign" center
+    }
+    ButtonWidgetClass BtnSpawn {
+     color 0 0.502 0.125 1
+     position 0.02 0.3
+     size 0.325 0.104
+     halign right_ref
+     valign center_ref
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     style Colorable
+     text "Claim"
+     font "gui/fonts/metron22"
+    }
+    MultilineTextWidgetClass NoteValue {
+     ignorepointer 1
+     position 0.02 0.073
+     size 0.961 0.297
+     valign center_ref
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     style DayZNormal
+     text "Rollback Cheater Kill"
+     font "gui/fonts/metron22"
+     "size to text h" 0
+     "size to text v" 0
+     "text halign" center
+     "text valign" center
+     wrap 1
+     "strip newlines" 1
+    }
+   }
+  }
+ }
+}
