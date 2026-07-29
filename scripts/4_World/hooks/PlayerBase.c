@@ -56,15 +56,7 @@ modded class PlayerBase
 
         super.EEHitBy(damageResult, damageType, source, component, dmgZone, ammo, modelPos, speedCoef);
 
-        ServerSentryHitRequest request = new ServerSentryHitRequest(
-            EntityAI.Cast(this),
-            GetSSCombatState(),
-            damageResult,
-            damageType,
-            source,
-            component,
-            dmgZone,
-            ammo);
+        ServerSentryHitRequest request = new ServerSentryHitRequest(EntityAI.Cast(this), GetSSCombatState(), damageResult, damageType, source, component, dmgZone, ammo);
         request.CapturePostHitState();
 
         bool logHits = ServerSentryConfigManager.Get().IsAllowedToLogPlayerHits();
@@ -80,5 +72,27 @@ modded class PlayerBase
         // The classifier resolves identity-backed players as "player" and bots as "ai".
         request.SetTargetIdentity(targetSteamId, targetBohemiaId, targetName);
         ServerSentryCombatLifecycle.LogHit(request);
+    }
+
+    override void OnRPC(PlayerIdentity sender, int rpc_type, ParamsReadContext ctx)
+    {
+        super.OnRPC(sender, rpc_type, ctx);
+
+        if (rpc_type == ServerSentryRPCs.VEHICLE_KICK)
+        {
+            Param1<bool> param;
+            if (!ctx.Read(param))
+                return;
+
+            bool kick = param.param1;
+            if (kick)
+            {
+                HumanCommandVehicle vehicleCommand = GetCommand_Vehicle();
+                if (vehicleCommand)
+                {
+                    vehicleCommand.GetOutVehicle();
+                }
+            }
+        }
     }
 }

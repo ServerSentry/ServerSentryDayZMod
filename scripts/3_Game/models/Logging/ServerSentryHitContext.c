@@ -82,6 +82,14 @@ class ServerSentryHitContext
     	\brief Stores the victim position.
     */
     vector victimPosition;
+    /**
+    	\brief Stores the attacker position when the source can be resolved.
+    */
+    vector attackerPosition;
+    /**
+    	\brief Indicates whether attacker position contains a resolved world position.
+    */
+    bool hasAttackerPosition;
 
     /**
     	\brief Indicates whether target alive after.
@@ -129,6 +137,8 @@ class ServerSentryHitContext
         component = 0;
         eventSequence = 0;
         victimPosition = "0 0 0";
+        attackerPosition = "0 0 0";
+        hasAttackerPosition = false;
 
         targetAliveAfter = true;
         isHeadshot = false;

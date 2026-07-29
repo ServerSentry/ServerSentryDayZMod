@@ -36,7 +36,7 @@ class ServerSentrySupportMenu extends UIScriptedMenu
     */
     override Widget Init()
     {
-        layoutRoot = GetGame().GetWorkspace().CreateWidgets("ServerSentryMod/gui/SupportMenu.layout");
+        layoutRoot = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/SupportMenu.layout");
         m_SpawnItemsBtn = ButtonWidget.Cast(layoutRoot.FindAnyWidget("BtnSpawn"));
         m_CloseBtn = ButtonWidget.Cast(layoutRoot.FindAnyWidget("CloseBtn"));
         m_WelcomeLbl = TextWidget.Cast(layoutRoot.FindAnyWidget("PlayerName"));

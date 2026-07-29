@@ -63,9 +63,17 @@ class ServerSentryEvent
     */
     ref ServerSentryTarget target;
     /**
-    	\brief Stores the position.
+    	\brief Stores the primary event position.
     */
     ref ServerSentryVectorDto position;
+    /**
+    	\brief Stores the actor position for events with two spatial participants.
+    */
+    ref ServerSentryVectorDto actorPosition;
+    /**
+    	\brief Stores the target position for events with two spatial participants.
+    */
+    ref ServerSentryVectorDto targetPosition;
     /**
     	\brief Schema used for each list item.
     */

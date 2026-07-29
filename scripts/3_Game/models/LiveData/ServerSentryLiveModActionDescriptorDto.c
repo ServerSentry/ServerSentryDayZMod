@@ -151,6 +151,44 @@ class ServerSentryLiveModActionDescriptorFactory
     }
 
     /**
+    	\brief Creates an action descriptor targeting any tracked vehicle.
+    */
+    static ServerSentryLiveModActionDescriptorDto ForVehicle(string id, string label, string icon = "Car", string description = "")
+    {
+        return Create(id, "vehicle", label, icon, description);
+    }
+
+    /**
+    	\brief Creates an action descriptor targeting any tracked base object.
+    */
+    static ServerSentryLiveModActionDescriptorDto ForBase(string id, string label, string icon = "Fence", string description = "")
+    {
+        return Create(id, "base", label, icon, description);
+    }
+
+    /**
+    	\brief Creates an action descriptor targeting tracked territory flags / flag poles only.
+    */
+    static ServerSentryLiveModActionDescriptorDto ForFlagPole(string id, string label, string icon = "Flag", string description = "")
+    {
+        return Create(id, "base_flagpole", label, icon, description);
+    }
+
+    /**
+    	\brief Creates an action descriptor for a custom live-map object subtype.
+    */
+    static ServerSentryLiveModActionDescriptorDto ForWorldObjectType(string id, string worldObjectType, string label, string icon = "Box", string description = "")
+    {
+        worldObjectType.TrimInPlace();
+        if (worldObjectType == "")
+        {
+            worldObjectType = "object";
+        }
+
+        return Create(id, worldObjectType, label, icon, description);
+    }
+
+    /**
     	\brief Creates a global action descriptor without a specific target.
     	\param id \p identifier used by the operation.
     	\param label \p human-readable label shown to users.
@@ -161,6 +199,19 @@ class ServerSentryLiveModActionDescriptorFactory
     static ServerSentryLiveModActionDescriptorDto ForGlobal(string id, string label, string icon = "Globe", string description = "")
     {
         return Create(id, "global", label, icon, description);
+    }
+
+    /**
+    	\brief Creates an action shown in the Live Map right-click context menu.
+    	\param id \p identifier used by the operation.
+    	\param label \p human-readable label shown to users.
+    	\param icon \p icon used by the operation.
+    	\param description \p description used by the operation.
+    	\return \p The resulting live mod action descriptor DTO instance, or null when unavailable.
+    */
+    static ServerSentryLiveModActionDescriptorDto ForContextMenu(string id, string label, string icon = "MapPin", string description = "")
+    {
+        return Create(id, "contextMenu", label, icon, description);
     }
 
     /**

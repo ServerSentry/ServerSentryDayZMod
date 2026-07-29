@@ -98,7 +98,9 @@ class ServerSentryCombatFactory
         {
             ctx.isMelee = false;
             ctx.weaponClassName = sourceVehicle.GetType();
-            ctx.distance = vector.Distance(sourceVehicle.GetPosition(), ctx.victimPosition);
+            ctx.attackerPosition = sourceVehicle.GetPosition();
+            ctx.hasAttackerPosition = true;
+            ctx.distance = vector.Distance(ctx.attackerPosition, ctx.victimPosition);
 
             DayZPlayer vehicleDriver = ResolveVehicleDriver(sourceVehicle);
             if (vehicleDriver)
@@ -117,13 +119,17 @@ class ServerSentryCombatFactory
         DayZPlayer attackerPlayer = DayZPlayer.Cast(attackerMan);
         if (attackerPlayer)
         {
-            ctx.distance = vector.Distance(attackerPlayer.GetPosition(), ctx.victimPosition);
+            ctx.attackerPosition = attackerPlayer.GetPosition();
+            ctx.hasAttackerPosition = true;
+            ctx.distance = vector.Distance(ctx.attackerPosition, ctx.victimPosition);
             ctx.weaponClassName = ResolveWeaponClassName(source, attackerPlayer, ctx.isMelee);
             ServerSentryEventFactory.FillActor(ctx.attacker, attackerPlayer, attackerPlayer.GetIdentity());
             return ctx;
         }
 
-        ctx.distance = vector.Distance(source.GetPosition(), ctx.victimPosition);
+        ctx.attackerPosition = source.GetPosition();
+        ctx.hasAttackerPosition = true;
+        ctx.distance = vector.Distance(ctx.attackerPosition, ctx.victimPosition);
         ctx.weaponClassName = ResolveWeaponClassName(source, null, ctx.isMelee);
         ServerSentryEventFactory.FillActorFromEntity(ctx.attacker, source);
         return ctx;

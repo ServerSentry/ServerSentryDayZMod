@@ -18,7 +18,7 @@ class CfgMods
 {
 	class ServerSentry
 	{
-		dir = "ServerSentryMod";
+		dir = "ServerSentryDayZMod";
 		picture = "";
 		action = "";
 		hideName = 1;
@@ -30,26 +30,26 @@ class CfgMods
 		version = "1.4.8";
 		extra = 0;
 		type = "mod";
-		inputs = "ServerSentryMod/Inputs.xml";
+		inputs = "ServerSentryDayZMod/Inputs.xml";
 		dependencies[] = {"Game","World","Mission"};
 		class defs
 		{
 			class gameScriptModule
 			{
 				value = "";
-				files[] = {"TM/Trader/scripts/defines","ServerSentryMod/scripts/3_Game"};
+				files[] = {"TM/Trader/scripts/defines","ServerSentryDayZMod/scripts/3_Game"};
 			};
 		
 			class worldScriptModule
 			{
 				value = "";
-				files[] = {"TM/Trader/scripts/defines","ServerSentryMod/scripts/4_World"};
+				files[] = {"TM/Trader/scripts/defines","ServerSentryDayZMod/scripts/4_World"};
 			};
 
 			class missionScriptModule
 			{
 				value = "";
-				files[] = {"TM/Trader/scripts/defines","ServerSentryMod/scripts/5_Mission"};
+				files[] = {"TM/Trader/scripts/defines","ServerSentryDayZMod/scripts/5_Mission"};
 			};
 		};
 	};

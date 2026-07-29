@@ -203,7 +203,7 @@ class ServerSentryLiveApi
         if (s_Bases.Find(entity) == -1)
         {
             s_Bases.Insert(entity);
-            Print("[ServerSentry][LiveMap] Registered base object class=" + entity.GetType() + " objectId=" + entity.ToString());
+            //Print("[ServerSentry][LiveMap] Registered base object class=" + entity.GetType() + " objectId=" + entity.ToString());
         }
     }
 
@@ -415,16 +415,7 @@ class ServerSentryLiveApi
     */
     static void AddMarkerDetail(ServerSentryLiveWorldEventDto marker, string key, string label, string value)
     {
-        if (!marker || key == "")
-        {
-            return;
-        }
-
-        ServerSentryLiveDetailDto detail = new ServerSentryLiveDetailDto();
-        detail.key = key;
-        detail.label = label;
-        detail.value = value;
-        marker.details.Insert(detail);
+        ServerSentryLiveDetails.UpsertMarkerDetail(marker, key, label, value);
     }
 
     /**
@@ -780,16 +771,102 @@ class ServerSentryLiveApi
             dto.health = SafeGetEntityHealth(entity);
             dto.radius = 60;
 
+            AddDetail(dto, "type", "Type", dto.type);
             AddDetail(dto, "className", "Class", dto.className);
             AddDetail(dto, "objectId", "Object", dto.objectId);
             AddDetail(dto, "position", "Position", "X " + Math.Round(dto.position.x).ToString() + " · Z " + Math.Round(dto.position.z).ToString());
-            AddDetail(dto, "health", "Health", dto.health.ToString());
+            AddDetail(dto, "health", "Health", FormatHealthValue(dto.health));
+            AddDetail(dto, "radius", "Radius", Math.Round(dto.radius).ToString() + " m");
+            AddBaseFlagDetails(dto, entity);
             AddBaseDespawnDetails(dto, entity);
 
-            dto.actions.Insert("object.inspect");
-            dto.actions.Insert("object.delete");
+            ServerSentryLiveBaseDetailRegistry.Apply(entity, dto);
+            AddRegisteredActionsForTarget(dto.actions, dto.type);
             snapshot.bases.Insert(dto);
         }
+    }
+
+    /**
+    	\brief Adds all registered action IDs that apply to a live-map target subtype.
+    */
+    protected static void AddRegisteredActionsForTarget(array<string> actionIds, string requestedTargetType)
+    {
+        if (!actionIds)
+        {
+            return;
+        }
+
+        array<ref ServerSentryLiveModActionDescriptorDto> descriptors = ServerSentryModActionRegistry.GetDescriptors();
+        foreach (ServerSentryLiveModActionDescriptorDto descriptor: descriptors)
+        {
+            if (!descriptor || descriptor.id == "")
+            {
+                continue;
+            }
+
+            if (ActionTargetTypeMatches(descriptor.targetType, requestedTargetType) && actionIds.Find(descriptor.id) == -1)
+            {
+                actionIds.Insert(descriptor.id);
+            }
+        }
+    }
+
+    /**
+    	\brief Matches generic and subtype-specific live action target types.
+    */
+    protected static bool ActionTargetTypeMatches(string registeredTargetType, string requestedTargetType)
+    {
+        registeredTargetType.TrimInPlace();
+        requestedTargetType.TrimInPlace();
+        registeredTargetType.ToLower();
+        requestedTargetType.ToLower();
+
+        if (registeredTargetType == "" || registeredTargetType == "any")
+        {
+            return true;
+        }
+
+        if (registeredTargetType == "object")
+        {
+            if (requestedTargetType == "player")
+            {
+                return false;
+            }
+
+            if (requestedTargetType == "eventzone")
+            {
+                return false;
+            }
+
+            if (requestedTargetType == "server")
+            {
+                return false;
+            }
+
+            if (requestedTargetType == "world")
+            {
+                return false;
+            }
+
+            if (requestedTargetType == "position")
+            {
+                return false;
+            }
+
+            if (requestedTargetType == "contextmenu")
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        if (registeredTargetType == "base")
+        {
+            return requestedTargetType == "base" || requestedTargetType.IndexOf("base_") == 0;
+        }
+
+        return registeredTargetType == requestedTargetType;
     }
 
     /**
@@ -819,16 +896,45 @@ class ServerSentryLiveApi
     */
     protected static void AddDetail(ServerSentryLiveBaseDto dto, string key, string label, string value)
     {
-        if (!dto || key == "")
+        ServerSentryLiveDetails.UpsertBaseDetail(dto, key, label, value);
+    }
+
+    /**
+    	\brief Adds Vanilla flag-height details when the base is a TerritoryFlag.
+    	\param dto \p dto used by the operation.
+    	\param entity \p entity processed by the operation.
+    */
+    protected static void AddBaseFlagDetails(ServerSentryLiveBaseDto dto, EntityAI entity)
+    {
+        if (!dto || !entity)
         {
             return;
         }
 
-        ServerSentryLiveDetailDto detail = new ServerSentryLiveDetailDto();
-        detail.key = key;
-        detail.label = label;
-        detail.value = value;
-        dto.details.Insert(detail);
+        TerritoryFlag territoryFlag = TerritoryFlag.Cast(entity);
+        if (!territoryFlag)
+        {
+            return;
+        }
+
+        float flagHeight01 = territoryFlag.ServerSentryGetFlagHeight01();
+        int flagHeightPercent = Math.Round(flagHeight01 * 100);
+        AddDetail(dto, "flagHeightPercent", "Flag height", flagHeightPercent.ToString() + "%");
+    }
+
+    /**
+    	\brief Formats a health value for Live Map details.
+    	\param health \p normalized entity health or a negative unknown value.
+    	\return \p the formatted health value.
+    */
+    protected static string FormatHealthValue(float health)
+    {
+        if (health < 0)
+        {
+            return "Unknown";
+        }
+
+        return Math.Round(health).ToString();
     }
 
     /**
@@ -843,7 +949,21 @@ class ServerSentryLiveApi
             return;
         }
 
-        float lifetimeRemaining = SafeGetEntityLifetime(entity);
+        float lifetimeRemaining = -1;
+        float lifetimeMax = -1;
+
+        TerritoryFlag territoryFlag = TerritoryFlag.Cast(entity);
+        if (territoryFlag)
+        {
+            lifetimeRemaining = territoryFlag.ServerSentryGetFlagLifetimeRemaining();
+            lifetimeMax = territoryFlag.ServerSentryGetFlagLifetimeMax();
+        }
+        else
+        {
+            lifetimeRemaining = SafeGetEntityLifetime(entity);
+            lifetimeMax = SafeGetEntityLifetimeMax(entity);
+        }
+
         if (lifetimeRemaining >= 0)
         {
             AddDetail(dto, "lifetimeRemaining", "Despawn in", FormatDurationSeconds(lifetimeRemaining));
@@ -853,7 +973,6 @@ class ServerSentryLiveApi
             AddDetail(dto, "lifetimeRemaining", "Despawn in", "Unknown");
         }
 
-        float lifetimeMax = SafeGetEntityLifetimeMax(entity);
         if (lifetimeMax >= 0)
         {
             AddDetail(dto, "lifetimeMax", "Lifetime max", FormatDurationSeconds(lifetimeMax));
@@ -984,32 +1103,100 @@ class ServerSentryLiveApi
         foreach (ServerSentryLivePlayerDto player: snapshot.players)
         {
             string aliveValue = BoolFingerprintValue(player.isAlive);
-            value = value + player.steamId + "@" + RoundedVectorKey(player.position) + ":" + Math.Round(player.health).ToString() + ":" + Math.Round(player.blood).ToString() + ":" + aliveValue + ";";
+            value = value + player.steamId;
+            value = value + "@";
+            value = value + RoundedVectorKey(player.position);
+            value = value + ":";
+            value = value + Math.Round(player.health).ToString();
+            value = value + ":";
+            value = value + Math.Round(player.blood).ToString();
+            value = value + ":";
+            value = value + aliveValue;
+            value = value + ";";
         }
 
         value = value + "v=" + snapshot.vehicles.Count().ToString() + ";";
         foreach (ServerSentryLiveVehicleDto vehicle: snapshot.vehicles)
         {
             string engineOnValue = BoolFingerprintValue(vehicle.engineOn);
-            value = value + vehicle.objectId + "@" + RoundedVectorKey(vehicle.position) + ":" + Math.Round(vehicle.health).ToString() + ":" + vehicle.crewSize.ToString() + ":" + engineOnValue + ";";
+            value = value + vehicle.objectId;
+            value = value + "@";
+            value = value + RoundedVectorKey(vehicle.position);
+            value = value + ":";
+            value = value + Math.Round(vehicle.health).ToString();
+            value = value + ":";
+            value = value + vehicle.crewSize.ToString();
+            value = value + ":";
+            value = value + engineOnValue;
+            value = value + ";";
         }
 
         value = value + "e=" + snapshot.events.Count().ToString() + ";";
         foreach (ServerSentryLiveWorldEventDto eventDto: snapshot.events)
         {
-            value = value + eventDto.objectId + "@" + eventDto.eventType + "@" + RoundedVectorKey(eventDto.position) + ":" + Math.Round(eventDto.radius).ToString() + ":" + eventDto.shape + ":" + eventDto.icon + ":" + eventDto.points.Count().ToString() + ":" + eventDto.actions.Count().ToString() + ";";
+            value = value + eventDto.objectId;
+            value = value + "@";
+            value = value + eventDto.eventType;
+            value = value + "@";
+            value = value + RoundedVectorKey(eventDto.position);
+            value = value + ":";
+            value = value + Math.Round(eventDto.radius).ToString();
+            value = value + ":";
+            value = value + eventDto.shape;
+            value = value + ":";
+            value = value + eventDto.icon;
+            value = value + ":";
+            value = value + eventDto.points.Count().ToString();
+            value = value + ":";
+            value = value + eventDto.actions.Count().ToString();
+            value = value + ":";
+            value = value + BuildDetailFingerprint(eventDto.details);
+            value = value + ";";
         }
 
         value = value + "b=" + snapshot.bases.Count().ToString() + ";";
         foreach (ServerSentryLiveBaseDto baseDto: snapshot.bases)
         {
-            value = value + baseDto.objectId + "@" + baseDto.className + "@" + RoundedVectorKey(baseDto.position) + ":" + Math.Round(baseDto.health).ToString() + ";";
+            value = value + baseDto.objectId;
+            value = value + "@";
+            value = value + baseDto.className;
+            value = value + "@";
+            value = value + RoundedVectorKey(baseDto.position);
+            value = value + ":";
+            value = value + Math.Round(baseDto.health).ToString();
+            value = value + ":";
+            value = value + BuildDetailFingerprint(baseDto.details);
+            value = value + ";";
         }
 
         value = value + "a=" + snapshot.actions.Count().ToString() + ";";
         foreach (ServerSentryLiveModActionDescriptorDto action: snapshot.actions)
         {
             value = value + action.id + ":" + action.targetType + ";";
+        }
+
+        return value;
+    }
+
+    /**
+    	\brief Builds a deterministic fingerprint for Live Map detail values.
+    	\param details \p details included in the snapshot.
+    	\return \p the concatenated detail fingerprint.
+    */
+    protected static string BuildDetailFingerprint(array<ref ServerSentryLiveDetailDto> details)
+    {
+        if (!details)
+        {
+            return "";
+        }
+
+        string value = "";
+        foreach (ServerSentryLiveDetailDto detail: details)
+        {
+            if (detail)
+            {
+                value = value + detail.key + "=" + detail.label + "=" + detail.value + "|";
+            }
         }
 
         return value;

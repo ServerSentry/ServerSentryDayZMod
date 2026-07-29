@@ -41,7 +41,7 @@ Some integrations are optional and only become active when the corresponding mod
    ```text
    @ServerSentry/
    ├── addons/
-   │   └── ServerSentryMod.pbo
+   │   └── ServerSentryDayZMod.pbo
    └── mod.cpp
    ```
 
@@ -65,7 +65,7 @@ git clone https://github.com/Krypton91/ServerSentryDayZMod.git
 cd ServerSentryDayZMod
 ```
 
-Use DayZ Tools/Addon Builder or your existing mod build pipeline to pack the project as a PBO. The source root containing `config.cpp` must become the `ServerSentryMod` PBO prefix expected by the script paths.
+Use DayZ Tools/Addon Builder or your existing mod build pipeline to pack the project as a PBO. The source root containing `config.cpp` must become the `ServerSentryDayZMod` PBO prefix expected by the script paths.
 
 ## Configuration
 
@@ -278,7 +278,7 @@ Shop actions should use `ServerSentryShopFulfillment.BeginProductOperation()` an
 ## Project structure
 
 ```text
-ServerSentryMod/
+ServerSentryDayZMod/
 ├── config.cpp
 ├── Inputs.xml
 ├── gui/
@@ -306,7 +306,7 @@ ServerSentryMod/
 
 - Confirm that Community Framework is installed and loaded before Server Sentry.
 - Check the server script log for missing addon or script-module errors.
-- Confirm that the packed PBO uses the expected `ServerSentryMod` prefix.
+- Confirm that the packed PBO uses the expected `ServerSentryDayZMod` prefix.
 - Confirm that the server and clients use compatible mod versions when the client UI is enabled.
 
 ### No event files are created

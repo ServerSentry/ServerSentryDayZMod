@@ -32,9 +32,13 @@ class ServerSentryModActionBootstrap
         ServerSentryModActionRegistry.Register(new ServerSentryExplodePlayerAction());
         ServerSentryModActionRegistry.Register(new ServerSentryVoiceMutePlayerAction());
         ServerSentryModActionRegistry.Register(new ServerSentryVoiceUnMutePlayerAction());
+        ServerSentryModActionRegistry.Register(new ServerSentryGodModePlayerAction());
+        ServerSentryModActionRegistry.Register(new ServerSentryVehicleKickAction());
+        ServerSentryModActionRegistry.Register(new ServerSentryVehicleRepairAction());
         ServerSentryModActionRegistry.Register(new ServerSentrySetTimeAction());
         ServerSentryModActionRegistry.Register(new ServerSentrySetWeatherAction());
         ServerSentryModActionRegistry.Register(new ServerSentrySpawnItemAtPositionAction());
+        ServerSentryModActionRegistry.Register(new ServerSentryAirdropContextAction());
         ServerSentryModActionRegistry.Register(new ServerSentryShopBankDepositAction());
         ServerSentryModActionRegistry.Register(new ServerSentryShopSpawnBundleAction());
 
@@ -46,6 +50,8 @@ class ServerSentryModActionBootstrap
         //ServerSentryModActionRegistry.Register(new ServerSentrySampleCollectionsAction());
         //ServerSentryModActionRegistry.Register(new ServerSentrySampleObjectMapAction());
         //ServerSentryModActionRegistry.Register(new ServerSentrySampleJsonAction());
+        //ServerSentryModActionRegistry.Register(new ServerSentrySampleVehicleKickAction());
+        //ServerSentryModActionRegistry.Register(new ServerSentrySampleRaiseFlagAction());
     }
 
     /**

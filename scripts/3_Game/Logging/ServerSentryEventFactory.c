@@ -1017,6 +1017,13 @@ class ServerSentryEventFactory
         }
 
         ev.position.FromVector(ctx.victimPosition);
+        ev.targetPosition = new ServerSentryVectorDto();
+        ev.targetPosition.FromVector(ctx.victimPosition);
+        if (ctx.hasAttackerPosition)
+        {
+            ev.actorPosition = new ServerSentryVectorDto();
+            ev.actorPosition.FromVector(ctx.attackerPosition);
+        }
 
         ev.weapon.className = ctx.weaponClassName;
         ev.weapon.ammoType = ctx.ammoType;

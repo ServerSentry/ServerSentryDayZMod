@@ -33,6 +33,7 @@ modded class MissionServer
         {
             Print("[Server Sentry] -> Live Logging is enabled, starting module!");
             ServerSentryModActionBootstrap.Get().RegisterDefaults();
+            ServerSentryLiveBaseDetailBootstrap.Get().RegisterDefaults();
             ServerSentryModActionPoller.Start();
             ServerSentryLiveApi.Start();
             Print("[Server Sentry] -> Live Logging module started!");

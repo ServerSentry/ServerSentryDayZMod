@@ -60,3 +60,12 @@ Wraps idempotent grant and removal operations. `BeginProductOperation()` reserve
 9. Register the action in a `modded class ServerSentryModActionBootstrap` extension.
 
 See `DEVELOPER_API.md` for complete examples and `DOCUMENTATION_STYLE.md` for source-comment conventions.
+
+### Live Map base detail providers
+
+- `ServerSentryLiveBaseDetailProvider`: filters and enriches a base marker DTO.
+- `ServerSentryLiveBaseDetailRegistry`: executes providers after Vanilla rows are populated.
+- `ServerSentryLiveDetails`: key-based add/replace/remove helpers; later writes override earlier values.
+- `ServerSentryLiveBaseDetailBootstrap`: extension registration hook for integration PBOs.
+
+See `DEVELOPER_API.md` for a complete FlagPole group-name and override example.

@@ -116,6 +116,36 @@ class ServerSentryModActionContext
     }
 
     /**
+    	\brief Returns the raw world position supplied with the action target.
+    	\return \p The resulting DayZ world vector.
+    */
+    vector GetPositionVector()
+    {
+        if (!position)
+        {
+            return Vector(0, 0, 0);
+        }
+
+        return Vector(position.x, position.y, position.z);
+    }
+
+    /**
+    	\brief Returns the supplied X/Z position snapped to the DayZ terrain surface.
+    	\param heightOffset \p optional height added above the terrain surface.
+    	\return \p The resulting DayZ world vector.
+    */
+    vector GetSurfacePosition(float heightOffset = 0)
+    {
+        if (!position)
+        {
+            return Vector(0, 0, 0);
+        }
+
+        float surfaceY = GetGame().SurfaceY(position.x, position.z);
+        return Vector(position.x, surfaceY + heightOffset, position.z);
+    }
+
+    /**
     	\brief Returns whether the current action removes a product effect.
     	\return \p true when the condition is satisfied; otherwise false.
     */

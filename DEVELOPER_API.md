@@ -58,6 +58,8 @@ class MyColorAction : ServerSentryModActionHandler
 
 Do not chain factory results and do not split any method-call argument list across multiple lines. Store long strings in local variables first.
 
+For vehicle and FlagPole actions, the bundled samples now build the descriptor with explicit field assignments.
+
 ## Addon registration
 
 ```c
@@ -72,6 +74,89 @@ modded class ServerSentryModActionBootstrap
 ```
 
 Use `modded class` for the extension point and keep `super.RegisterExtensionActions()` so other loaded integration PBOs remain in the inheritance chain. Duplicate action IDs are rejected unless an intentional replacement passes `true` to `ServerSentryModActionRegistry.Register` as the second argument.
+
+## Live Map FlagPole details
+
+ServerSentry creates Vanilla FlagPole details first and then runs registered detail providers. Details use a stable, case-insensitive key. Calling `UpsertBaseDetail` with an existing key replaces its label and value in place; a new key appends a new row. Providers run in registration order, so the last provider writing a key wins.
+
+Vanilla base keys are:
+
+- `type`
+- `className`
+- `objectId`
+- `position`
+- `health`
+- `radius`
+- `flagHeightPercent`
+- `lifetimeRemaining`
+- `lifetimeMax`
+
+Create a provider in the integration mod:
+
+```c
+class MyFlagPoleDetails: ServerSentryLiveBaseDetailProvider
+{
+    override bool Supports(EntityAI entity, ServerSentryLiveBaseDto dto)
+    {
+        return TerritoryFlag.Cast(entity) != null;
+    }
+
+    override void ApplyDetails(EntityAI entity, ServerSentryLiveBaseDto dto)
+    {
+        string groupName = ResolveMyGroupName(entity);
+        ServerSentryLiveDetails.UpsertBaseDetail(dto, "groupName", "Group", groupName);
+
+        // Same key replaces the Vanilla value.
+        ServerSentryLiveDetails.UpsertBaseDetail(dto, "flagHeightPercent", "Flag status", "Protected by My Mod");
+
+        // A Vanilla row can also be removed.
+        ServerSentryLiveDetails.RemoveBaseDetail(dto, "lifetimeMax");
+    }
+}
+```
+
+Register it through the bootstrap hook:
+
+```c
+modded class ServerSentryLiveBaseDetailBootstrap
+{
+    override void RegisterExtensionProviders()
+    {
+        super.RegisterExtensionProviders();
+        ServerSentryLiveBaseDetailRegistry.Register(new MyFlagPoleDetails());
+    }
+}
+```
+
+The provider receives the live `EntityAI` and the already populated `ServerSentryLiveBaseDto`, so it can filter by class, read data from its own modded entity classes, add new rows, replace Vanilla rows, or remove rows. Keep `super.RegisterExtensionProviders()` so multiple integration PBOs remain compatible.
+
+## Live Map context-menu action
+
+Actions whose descriptor uses the target type `contextMenu` are shown when an administrator right-clicks the Live Map. The request contains the mouse-selected world coordinate in `ctx.position`. Because the browser map does not know the terrain height, X and Z are authoritative and the supplied Y value is normally `0`. Use `ctx.GetSurfacePosition()` or extend `ServerSentryContextMenuModActionHandler` to resolve the DayZ terrain height.
+
+```c
+class MyAirdropAction : ServerSentryContextMenuModActionHandler
+{
+    override ServerSentryLiveModActionDescriptorDto GetDescriptor()
+    {
+        string description = "Spawns an airdrop at the map position selected by an administrator.";
+        ServerSentryLiveModActionDescriptorDto descriptor = ServerSentryLiveModActionDescriptorFactory.ForContextMenu("world.my_mod.airdrop", "Spawn Airdrop", "Plane", description);
+        descriptor.AddScope("live");
+        descriptor.SetDangerous("Spawn an airdrop at the selected map position?");
+        return descriptor;
+    }
+
+    override bool ExecuteAtPosition(ServerSentryModActionContext ctx, vector targetPosition, out string message)
+    {
+        // targetPosition already uses GetGame().SurfaceY(ctx.position.x, ctx.position.z).
+        // Spawn your airdrop implementation here.
+        message = "Airdrop action received for " + targetPosition.ToString() + ".";
+        return true;
+    }
+}
+```
+
+The frontend also includes `position`, `x`, `y`, and `z` in `ctx.inputJson`. Action input descriptors named `x`, `y`, or `z` are automatically prefilled, but handlers should normally use `ctx.position` as the canonical map target.
 
 ## Simple input access
 
@@ -154,3 +239,31 @@ Keep lower script modules independent from classes that are only available in la
 - DayZ Modding Basics: https://community.bohemia.net/wiki/DayZ:Modding_Basics
 - DayZ Modding Structure: https://community.bohemia.net/wiki/DayZ:Modding_Structure
 - DayZ Workbench Script Debugging: https://community.bohemia.net/wiki/DayZ:Workbench_Script_Debugging
+
+### Bundled airdrop context hook
+
+The core mod now registers `ServerSentryAirdropContextAction` with the action ID
+`world.airdrop.spawn`. This makes **Spawn Airdrop** visible in the Live Map
+right-click menu immediately and verifies the complete frontend/backend/mod
+transport. Its default implementation only logs and confirms the selected
+terrain position; it does not spawn an airdrop.
+
+Put the actual airdrop call into:
+
+```c
+ServerSentryDayZMod/scripts/4_World/Actions/Global/ServerSentryAirdropContextAction.c
+```
+
+or override it from an integration PBO:
+
+```c
+modded class ServerSentryAirdropContextAction
+{
+    override bool ExecuteAtPosition(ServerSentryModActionContext ctx, vector targetPosition, out string message)
+    {
+        // Your airdrop implementation here.
+        message = "Airdrop spawned at " + targetPosition.ToString() + ".";
+        return true;
+    }
+}
+```

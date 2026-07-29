@@ -69,7 +69,7 @@ FrameWidgetClass rootFrame {
        vexactpos 0
        hexactsize 0
        vexactsize 0
-       imageTexture "{B9718DA855602A9D}ServerSentryMod/gui/ServerSentryLogo.edds"
+       imageTexture "{B9718DA855602A9D}ServerSentryDayZMod/gui/ServerSentryLogo.edds"
        mode blend
        "src alpha" 1
        "clamp mode" invalid

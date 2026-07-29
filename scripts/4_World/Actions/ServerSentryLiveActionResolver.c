@@ -87,4 +87,97 @@ class ServerSentryLiveActionResolver
 
         return null;
     }
+
+    /**
+    	\brief Resolves and validates a tracked vehicle target.
+    */
+    static Transport FindVehicle(ServerSentryModActionContext ctx)
+    {
+        if (!ctx)
+        {
+            return null;
+        }
+
+        Transport vehicle = ServerSentryLiveApi.FindLiveVehicleById(ctx.objectId);
+        if (vehicle)
+        {
+            return vehicle;
+        }
+
+        return Transport.Cast(FindObject(ctx));
+    }
+
+    /**
+    	\brief Resolves and validates a tracked flag-pole target.
+    */
+    static EntityAI FindFlagPole(ServerSentryModActionContext ctx)
+    {
+        EntityAI targetObject = FindObject(ctx);
+        if (IsFlagPole(targetObject))
+        {
+            return targetObject;
+        }
+
+        return null;
+    }
+
+    /**
+    	\brief Returns whether an entity is a territory flag / flag pole rather than a deployment kit.
+    */
+    static bool IsFlagPole(EntityAI entity)
+    {
+        if (!entity)
+        {
+            return false;
+        }
+
+        string className = entity.GetType();
+        string normalized = className;
+        normalized.ToLower();
+
+        if (normalized.IndexOf("kit") > -1)
+        {
+            return false;
+        }
+
+        if (normalized == "territoryflag")
+        {
+            return true;
+        }
+
+        if (normalized == "flagpole")
+        {
+            return true;
+        }
+
+        if (normalized.IndexOf("territoryflag") > -1)
+        {
+            return true;
+        }
+
+        if (normalized.IndexOf("flagpole") > -1)
+        {
+            return true;
+        }
+
+        if (normalized.IndexOf("flag_pole") > -1)
+        {
+            return true;
+        }
+
+        if (normalized.IndexOf("baseflag") > -1)
+        {
+            return true;
+        }
+
+        if (normalized.IndexOf("flag") > -1)
+        {
+            if (normalized.IndexOf("territory") > -1)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
