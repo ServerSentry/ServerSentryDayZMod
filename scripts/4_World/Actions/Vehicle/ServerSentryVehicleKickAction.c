@@ -7,7 +7,7 @@ class ServerSentryVehicleKickAction: ServerSentryVehicleModActionHandler
         ServerSentryLiveModActionDescriptorDto descriptor = new ServerSentryLiveModActionDescriptorDto();
         descriptor.id = "vehicle.kick";
         descriptor.targetType = "vehicle";
-        descriptor.label = "Kick";
+        descriptor.label = "Kick out of vehicle";
         descriptor.icon = "LogOut";
         descriptor.description = "Kicks everyone from the selected vehicle.";
         descriptor.AddScope("live");
