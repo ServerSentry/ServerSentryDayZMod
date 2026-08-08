@@ -37,19 +37,19 @@ class CfgMods
 			class gameScriptModule
 			{
 				value = "";
-				files[] = {"TM/Trader/scripts/defines","ServerSentryDayZMod/scripts/3_Game"};
+				files[] = {"ServerSentryDayZMod/scripts/3_Game"};
 			};
 		
 			class worldScriptModule
 			{
 				value = "";
-				files[] = {"TM/Trader/scripts/defines","ServerSentryDayZMod/scripts/4_World"};
+				files[] = {"ServerSentryDayZMod/scripts/4_World"};
 			};
 
 			class missionScriptModule
 			{
 				value = "";
-				files[] = {"TM/Trader/scripts/defines","ServerSentryDayZMod/scripts/5_Mission"};
+				files[] = {"TM/Trader/scripts/defines", "ServerSentryDayZMod/scripts/5_Mission"};
 			};
 		};
 	};
