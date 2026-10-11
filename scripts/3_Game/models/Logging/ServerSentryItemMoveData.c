@@ -29,6 +29,14 @@ class ServerSentryItemMoveData
     */
     string itemDisplayName;
     /**
+        \brief Stores the restart-stable DayZ persistence ID when available.
+    */
+    string itemPersistentId;
+    /**
+        \brief Stores the runtime-only entity ID for diagnostics and fallback correlation.
+    */
+    int runtimeItemId;
+    /**
     	\brief Stores the relation.
     */
     string relation;
@@ -95,6 +103,8 @@ class ServerSentryItemMoveData
         itemKind = "unknown";
         itemClassName = "";
         itemDisplayName = "";
+        itemPersistentId = "";
+        runtimeItemId = -1;
         relation = "unknown_to_unknown";
         actorInference = "unknown";
         countsForPlayerItemStats = false;

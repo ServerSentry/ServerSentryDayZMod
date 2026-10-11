@@ -167,7 +167,11 @@ class ServerSentryItemMoveSnapshot
     /**
     	\brief Stores the item ID.
     */
-    int itemId;
+    int runtimeItemId;
+    /**
+        \brief Stores the restart-stable DayZ persistence ID when available.
+    */
+    string itemPersistentId;
     /**
     	\brief Stores the item class name.
     */
@@ -258,7 +262,8 @@ class ServerSentryItemMoveSnapshot
         gameTime = 0;
         allowed = false;
         rejectReason = "not evaluated";
-        itemId = -1;
+        runtimeItemId = -1;
+        itemPersistentId = "";
         itemClassName = "";
         itemDisplayName = "";
         itemKind = "unknown";
@@ -339,7 +344,8 @@ class ServerSentryItemMoveScriptLog
         }
 
         snapshot.itemClassName = item.GetType();
-        snapshot.itemId = item.GetID();
+        snapshot.runtimeItemId = item.GetID();
+        snapshot.itemPersistentId = ResolveItemPersistentId(item);
         snapshot.itemDisplayName = item.GetDisplayName();
         snapshot.itemPosition = item.GetPosition();
         snapshot.itemKind = ResolveItemKind(snapshot.itemClassName);
@@ -779,7 +785,11 @@ class ServerSentryItemMoveScriptLog
             s_RecentMoves = new map<string, int>();
         }
 
-        string signature = snapshot.itemId.ToString();
+        string signature = snapshot.itemPersistentId;
+        if (signature == "")
+        {
+            signature = "runtime:" + snapshot.runtimeItemId.ToString();
+        }
         signature += "|" + snapshot.itemClassName;
         signature += "|" + snapshot.actionName;
         signature += "|" + snapshot.from.raw;
@@ -939,6 +949,7 @@ class ServerSentryItemMoveScriptLog
 
         ev.item.className = snapshot.itemClassName;
         ev.item.displayName = snapshot.itemDisplayName;
+        ev.item.persistentId = snapshot.itemPersistentId;
         ev.item.health = -1;
         ev.item.quantity = 0;
 
@@ -956,11 +967,15 @@ class ServerSentryItemMoveScriptLog
 
         ev.position.FromVector(snapshot.actorPosition);
 
-        ev.data.moveId = "move-" + snapshot.itemId.ToString() + "-" + snapshot.gameTime.ToString() + "-trace" + snapshot.moveId.ToString();
+        // Keep the established occurrence-ID format for existing consumers. The
+        // restart-stable item identity is exposed separately in item/data.
+        ev.data.moveId = "move-" + snapshot.runtimeItemId.ToString() + "-" + snapshot.gameTime.ToString() + "-trace" + snapshot.moveId.ToString();
         ev.data.sourceHook = "ItemBase.EEItemLocationChanged";
         ev.data.itemKind = snapshot.itemKind;
         ev.data.itemClassName = snapshot.itemClassName;
         ev.data.itemDisplayName = snapshot.itemDisplayName;
+        ev.data.itemPersistentId = snapshot.itemPersistentId;
+        ev.data.runtimeItemId = snapshot.runtimeItemId;
         ev.data.actorInference = snapshot.actorInference;
         ev.data.countsForPlayerItemStats = snapshot.actorType == "player" || snapshot.actorType == "ai";
 
@@ -988,6 +1003,32 @@ class ServerSentryItemMoveScriptLog
         ev.dataJson = "";
         ev.message = snapshot.actionName + ": " + snapshot.itemDisplayName + " from " + ev.data.fromLabel + " to " + ev.data.toLabel;
         return ev;
+    }
+
+    /**
+        \brief Builds a canonical ID from DayZ's four restart-stable persistence blocks.
+        \param item \p item whose persistence ID is captured.
+        \return \p A canonical ID, or an empty string when DayZ has not assigned one.
+    */
+    static string ResolveItemPersistentId(EntityAI item)
+    {
+        if (!item)
+        {
+            return "";
+        }
+
+        int b1;
+        int b2;
+        int b3;
+        int b4;
+        item.GetPersistentID(b1, b2, b3, b4);
+
+        if (b1 == 0 && b2 == 0 && b3 == 0 && b4 == 0)
+        {
+            return "";
+        }
+
+        return "dayz-pid-v1:" + b1.ToString() + ":" + b2.ToString() + ":" + b3.ToString() + ":" + b4.ToString();
     }
 
     /**

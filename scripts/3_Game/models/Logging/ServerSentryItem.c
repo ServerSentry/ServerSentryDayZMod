@@ -16,6 +16,10 @@ class ServerSentryItem
     	\brief Stores the display name.
     */
     string displayName;
+    /**
+        \brief Stores the restart-stable DayZ persistence ID when available.
+    */
+    string persistentId;
 
     /**
     	\brief Stores the quantity.
@@ -33,6 +37,7 @@ class ServerSentryItem
     {
         className = "";
         displayName = "";
+        persistentId = "";
         quantity = 0;
         health = 0;
     }

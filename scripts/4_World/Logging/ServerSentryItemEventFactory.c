@@ -128,6 +128,7 @@ class ServerSentryItemEventFactory
 
         output.className = item.GetType();
         output.displayName = item.GetDisplayName();
+        output.persistentId = ServerSentryItemMoveScriptLog.ResolveItemPersistentId(item);
         output.health = item.GetHealth("", "Health");
         output.quantity = 0;
         ServerSentryInventoryDebug.PrintTrace(traceId, "ItemEventFactory.FillItem.base", "class=" + output.className + " name=" + output.displayName + " health=" + output.health.ToString());
@@ -174,6 +175,11 @@ class ServerSentryItemEventFactory
 
         data.sourceHook = sourceHook;
         data.itemKind = itemKind;
+        if (item)
+        {
+            data.runtimeItemId = item.GetID();
+            data.itemPersistentId = ServerSentryItemMoveScriptLog.ResolveItemPersistentId(item);
+        }
         data.actorInference = actorInference;
 
         ServerSentryInventoryDebug.PrintTrace(traceId, "ItemEventFactory.CreateItemMoveData.beforeFromLocation");
