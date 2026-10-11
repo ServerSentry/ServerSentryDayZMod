@@ -21,7 +21,7 @@ modded class ActionDeployObject
             PlaceObjectActionData poActionData = PlaceObjectActionData.Cast(action_data);
             if (poActionData && poActionData.m_AlreadyPlaced)
             {
-                EntityAI placedEntity = EntityAI.Cast(action_data.m_MainItem);
+                EntityAI placedEntity = action_data.m_MainItem;
                 vector position = poActionData.m_Position;
                 vector orientation = poActionData.m_Orientation;
 
