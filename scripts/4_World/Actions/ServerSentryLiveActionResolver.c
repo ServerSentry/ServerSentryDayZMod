@@ -82,7 +82,7 @@ class ServerSentryLiveActionResolver
         Transport vehicle = ServerSentryLiveApi.FindLiveVehicleById(ctx.objectId);
         if (vehicle)
         {
-            return EntityAI.Cast(vehicle);
+            return vehicle;
         }
 
         return null;

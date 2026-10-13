@@ -6,7 +6,7 @@
         <actions>
             <input name="UAToggleSupportMenu" loc="Support Menu" />
         </actions>
-        <sorting name="dbm" loc="DBM">
+        <sorting name="sentry" loc="ServerSentry">
             <input name="UAToggleSupportMenu" />
         </sorting>
     </inputs>
