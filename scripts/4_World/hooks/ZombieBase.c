@@ -42,7 +42,7 @@ modded class ZombieBase
     {
         super.EEHitBy(damageResult, damageType, source, component, dmgZone, ammo, modelPos, speedCoef);
 
-        ServerSentryHitRequest request = new ServerSentryHitRequest(EntityAI.Cast(this), GetSSCombatState(), damageResult, damageType, source, component, dmgZone, ammo);
+        ServerSentryHitRequest request = new ServerSentryHitRequest(this, GetSSCombatState(), damageResult, damageType, source, component, dmgZone, ammo);
         request.CapturePostHitState();
 
         bool logHits = ServerSentryConfigManager.Get().IsAllowedToLogZombieHits();
