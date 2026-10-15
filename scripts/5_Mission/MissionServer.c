@@ -14,6 +14,34 @@ modded class MissionServer
     protected ref map<string, bool> m_ServerSentryLoginEmitted;
 
     /**
+        \brief Enables item lifecycle observations only after mission startup.
+    */
+    override void OnMissionStart()
+    {
+        super.OnMissionStart();
+        ServerSentryItemLifecycle.Start();
+    }
+
+    /**
+        \brief Suppresses item removals during shutdown and flushes already recorded events.
+    */
+    override void OnMissionFinish()
+    {
+        ServerSentryItemLifecycle.Stop();
+        if (ServerSentryConfigManager.Get().IsAllowedToStartTelemetryLogging())
+            ServerSentryLogger.Get().Flush();
+        super.OnMissionFinish();
+    }
+
+    /**
+        \brief Keeps deletion logging disabled if the mission is destroyed directly.
+    */
+    void ~MissionServer()
+    {
+        ServerSentryItemLifecycle.Stop();
+    }
+
+    /**
     	\brief Handles the DayZ Init callback.
     */
     override void OnInit()

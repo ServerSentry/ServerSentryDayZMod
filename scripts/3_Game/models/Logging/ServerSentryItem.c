@@ -20,6 +20,10 @@ class ServerSentryItem
         \brief Stores the restart-stable DayZ persistence ID when available.
     */
     string persistentId;
+    /**
+        \brief Last observed world position of this exact item; absent in legacy events.
+    */
+    ref ServerSentryVectorDto position;
 
     /**
     	\brief Stores the quantity.

@@ -26,6 +26,10 @@ class ServerSentryItemLocationData
     */
     string parentName;
     /**
+        \brief Runtime ID of the immediate parent object during this server session.
+    */
+    string parentObjectId;
+    /**
     	\brief Stores the parent owner type.
     */
     string parentOwnerType;
@@ -99,6 +103,7 @@ class ServerSentryItemLocationData
 
         parentClassName = "";
         parentName = "";
+        parentObjectId = "";
         parentOwnerType = "";
         parentOwnerKind = "";
         parentOwnerClassName = "";

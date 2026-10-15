@@ -43,6 +43,10 @@ class ServerSentryItemMoveLocationSnapshot
     */
     bool hasPlayerOwner;
     /**
+        \brief Indicates whether the immediate parent is a player rather than an owned item.
+    */
+    bool parentIsPlayer;
+    /**
     	\brief Stores the parent owner type.
     */
     string parentOwnerType;
@@ -85,6 +89,10 @@ class ServerSentryItemMoveLocationSnapshot
     */
     string slotName;
     /**
+        \brief Display name of the captured attachment slot.
+    */
+    string slotDisplayName;
+    /**
     	\brief Stores the cargo idx.
     */
     int cargoIdx;
@@ -122,6 +130,7 @@ class ServerSentryItemMoveLocationSnapshot
         parentName = "";
         parentPosition = "0 0 0";
         hasPlayerOwner = false;
+        parentIsPlayer = false;
         parentOwnerType = "";
         parentOwnerKind = "";
         parentOwnerClassName = "";
@@ -132,6 +141,7 @@ class ServerSentryItemMoveLocationSnapshot
         isExternalStorage = false;
         slotId = -1;
         slotName = "";
+        slotDisplayName = "";
         cargoIdx = -1;
         row = -1;
         col = -1;
@@ -502,6 +512,7 @@ class ServerSentryItemMoveScriptLog
             output.parentClassName = parent.GetType();
             output.parentName = parent.GetDisplayName();
             output.parentPosition = parent.GetPosition();
+            output.parentIsPlayer = PlayerBase.Cast(parent) != null;
             CapturePlayerOwner(parent, output);
         }
 
@@ -511,6 +522,7 @@ class ServerSentryItemMoveScriptLog
             if (InventorySlots.IsSlotIdValid(output.slotId))
             {
                 output.slotName = InventorySlots.GetSlotName(output.slotId);
+                output.slotDisplayName = InventorySlots.GetSlotDisplayName(output.slotId);
             }
         }
         else if (output.typeId == InventoryLocationType.CARGO || output.typeId == InventoryLocationType.PROXYCARGO)
@@ -613,6 +625,12 @@ class ServerSentryItemMoveScriptLog
     */
     protected static string ResolveAction(ServerSentryItemMoveSnapshot snapshot)
     {
+        if (IsItemAttachment(snapshot.to))
+            return "item_attach";
+
+        if (IsItemAttachment(snapshot.from))
+            return "item_detach";
+
         bool fromGround = snapshot.from.typeId == InventoryLocationType.GROUND;
         bool toGround = snapshot.to.typeId == InventoryLocationType.GROUND;
         bool fromPlayer = snapshot.from.hasPlayerOwner;
@@ -635,6 +653,12 @@ class ServerSentryItemMoveScriptLog
         if (fromStorage && toStorage)
             return "storage_transfer";
 
+        if (snapshot.to.typeId == InventoryLocationType.ATTACHMENT)
+            return "item_attach";
+
+        if (snapshot.from.typeId == InventoryLocationType.ATTACHMENT)
+            return "item_detach";
+
         return "item_move";
     }
 
@@ -646,12 +670,12 @@ class ServerSentryItemMoveScriptLog
     {
         ServerSentryItemMoveLocationSnapshot actorLoc = null;
 
-        if (snapshot.actionName == "item_pickup" || snapshot.actionName == "storage_take")
+        if (snapshot.actionName == "item_pickup" || snapshot.actionName == "storage_take" || (snapshot.actionName == "item_detach" && snapshot.to.hasPlayerOwner))
         {
             actorLoc = snapshot.to;
             snapshot.actorInference = "new_owner";
         }
-        else if (snapshot.actionName == "item_drop" || snapshot.actionName == "storage_put")
+        else if (snapshot.actionName == "item_drop" || snapshot.actionName == "storage_put" || (snapshot.actionName == "item_attach" && snapshot.from.hasPlayerOwner))
         {
             actorLoc = snapshot.from;
             snapshot.actorInference = "old_owner";
@@ -693,12 +717,12 @@ class ServerSentryItemMoveScriptLog
     protected static void ResolveTarget(ServerSentryItemMoveSnapshot snapshot)
     {
         ServerSentryItemMoveLocationSnapshot targetLoc = snapshot.to;
-        if (snapshot.actionName == "storage_take" || snapshot.actionName == "storage_transfer")
+        if (snapshot.actionName == "storage_take" || snapshot.actionName == "storage_transfer" || snapshot.actionName == "item_detach")
         {
             targetLoc = snapshot.from;
         }
 
-        if (targetLoc && targetLoc.isExternalStorage)
+        if (targetLoc && (targetLoc.isExternalStorage || IsItemAttachment(targetLoc)))
         {
             snapshot.targetType = "object";
             snapshot.targetKind = "object";
@@ -728,6 +752,9 @@ class ServerSentryItemMoveScriptLog
     */
     protected static bool IsTrackedMove(ServerSentryItemMoveSnapshot snapshot)
     {
+        if (snapshot.from.typeId == InventoryLocationType.ATTACHMENT || snapshot.to.typeId == InventoryLocationType.ATTACHMENT)
+            return true;
+
         bool fromGround = snapshot.from.typeId == InventoryLocationType.GROUND;
         bool toGround = snapshot.to.typeId == InventoryLocationType.GROUND;
         bool fromPlayer = snapshot.from.hasPlayerOwner;
@@ -751,6 +778,16 @@ class ServerSentryItemMoveScriptLog
             return true;
 
         return false;
+    }
+
+    /**
+        \brief Identifies an attachment to an object, excluding equipment slots on a player.
+        \param loc \p captured inventory location.
+        \return \p true for attachments to weapons, clothing, vehicles, or world objects.
+    */
+    protected static bool IsItemAttachment(ServerSentryItemMoveLocationSnapshot loc)
+    {
+        return loc && loc.valid && loc.typeId == InventoryLocationType.ATTACHMENT && !loc.parentIsPlayer;
     }
 
     /**
@@ -950,6 +987,16 @@ class ServerSentryItemMoveScriptLog
         ev.item.className = snapshot.itemClassName;
         ev.item.displayName = snapshot.itemDisplayName;
         ev.item.persistentId = snapshot.itemPersistentId;
+        // Use the captured destination, never an actor position or a default cargo vector.
+        vector observedItemPosition = snapshot.itemPosition;
+        if (snapshot.to.typeId == InventoryLocationType.GROUND)
+            observedItemPosition = snapshot.to.position;
+        else if (snapshot.to.hasPlayerOwner)
+            observedItemPosition = snapshot.to.parentOwnerPosition;
+        else if (snapshot.to.parentId >= 0)
+            observedItemPosition = snapshot.to.parentPosition;
+        ev.item.position = new ServerSentryVectorDto();
+        ev.item.position.FromVector(observedItemPosition);
         ev.item.health = -1;
         ev.item.quantity = 0;
 
@@ -1049,13 +1096,17 @@ class ServerSentryItemMoveScriptLog
         {
             data.type = "storage";
         }
-        else if (snapshot.typeId == InventoryLocationType.ATTACHMENT && snapshot.hasPlayerOwner)
+        else if (snapshot.typeId == InventoryLocationType.ATTACHMENT && snapshot.parentIsPlayer)
         {
             data.type = "player_slot";
         }
 
         data.parentClassName = snapshot.parentClassName;
         data.parentName = snapshot.parentName;
+        if (snapshot.parentId >= 0)
+        {
+            data.parentObjectId = snapshot.parentId.ToString();
+        }
         data.parentOwnerType = snapshot.parentOwnerType;
         data.parentOwnerKind = snapshot.parentOwnerKind;
         data.parentOwnerClassName = snapshot.parentOwnerClassName;
@@ -1065,7 +1116,7 @@ class ServerSentryItemMoveScriptLog
 
         data.slotId = snapshot.slotId;
         data.slotName = snapshot.slotName;
-        data.slotDisplayName = "";
+        data.slotDisplayName = snapshot.slotDisplayName;
         data.cargoIdx = snapshot.cargoIdx;
         data.row = snapshot.row;
         data.col = snapshot.col;
@@ -1086,6 +1137,19 @@ class ServerSentryItemMoveScriptLog
             return "unknown";
         }
 
+        if (loc.type == "attachment")
+        {
+            string parentLabel = loc.parentName;
+            if (parentLabel == "")
+                parentLabel = loc.parentClassName;
+
+            string slotLabel = loc.slotDisplayName;
+            if (slotLabel == "")
+                slotLabel = loc.slotName;
+
+            return "attachment:" + parentLabel + " slot:" + slotLabel;
+        }
+
         if (loc.type == "storage")
         {
             if (loc.parentName != "")
@@ -1100,7 +1164,12 @@ class ServerSentryItemMoveScriptLog
             if (loc.type == "hands")
                 return loc.parentOwnerName + " hands";
             if (loc.type == "player_slot")
-                return loc.parentOwnerName + " slot";
+            {
+                string playerSlotLabel = loc.slotDisplayName;
+                if (playerSlotLabel == "")
+                    playerSlotLabel = loc.slotName;
+                return loc.parentOwnerName + " slot:" + playerSlotLabel;
+            }
             if (loc.type == "cargo")
                 return loc.parentOwnerName + " inventory";
             return loc.parentOwnerName + " " + loc.type;

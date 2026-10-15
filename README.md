@@ -135,6 +135,28 @@ $profile:ServerSentry/events
 
 Every line is an independent JSON event. Events include schema information, a logical server ID, a boot ID, a sequence number, timestamps, actors, targets, actions, and event-specific data.
 
+### Inventory attachments
+
+With `LogInventoryMovement` enabled, `item_move` events also cover attaching and detaching items. `action.name` is `item_attach` or `item_detach` for these operations. Existing pickup, drop, and storage actions remain in use for transfers involving player equipment slots.
+
+The `data.from` and `data.to` locations include the immediate parent class/name, its session-local `parentObjectId`, and the slot ID, name, and display name. Attachments on carried weapons or clothing retain `type: "attachment"`; equipment slots directly on a player use `type: "player_slot"`. The target identifies the object receiving or losing the attachment.
+
+Player attribution still comes from the old or new inventory owner. With the default player-only filter, moves between world objects without a player inventory owner are omitted rather than attributed to a nearby player.
+
+### Vanilla digital code locks
+
+On DayZ 1.30 and later, `DigitalCodeLock` (including `DigitalCodeLock_Bunker`) emits `codelock_event` events with `mod` and `data.sourceMod` set to `DayZ`. These events follow `EnableTelemtryLogging` and the existing code-lock logging default.
+
+| `action.name` | Recorded operation |
+| --- | --- |
+| `access` | Keypad interaction, including rejected interaction data or lock-side validation. Opening the keypad is separate from a checked code request. |
+| `lock` | The player locks an unlocked digital lock. |
+| `unlock` | A checked code unlocks the lock, fails to unlock it, or the player releases it from the physical inside. |
+| `set_code` | Initial code setup, with the result determined from the resulting lock state. |
+| `reset_code` | A player resets the configured code. |
+
+Payloads contain the actor identity/position, lock and parent object information, resulting lock state, access method, and outcome (`success`, `failed`, `denied`, or `ignored`). PIN values are never included. Failed requests are reported from the observed server state. Merely opening the keypad does not count as a successful unlock. Installing or removing the lock or its battery is covered by the inventory attachment events.
+
 ### Live state
 
 The current live snapshot is written to:

@@ -129,6 +129,8 @@ class ServerSentryItemEventFactory
         output.className = item.GetType();
         output.displayName = item.GetDisplayName();
         output.persistentId = ServerSentryItemMoveScriptLog.ResolveItemPersistentId(item);
+        output.position = new ServerSentryVectorDto();
+        output.position.FromVector(item.GetPosition());
         output.health = item.GetHealth("", "Health");
         output.quantity = 0;
         ServerSentryInventoryDebug.PrintTrace(traceId, "ItemEventFactory.FillItem.base", "class=" + output.className + " name=" + output.displayName + " health=" + output.health.ToString());
