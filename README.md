@@ -29,6 +29,8 @@ The mod is designed to be consumed by an external Server Sentry service or by cu
 - [Community Framework (CF)](https://steamcommunity.com/sharedfiles/filedetails/?id=1559212036)
 `JM_CF_Scripts` is declared as a required addon in `config.cpp`.
 
+CF must include `CF.FindFileEx`, which handles the DayZ 1.30 file-enumeration regression ([DZEXP-134](https://report.bistudio.com/issues/DZEXP-134)).
+
 Some integrations are optional and only become active when the corresponding mod or compile-time symbol is available. For example, Dr. Jones Trader `TRADER`
 
 ## Installation
@@ -178,6 +180,8 @@ When live data is enabled, the server checks the action inbox once per second:
 $profile:ServerSentry/actions/inbox/*.json
 ```
 
+The poller uses `CF.FindFileEx` to enumerate the existing inbox files, including the DayZ 1.30 filesystem workaround. The request format and the writing service do not need to change.
+
 After execution, the request file is removed and a result is written to:
 
 ```text
@@ -325,6 +329,7 @@ ServerSentryDayZMod/
 ### Actions remain in the inbox
 
 - Confirm that live data logging is enabled, because it starts the action poller.
+- Confirm that the loaded CF version provides `CF.FindFileEx` and that the Server Sentry PBO was rebuilt with the updated poller.
 - Validate that the request contains a non-empty `actionId`.
 - Check `script.log` for `[ServerSentry][LiveAction]` messages.
 - Ensure the request target and input JSON match the selected action descriptor.

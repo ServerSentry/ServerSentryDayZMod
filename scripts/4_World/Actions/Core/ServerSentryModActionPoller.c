@@ -58,24 +58,34 @@ class ServerSentryModActionPoller
         string fileName;
         FileAttr fileAttr;
         string pattern = InboxDirectory() + "/*.json";
-        FindFileHandle handle = FindFile(pattern, fileName, fileAttr, FindFileFlags.ALL);
+        // CF.FindFileEx applies the DayZ 1.30 filesystem workaround (DZEXP-134).
+        FindFileHandle handle = CF.FindFileEx(pattern, fileName, fileAttr, FindFileFlags.ALL);
         if (!handle)
         {
             return;
         }
 
-        bool keepGoing = true;
-        while (keepGoing)
+        // Finish enumerating before executing actions that delete inbox files.
+        array<string> fileNames = new array<string>();
+        while (true)
         {
             if (fileName != "")
             {
-                ProcessFile(InboxDirectory() + "/" + fileName);
+                fileNames.Insert(fileName);
             }
 
-            keepGoing = FindNextFile(handle, fileName, fileAttr);
+            if (!FindNextFile(handle, fileName, fileAttr))
+            {
+                break;
+            }
         }
 
         CloseFindFile(handle);
+
+        foreach (string pendingFileName : fileNames)
+        {
+            ProcessFile(InboxDirectory() + "/" + pendingFileName);
+        }
     }
 
     /**
