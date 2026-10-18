@@ -52,6 +52,9 @@ class ServerSentryCombat
     */
     string hitZone;
 
+    /** \brief Exact named selections from the hit component in fire geometry. */
+    ref array<string> hitComponentNames;
+
     /**
     	\brief Indicates whether target alive after.
     */
@@ -123,6 +126,7 @@ class ServerSentryCombat
         damageType = 0;
         component = 0;
         hitZone = "";
+        hitComponentNames = new array<string>();
         targetAliveAfter = true;
         isHeadshot = false;
         isMelee = false;

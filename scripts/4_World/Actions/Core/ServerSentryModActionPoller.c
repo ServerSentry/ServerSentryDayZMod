@@ -132,7 +132,7 @@ class ServerSentryModActionPoller
 
         ServerSentryModActionContext ctx = ToContext(request);
         bool success = ServerSentryModActionRegistry.Execute(ctx, message);
-        WriteResult(request, success, message);
+        WriteResult(request, success, message, ctx.resultDataJson);
         DeleteFile(filePath);
         s_Processing.Remove(filePath);
     }
@@ -172,8 +172,9 @@ class ServerSentryModActionPoller
     	\param request \p request data to process.
     	\param success \p true to enable success.
     	\param message \p receives a human-readable result or error message.
+        \param dataJson \p Optional typed response returned by the handler.
     */
-    protected static void WriteResult(ServerSentryLiveActionRequestDto request, bool success, string message)
+    protected static void WriteResult(ServerSentryLiveActionRequestDto request, bool success, string message, string dataJson = "")
     {
         ServerSentryLiveActionResultDto result = new ServerSentryLiveActionResultDto();
         if (request)
@@ -189,6 +190,7 @@ class ServerSentryModActionPoller
 
         result.success = success;
         result.message = message;
+        result.dataJson = dataJson;
         result.executedAtUtc = ServerSentryTime.NowUtc();
 
         string requestId = result.requestId;

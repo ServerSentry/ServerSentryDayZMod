@@ -32,6 +32,8 @@ class ServerSentryLiveSnapshot
     	\brief Stores the max fps.
     */
     int maxFPS;
+    /** \brief Optional additive simulation and loaded-world item measurements. */
+    ref ServerSentryLivePerformanceDto performance;
 
     /**
     	\brief Collection of players values.
@@ -61,10 +63,26 @@ class ServerSentryLiveSnapshot
     {
         schemaVersion = ServerSentryDefaults.LiveSchemaVersion();
         generatedAtUtc = ServerSentryTime.NowUtc();
+        performance = new ServerSentryLivePerformanceDto();
         players = new array<ref ServerSentryLivePlayerDto>();
         vehicles = new array<ref ServerSentryLiveVehicleDto>();
         events = new array<ref ServerSentryLiveWorldEventDto>();
         bases = new array<ref ServerSentryLiveBaseDto>();
         actions = new array<ref ServerSentryLiveModActionDescriptorDto>();
     }
+}
+
+/** \brief Snapshot measurements; negative timing sentinels mean unavailable, not zero. */
+class ServerSentryLivePerformanceDto
+{
+    /** \brief Mean simulation frame interval in milliseconds. */
+    float averageTickTimeMs = -1.0;
+    /** \brief Longest frame interval in the measurement window. */
+    float maxTickTimeMs = -1.0;
+    /** \brief Number of frames in the measurement window. */
+    int tickSampleCount = 0;
+    /** \brief Loaded items without an inventory parent. */
+    int groundItemCount = 0;
+    /** \brief All loaded item instances, including inventories and attachments. */
+    int loadedItemCount = 0;
 }

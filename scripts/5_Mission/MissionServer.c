@@ -20,6 +20,7 @@ modded class MissionServer
     {
         super.OnMissionStart();
         ServerSentryItemLifecycle.Start();
+        // ServerSentryDamageZoneExporter.Reset(); // Development diagnostics only; disabled in production.
     }
 
     /**
@@ -28,17 +29,19 @@ modded class MissionServer
     override void OnMissionFinish()
     {
         ServerSentryItemLifecycle.Stop();
+        ServerSentryMapMarkers.Clear();
         if (ServerSentryConfigManager.Get().IsAllowedToStartTelemetryLogging())
             ServerSentryLogger.Get().Flush();
         super.OnMissionFinish();
     }
 
     /**
-        \brief Keeps deletion logging disabled if the mission is destroyed directly.
+        \brief Stops deletion tracking and clears markers if the mission is destroyed directly.
     */
     void ~MissionServer()
     {
         ServerSentryItemLifecycle.Stop();
+        ServerSentryMapMarkers.Clear();
     }
 
     /**
@@ -84,6 +87,7 @@ modded class MissionServer
     {
         super.OnClientReadyEvent(identity, player);
 
+        // ServerSentryDamageZoneExporter.Observe(player); // Development diagnostics only; disabled in production.
         ServerSentryApplyVoiceMuteState(player, identity);
         ServerSentryEmitLoginOnce(player, identity);
     }
@@ -96,6 +100,7 @@ modded class MissionServer
     override void OnClientRespawnEvent(PlayerIdentity identity, PlayerBase player)
     {
         super.OnClientRespawnEvent(identity, player);
+        // ServerSentryDamageZoneExporter.Observe(player); // Development diagnostics only; disabled in production.
         
 
         GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.ServerSentryApplyVoiceMuteState, 15000, false, player, identity);
@@ -110,6 +115,7 @@ modded class MissionServer
     {
         super.OnClientReconnectEvent(identity, player);
 
+        // ServerSentryDamageZoneExporter.Observe(player); // Development diagnostics only; disabled in production.
         ServerSentryApplyVoiceMuteState(player, identity);
     }
 

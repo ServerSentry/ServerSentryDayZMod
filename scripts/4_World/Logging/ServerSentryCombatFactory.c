@@ -25,6 +25,7 @@ class ServerSentryCombatFactory
         }
 
         EntityAI victim = request.victim;
+        // ServerSentryDamageZoneExporter.Observe(victim); // Development diagnostics only; disabled in production.
         TotalDamageResult damageResult = request.damageResult;
         int damageType = request.damageType;
         EntityAI source = request.source;
@@ -42,6 +43,13 @@ class ServerSentryCombatFactory
         ctx.damageType = damageType;
         ctx.component = component;
         ctx.hitZone = ResolveHitZone(victim, component, dmgZone);
+        // EEHitBy component indices refer to fire geometry. Preserve every
+        // named selection: the first name alone may only be a broad damage zone.
+        // No inference from position or skeleton; damage/headshot logic is unchanged.
+        if (component >= 0)
+        {
+            victim.GetActionComponentNameList(component, ctx.hitComponentNames, "fire");
+        }
         ctx.ammoType = ammo;
         ctx.victimPosition = victim.GetPosition();
 

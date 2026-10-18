@@ -25,10 +25,6 @@ class ServerSentryLiveApi
     */
     protected static ref array<EntityAI> s_Bases;
     /**
-    	\brief Shared custom markers state used by all instances.
-    */
-    protected static ref array<ref ServerSentryLiveWorldEventDto> s_CustomMarkers;
-    /**
     	\brief Shared last snapshot fingerprint state used by all instances.
     */
     protected static string s_LastSnapshotFingerprint;
@@ -334,26 +330,51 @@ class ServerSentryLiveApi
     */
     static void UpsertMarker(ServerSentryLiveWorldEventDto marker)
     {
-        if (!marker || marker.objectId == "")
-        {
+        StoreMarker(marker, true);
+    }
+
+    /**
+        \brief Registers a marker for export on the existing snapshot cadence.
+        \param marker \p marker to register or replace.
+    */
+    static void UpsertMarkerDeferred(ServerSentryLiveWorldEventDto marker)
+    {
+        StoreMarker(marker, false);
+    }
+
+    /**
+        \brief Stores a marker with the requested export behavior.
+        \param marker \p marker to register or replace.
+        \param writeImmediately \p true for the legacy immediate write.
+    */
+    protected static void StoreMarker(ServerSentryLiveWorldEventDto marker, bool writeImmediately)
+    {
+        if (!ServerSentryMapMarkers.Register(marker))
             return;
-        }
 
-        EnsureState();
-
-        for (int i = 0; i < s_CustomMarkers.Count(); i++)
+        if (writeImmediately)
         {
-            ServerSentryLiveWorldEventDto existing = s_CustomMarkers.Get(i);
-            if (existing && existing.objectId == marker.objectId)
-            {
-                s_CustomMarkers.Set(i, marker);
-                WriteSnapshot();
-                return;
-            }
+            WriteSnapshot();
         }
+    }
 
-        s_CustomMarkers.Insert(marker);
-        WriteSnapshot();
+    /**
+        \brief Finds a registered marker without writing a snapshot.
+        \param id \p marker ID to look up.
+        \return \p Registered handle, or null if absent.
+    */
+    static ServerSentryLiveWorldEventDto FindMarker(string id)
+    {
+        return ServerSentryMapMarkers.Find(id);
+    }
+
+    /**
+        \brief Returns the number of currently registered custom markers.
+        \return \p Registry size used by the bounded simple API.
+    */
+    static int GetMarkerCount()
+    {
+        return ServerSentryMapMarkers.Count();
     }
 
     /**
@@ -362,23 +383,34 @@ class ServerSentryLiveApi
     */
     static void RemoveMarker(string id)
     {
+        DeleteMarker(id, true);
+    }
+
+    /**
+        \brief Removes a marker on the existing export cadence.
+        \param id \p stable marker ID.
+    */
+    static void RemoveMarkerDeferred(string id)
+    {
+        DeleteMarker(id, false);
+    }
+
+    /**
+        \brief Removes the registry entry with the requested export behavior.
+        \param id \p stable marker ID.
+        \param writeImmediately \p true for the legacy immediate write.
+    */
+    protected static void DeleteMarker(string id, bool writeImmediately)
+    {
         if (id == "")
         {
             return;
         }
-
-        EnsureState();
-
-        for (int i = s_CustomMarkers.Count() - 1; i >= 0; i--)
+        ServerSentryMapMarkers.Remove(id);
+        if (writeImmediately)
         {
-            ServerSentryLiveWorldEventDto marker = s_CustomMarkers.Get(i);
-            if (marker && marker.objectId == id)
-            {
-                s_CustomMarkers.Remove(i);
-            }
+            WriteSnapshot();
         }
-
-        WriteSnapshot();
     }
 
     /**
@@ -392,17 +424,7 @@ class ServerSentryLiveApi
             return;
         }
 
-        EnsureState();
-
-        for (int i = s_CustomMarkers.Count() - 1; i >= 0; i--)
-        {
-            ServerSentryLiveWorldEventDto marker = s_CustomMarkers.Get(i);
-            if (marker && marker.objectId.IndexOf(prefix) == 0)
-            {
-                s_CustomMarkers.Remove(i);
-            }
-        }
-
+        ServerSentryMapMarkers.ClearByPrefix(prefix);
         WriteSnapshot();
     }
 
@@ -575,6 +597,11 @@ class ServerSentryLiveApi
         snapshot.currentFPS = ServerSentryPerformance.CurrentServerFps;
         snapshot.minFPS = ServerSentryPerformance.MinServerFps;
         snapshot.maxFPS = ServerSentryPerformance.MaxServerFps;
+        snapshot.performance.averageTickTimeMs = ServerSentryPerformance.AverageTickTimeMs;
+        snapshot.performance.maxTickTimeMs = ServerSentryPerformance.MaxTickTimeMs;
+        snapshot.performance.tickSampleCount = ServerSentryPerformance.TickSampleCount;
+        snapshot.performance.groundItemCount = ServerSentryWorldItemCounts.Ground;
+        snapshot.performance.loadedItemCount = ServerSentryWorldItemCounts.Loaded;
 
         FillPlayers(snapshot);
         FillVehicles(snapshot);
@@ -721,18 +748,12 @@ class ServerSentryLiveApi
     */
     protected static void FillCustomMarkers(ServerSentryLiveSnapshot snapshot)
     {
-        if (!snapshot || !s_CustomMarkers)
+        if (!snapshot)
         {
             return;
         }
 
-        foreach (ServerSentryLiveWorldEventDto marker: s_CustomMarkers)
-        {
-            if (marker && marker.position)
-            {
-                snapshot.events.Insert(marker);
-            }
-        }
+        ServerSentryMapMarkers.AppendTo(snapshot.events);
     }
 
     /**
@@ -1099,6 +1120,11 @@ class ServerSentryLiveApi
 
         string value = "";
         value = value + "map=" + snapshot.mapName + ";";
+        value = value + "tick=" + snapshot.performance.averageTickTimeMs.ToString() + ";";
+        value = value + "tickMax=" + snapshot.performance.maxTickTimeMs.ToString() + ";";
+        value = value + "tickSamples=" + snapshot.performance.tickSampleCount.ToString() + ";";
+        value = value + "groundItems=" + snapshot.performance.groundItemCount.ToString() + ";";
+        value = value + "loadedItems=" + snapshot.performance.loadedItemCount.ToString() + ";";
         value = value + "p=" + snapshot.players.Count().ToString() + ";";
         foreach (ServerSentryLivePlayerDto player: snapshot.players)
         {
@@ -1146,7 +1172,13 @@ class ServerSentryLiveApi
             value = value + ":";
             value = value + eventDto.icon;
             value = value + ":";
+            value = value + eventDto.displayName;
+            value = value + ":";
             value = value + eventDto.points.Count().ToString();
+            foreach (ServerSentryVectorDto routePoint: eventDto.points)
+            {
+                value = value + "[" + routePoint.x.ToString() + "," + routePoint.y.ToString() + "," + routePoint.z.ToString() + "]";
+            }
             value = value + ":";
             value = value + eventDto.actions.Count().ToString();
             value = value + ":";
@@ -1487,11 +1519,6 @@ class ServerSentryLiveApi
         if (!s_Bases)
         {
             s_Bases = new array<EntityAI>();
-        }
-
-        if (!s_CustomMarkers)
-        {
-            s_CustomMarkers = new array<ref ServerSentryLiveWorldEventDto>();
         }
 
         if (s_LastSnapshotFingerprint == "")

@@ -1039,6 +1039,7 @@ class ServerSentryEventFactory
         ev.combat.damageType = ctx.damageType;
         ev.combat.component = ctx.component;
         ev.combat.hitZone = ctx.hitZone;
+        ev.combat.hitComponentNames = ctx.hitComponentNames;
         ev.combat.targetAliveAfter = ctx.targetAliveAfter;
         ev.combat.isHeadshot = ctx.isHeadshot;
         ev.combat.isMelee = ctx.isMelee;

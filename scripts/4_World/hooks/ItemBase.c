@@ -12,6 +12,10 @@ modded class ItemBase
         \brief Tracks player-relevant observations for this loaded instance only; never written to persistence.
     */
     protected bool m_ServerSentryTraceRelevant = false;
+    /** \brief Prevents duplicate lifecycle registration for this runtime instance. */
+    protected bool m_ServerSentryCounted = false;
+    /** \brief Remembers the primitive ground state before native inventory transitions. */
+    protected bool m_ServerSentryCountedOnGround = false;
 
     /**
     	\brief Processes the ee init operation.
@@ -20,6 +24,14 @@ modded class ItemBase
     {
         super.EEInit();
         ServerSentryLiveApi.TryRegisterEntity(this);
+        if (GetGame() && GetGame().IsServer() && !m_ServerSentryCounted)
+        {
+            m_ServerSentryCounted = true;
+            m_ServerSentryCountedOnGround = GetHierarchyParent() == null;
+            ServerSentryWorldItemCounts.Loaded++;
+            if (m_ServerSentryCountedOnGround)
+                ServerSentryWorldItemCounts.Ground++;
+        }
     }
 
     /**
@@ -32,6 +44,15 @@ modded class ItemBase
         // Untouched world loot exits before identity reads, event allocation or serialization.
         if (m_ServerSentryTraceRelevant)
             ServerSentryItemLifecycle.ObserveDeletion(this, parent);
+        if (m_ServerSentryCounted)
+        {
+            if (ServerSentryWorldItemCounts.Loaded > 0)
+                ServerSentryWorldItemCounts.Loaded--;
+            if (m_ServerSentryCountedOnGround && ServerSentryWorldItemCounts.Ground > 0)
+                ServerSentryWorldItemCounts.Ground--;
+            m_ServerSentryCounted = false;
+            m_ServerSentryCountedOnGround = false;
+        }
         ServerSentryLiveApi.UnregisterEntity(this);
         super.EEDelete(parent);
     }
@@ -43,6 +64,19 @@ modded class ItemBase
     */
     override void EEItemLocationChanged(notnull InventoryLocation oldLoc, notnull InventoryLocation newLoc)
     {
+        // Update primitives before super can invalidate an entity during inventory moves.
+        if (m_ServerSentryCounted)
+        {
+            bool onGround = newLoc.GetType() == InventoryLocationType.GROUND;
+            if (onGround != m_ServerSentryCountedOnGround)
+            {
+                if (onGround)
+                    ServerSentryWorldItemCounts.Ground++;
+                else if (ServerSentryWorldItemCounts.Ground > 0)
+                    ServerSentryWorldItemCounts.Ground--;
+                m_ServerSentryCountedOnGround = onGround;
+            }
+        }
         int ssMoveId = ServerSentryItemMoveScriptLog.NextMoveId();
         ServerSentryItemMoveSnapshot snapshot = null;
 

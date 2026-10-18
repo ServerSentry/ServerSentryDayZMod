@@ -39,6 +39,9 @@ class ServerSentryHitContext
     */
     string hitZone;
 
+    /** \brief Exact named selections from the hit component in fire geometry. */
+    ref array<string> hitComponentNames;
+
     /**
     	\brief Stores the health damage.
     */
@@ -125,6 +128,7 @@ class ServerSentryHitContext
         weaponClassName = "";
         ammoType = "";
         hitZone = "";
+        hitComponentNames = new array<string>();
 
         healthDamage = 0;
         bloodDamage = 0;
