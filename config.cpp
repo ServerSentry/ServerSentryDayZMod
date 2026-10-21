@@ -49,7 +49,7 @@ class CfgMods
 			class missionScriptModule
 			{
 				value = "";
-				files[] = {"TM/Trader/scripts/defines", "ServerSentryDayZMod/scripts/5_Mission"};
+				files[] = {"ServerSentryDayZMod/scripts/5_Mission"};
 			};
 		};
 	};
