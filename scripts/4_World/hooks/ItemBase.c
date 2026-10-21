@@ -8,6 +8,36 @@
 */
 modded class ItemBase
 {
+    /** \brief Mission-local item identity, allocated only when a backup needs one. */
+    protected string m_ServerSentryBackupRuntimeKey;
+    /** \brief Whether the backup index needs a deletion notification for this instance. */
+    protected bool m_ServerSentryBackupTracked;
+
+    /** \brief Enables deletion notification for an item referenced by a retained backup. */
+    void ServerSentryMarkBackupTracked()
+    {
+        m_ServerSentryBackupTracked = true;
+    }
+
+    /**
+        \brief Returns an existing identity or allocates one when explicitly requested.
+        \param create \p true to create a mission-local key when absent.
+        \return \p existing/generated key, or an empty string for an untracked item.
+    */
+    string ServerSentryBackupRuntimeKey(bool create)
+    {
+        if (create && m_ServerSentryBackupRuntimeKey == "")
+            m_ServerSentryBackupRuntimeKey = ServerSentryBackupItemIndex.NewRuntimeKey();
+        return m_ServerSentryBackupRuntimeKey;
+    }
+
+    /** \brief Reconnects restored native entities with the retained backup index. */
+    override void EEOnAfterLoad()
+    {
+        super.EEOnAfterLoad();
+        ServerSentryBackupItemIndex.Observe(this);
+    }
+
     /**
         \brief Tracks player-relevant observations for this loaded instance only; never written to persistence.
     */
@@ -40,6 +70,8 @@ modded class ItemBase
     */
     override void EEDelete(EntityAI parent)
     {
+        if (m_ServerSentryBackupTracked)
+            ServerSentryBackupItemIndex.Forget(this);
         // Capture before super can invalidate the native entity or its inventory.
         // Untouched world loot exits before identity reads, event allocation or serialization.
         if (m_ServerSentryTraceRelevant)

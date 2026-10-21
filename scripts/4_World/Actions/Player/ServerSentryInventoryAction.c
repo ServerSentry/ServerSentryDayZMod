@@ -103,6 +103,12 @@ class ServerSentryInventoryAction: ServerSentryModActionHandler
         m_Operation = operation;
     }
 
+    /** \brief Invalidates all exact item references before another workflow replaces this inventory. */
+    static void InvalidatePlayerCapture(string steamId)
+    {
+        s_Captures.Remove(steamId);
+    }
+
     /** \brief Registers only the dedicated inventory scope, never shop or generic live execution.
         \return \p The fixed descriptor for this handler.
     */

@@ -8,6 +8,8 @@
 */
 class ServerSentryLoggingConfig
 {
+    /** \brief Persisted schema version; zero identifies an unversioned configuration. */
+    int ConfigVersion;
     /**
     	\brief Indicates whether enable item export.
     */
@@ -24,6 +26,8 @@ class ServerSentryLoggingConfig
     	\brief Stores the live data update interval seconds.
     */
     int LiveDataUpdateIntervalSeconds;
+    /** \brief Maximum base-detail age in seconds; zero rebuilds on every snapshot. */
+    int LiveBaseDetailsCacheSeconds;
     /**
     	\brief Indicates whether log animal hits.
     */
@@ -85,6 +89,8 @@ class ServerSentryLoggingConfig
     */
     bool LogActionDestroyPart;
 
+    /** \brief Character backup policy, initialized before JSON overrides are applied. */
+    ref ServerSentryCharBackupConfig CharBackupConfig;
 
     /**
     	\brief Initializes a new ServerSentryLoggingConfig instance.
@@ -107,6 +113,7 @@ class ServerSentryLoggingConfig
         EnableTelemtryLogging = true;
         EnableLiveDataLogging = true;
         LiveDataUpdateIntervalSeconds = 10;
+        LiveBaseDetailsCacheSeconds = 30;
         LogAnimalHits = true;
         LogAnimalKills = true;
         LogZombieHits = true;
@@ -119,5 +126,9 @@ class ServerSentryLoggingConfig
         LogInventoryMovement = true;
         LogPlayerHits = true;
         LogPlayerKills = true;
+        LogBaseBuilding = false;
+        LogActionDismantlePart = false;
+        LogActionDestroyPart = false;
+        CharBackupConfig = new ServerSentryCharBackupConfig();
     }
 }

@@ -343,11 +343,11 @@ ServerSentryMapMarkers.ClearByPrefix("myairdrop:flight42:");
 
 A marker stays registered until explicitly removed, replaced, or cleared at mission finish. Dropping a handle alone does not remove the registration. Stop mod-owned update callbacks during your own cleanup. Markers are not persisted across a process restart and there is no automatic entity tracking or TTL.
 
-Changes are exported on the configured snapshot cadence; multiple updates between snapshots coalesce. Avoid per-frame updates. Point/circle/polygon transport remains unchanged; the CMS must support `polyline` to render routes.
+Changes are exported on the configured snapshot cadence; multiple updates between snapshots coalesce. Avoid per-frame updates. Point/circle/polygon DTOs remain unchanged; the CMS must support `polyline` to render routes. The schema-four file transport stores events in a complete revisioned section referenced by `live/state.json`. Direct file consumers must validate the manifest session and section revision; `BuildSnapshot()` still returns the complete in-memory DTO.
 
 ### Existing World integrations
 
-`ServerSentryLiveApi.CreateMarker`, `CreatePolygonMarker`, `SetMarkerPolygon`, `AddMarkerPoint`, detail/action helpers, and DTO-based `UpsertMarker`/`RemoveMarker` remain available in 4_World and 5_Mission. Registration and removal use the same Game registry. The legacy immediate-write behavior is retained; deferred methods still use the configured export cadence. Removing or replacing a marker through the legacy API also invalidates any public handle for that registration.
+`ServerSentryLiveApi.CreateMarker`, `CreatePolygonMarker`, `SetMarkerPolygon`, `AddMarkerPoint`, detail/action helpers, and DTO-based `UpsertMarker`/`RemoveMarker` remain available in 4_World and 5_Mission. Registration and removal use the same Game registry. Legacy write-triggering methods now request a coalesced export instead of building a snapshot synchronously. Requests within 250 ms are combined, with at least one second between completed writes. Deferred methods still use the configured export cadence. Code must not assume the file has already been rewritten when a marker method returns. Removing or replacing a marker through the legacy API also invalidates any public handle for that registration.
 
 
 

@@ -32,6 +32,7 @@ class ServerSentryLiveBaseDetailRegistry
         }
 
         s_Providers.Insert(provider);
+        ServerSentryLiveApi.InvalidateBaseDetails();
         Print("[ServerSentry][LiveMap] Registered base detail provider.");
         return true;
     }

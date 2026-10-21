@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-<!-- Defines the ServerSentry support-menu input action and its default key binding. -->
+<!-- Defines the ServerSentry support menu binding. -->
 <modded_inputs>
     <!-- Declares actions exposed to the DayZ input settings menu. -->
     <inputs>

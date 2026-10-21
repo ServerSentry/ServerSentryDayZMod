@@ -19,6 +19,7 @@ modded class MissionServer
     override void OnMissionStart()
     {
         super.OnMissionStart();
+        ServerSentryCharacterBackupService.Get().Start();
         ServerSentryItemLifecycle.Start();
         // ServerSentryDamageZoneExporter.Reset(); // Development diagnostics only; disabled in production.
     }
@@ -28,6 +29,8 @@ modded class MissionServer
     */
     override void OnMissionFinish()
     {
+        ServerSentryLiveApi.Stop();
+        ServerSentryCharacterBackupService.Get().Stop();
         ServerSentryItemLifecycle.Stop();
         ServerSentryMapMarkers.Clear();
         if (ServerSentryConfigManager.Get().IsAllowedToStartTelemetryLogging())
@@ -40,6 +43,9 @@ modded class MissionServer
     */
     void ~MissionServer()
     {
+        ServerSentryLiveApi.Stop();
+        if (GetGame() && GetGame().IsServer())
+            ServerSentryCharacterBackupService.Get().Stop();
         ServerSentryItemLifecycle.Stop();
         ServerSentryMapMarkers.Clear();
     }
@@ -49,6 +55,7 @@ modded class MissionServer
     */
     override void OnInit()
     {
+        ServerSentryBackupItemIndex.BeginMission();
         super.OnInit();
 
         m_ServerSentryLoginEmitted = new map<string, bool>;
@@ -60,12 +67,19 @@ modded class MissionServer
             Print("[Server Sentry] -> Item Export Finished!");
         }
 
-        if (ServerSentryConfigManager.Get().IsAllowedToStartLiveLogging())
+        // Character restoration uses the same trusted file bridge even without live telemetry.
+        bool liveLoggingEnabled = ServerSentryConfigManager.Get().IsAllowedToStartLiveLogging();
+        bool characterBackupsEnabled = ServerSentryConfigManager.Get().IsAllowedToDoCharacterBackup();
+        if (liveLoggingEnabled || characterBackupsEnabled)
+        {
+            ServerSentryModActionBootstrap.Get().RegisterDefaults();
+            ServerSentryModActionPoller.Start();
+        }
+
+        if (liveLoggingEnabled)
         {
             Print("[Server Sentry] -> Live Logging is enabled, starting module!");
-            ServerSentryModActionBootstrap.Get().RegisterDefaults();
             ServerSentryLiveBaseDetailBootstrap.Get().RegisterDefaults();
-            ServerSentryModActionPoller.Start();
             ServerSentryLiveApi.Start();
             Print("[Server Sentry] -> Live Logging module started!");
         }

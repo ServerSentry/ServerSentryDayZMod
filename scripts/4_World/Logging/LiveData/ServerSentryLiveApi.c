@@ -24,14 +24,24 @@ class ServerSentryLiveApi
     	\brief Shared bases state used by all instances.
     */
     protected static ref array<EntityAI> s_Bases;
-    /**
-    	\brief Shared last snapshot fingerprint state used by all instances.
-    */
-    protected static string s_LastSnapshotFingerprint;
-    /**
-    	\brief Shared last forced snapshot write ms state used by all instances.
-    */
-    protected static int s_LastForcedSnapshotWriteMs;
+    /** \brief Small delay to combine marker updates made in one callback. */
+    protected static const int SNAPSHOT_COALESCE_MS = 250;
+    /** \brief Bounds repeated refresh requests to at most one write per second. */
+    protected static const int SNAPSHOT_MIN_INTERVAL_MS = 1000;
+    /** \brief Whether one snapshot flush is already queued. */
+    protected static bool s_SnapshotQueued;
+    /** \brief Prevents callbacks from scheduling exports after mission shutdown. */
+    protected static bool s_Stopped;
+    /** \brief Distinguishes an initial write from a write at game time zero. */
+    protected static bool s_HasWrittenSnapshot;
+    /** \brief Game time at completion of the most recent successful export. */
+    protected static int s_LastSnapshotWriteMs;
+    /** \brief Bounded cache containing only currently registered base objects. */
+    protected static ref map<int, ref ServerSentryLiveBaseCacheEntry> s_BaseCache;
+    /** \brief Version of the current set of built base DTOs. */
+    protected static int s_BaseGeneration;
+    /** \brief Owns recoverable manifest and changed-section file publication. */
+    protected static ref ServerSentryLiveFilePublisher s_FilePublisher;
 
     /**
     	\brief Processes the start operation.
@@ -54,10 +64,49 @@ class ServerSentryLiveApi
         }
 
         EnsureState();
+        s_Stopped = false;
         s_Started = true;
         WriteSnapshot();
 
         GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(WriteSnapshot, ServerSentryConfigManager.Get().GetLiveUpdatePollingDelay(), true);
+    }
+
+    /** \brief Cancels pending exports and releases mission-owned world references. */
+    static void Stop()
+    {
+        s_Stopped = true;
+        if (GetGame())
+        {
+            GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).Remove(WriteSnapshot);
+            GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).Remove(FlushSnapshot);
+        }
+        s_Started = false;
+        s_SnapshotQueued = false;
+        s_HasWrittenSnapshot = false;
+        s_LastSnapshotWriteMs = 0;
+        s_Vehicles = null;
+        s_WorldEvents = null;
+        s_Bases = null;
+        s_BaseCache = null;
+        s_BaseGeneration = 0;
+        s_FilePublisher = null;
+    }
+
+    /**
+        \brief Invalidates cached base details after a known world or provider change.
+        \param entity \p affected base; null invalidates all base details.
+    */
+    static void InvalidateBaseDetails(EntityAI entity = null)
+    {
+        if (!s_BaseCache)
+            return;
+
+        if (!entity)
+        {
+            s_BaseCache.Clear();
+            return;
+        }
+        s_BaseCache.Remove(entity.GetID());
     }
 
     /**
@@ -214,6 +263,7 @@ class ServerSentryLiveApi
             return;
         }
 
+        InvalidateBaseDetails(entity);
         int index = s_Bases.Find(entity);
         if (index >= 0)
         {
@@ -345,14 +395,14 @@ class ServerSentryLiveApi
     /**
         \brief Stores a marker with the requested export behavior.
         \param marker \p marker to register or replace.
-        \param writeImmediately \p true for the legacy immediate write.
+        \param requestExport \p true to request an early coalesced export.
     */
-    protected static void StoreMarker(ServerSentryLiveWorldEventDto marker, bool writeImmediately)
+    protected static void StoreMarker(ServerSentryLiveWorldEventDto marker, bool requestExport)
     {
         if (!ServerSentryMapMarkers.Register(marker))
             return;
 
-        if (writeImmediately)
+        if (requestExport)
         {
             WriteSnapshot();
         }
@@ -398,16 +448,16 @@ class ServerSentryLiveApi
     /**
         \brief Removes the registry entry with the requested export behavior.
         \param id \p stable marker ID.
-        \param writeImmediately \p true for the legacy immediate write.
+        \param requestExport \p true to request an early coalesced export.
     */
-    protected static void DeleteMarker(string id, bool writeImmediately)
+    protected static void DeleteMarker(string id, bool requestExport)
     {
         if (id == "")
         {
             return;
         }
         ServerSentryMapMarkers.Remove(id);
-        if (writeImmediately)
+        if (requestExport)
         {
             WriteSnapshot();
         }
@@ -516,62 +566,90 @@ class ServerSentryLiveApi
     }
 
     /**
-    	\brief Writes snapshot.
+        \brief Requests a coalesced snapshot without building or serializing on this call stack.
     */
     static void WriteSnapshot()
     {
-        if (!GetGame() || !GetGame().IsServer())
-        {
+        if (!CanWriteSnapshot() || s_SnapshotQueued)
             return;
-        }
+
+        int delayMs = SNAPSHOT_COALESCE_MS;
+        int elapsedMs = GetGame().GetTime() - s_LastSnapshotWriteMs;
+        if (s_HasWrittenSnapshot && elapsedMs >= 0)
+            delayMs = Math.Max(delayMs, SNAPSHOT_MIN_INTERVAL_MS - elapsedMs);
+
+        s_SnapshotQueued = true;
+        GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(FlushSnapshot, delayMs, false);
+    }
+
+    /**
+        \brief Checks execution context and the live export configuration.
+        \return \p true when live snapshots may be built and written.
+    */
+    protected static bool CanWriteSnapshot()
+    {
+        if (s_Stopped || !GetGame() || !GetGame().IsServer())
+            return false;
 
         if (!ServerSentryDefaults.LiveDataEnabled())
+            return false;
+
+        return ServerSentryConfigManager.Get().IsAllowedToStartLiveLogging();
+    }
+
+    /** \brief Builds and writes the latest state once for all pending requests. */
+    protected static void FlushSnapshot()
+    {
+        s_SnapshotQueued = false;
+        if (!CanWriteSnapshot())
+            return;
+
+        int elapsedMs = GetGame().GetTime() - s_LastSnapshotWriteMs;
+        if (s_HasWrittenSnapshot && elapsedMs >= 0 && elapsedMs < SNAPSHOT_MIN_INTERVAL_MS)
         {
+            WriteSnapshot();
             return;
         }
 
         ServerSentryLiveSnapshot snapshot = BuildSnapshot();
-        string fingerprint = BuildSnapshotFingerprint(snapshot);
-        int nowMs = GetGame().GetTime();
-        bool changed = fingerprint != s_LastSnapshotFingerprint;
-        bool keepAliveDue = (nowMs - s_LastForcedSnapshotWriteMs) >= LiveSnapshotKeepAliveMs();
-
-        if (!changed && !keepAliveDue)
-        {
-            return;
-        }
-
         snapshot.generatedAtUtc = ServerSentryTime.NowUtc();
-
-        string json;
-        string error;
-        if (!JsonFileLoader<ServerSentryLiveSnapshot>.MakeData(snapshot, json, error, false) || json == "")
-        {
-            Print("[ServerSentry][LiveMap] Failed to serialize live map snapshot - " + error);
+        if (!WriteSnapshotFile(snapshot))
             return;
-        }
 
+        s_HasWrittenSnapshot = true;
+        s_LastSnapshotWriteMs = GetGame().GetTime();
+        LogSnapshot(snapshot);
+    }
+
+    /**
+        \brief Publishes changed slow sections and the current hot-data manifest.
+        \param snapshot \p complete latest state.
+        \return \p true when serialization and opening the output file succeeded.
+    */
+    protected static bool WriteSnapshotFile(ServerSentryLiveSnapshot snapshot)
+    {
         if (!EnsureDirectories())
-        {
-            return;
-        }
+            return false;
 
-        string filePath = ServerSentryDefaults.LiveStateFilePath();
-        FileHandle file = OpenFile(filePath, FileMode.WRITE);
-        if (!file)
-        {
-            Print("[ServerSentry][LiveMap] Failed to open live map state file for write: " + filePath);
-            return;
-        }
+        if (!s_FilePublisher)
+            s_FilePublisher = new ServerSentryLiveFilePublisher();
 
-        FPrintln(file, json);
-        CloseFile(file);
+        return s_FilePublisher.Publish(snapshot, s_BaseGeneration);
+    }
 
-        s_LastSnapshotFingerprint = fingerprint;
-        s_LastForcedSnapshotWriteMs = nowMs;
-        string changedText = BoolLogValue(changed);
-        string keepAliveText = BoolLogValue(keepAliveDue);
-        Print("[ServerSentry][LiveMap] Wrote snapshot changed=" + changedText + " keepAlive=" + keepAliveText + " players=" + snapshot.players.Count().ToString() + " vehicles=" + snapshot.vehicles.Count().ToString() + " events=" + snapshot.events.Count().ToString() + " bases=" + snapshot.bases.Count().ToString() + " actions=" + snapshot.actions.Count().ToString());
+    /**
+        \brief Logs export counts without constructing a second full-state string.
+        \param snapshot \p snapshot that was just written.
+    */
+    protected static void LogSnapshot(ServerSentryLiveSnapshot snapshot)
+    {
+        string summary = "[ServerSentry][LiveMap] Wrote snapshot";
+        summary += " players=" + snapshot.players.Count().ToString();
+        summary += " vehicles=" + snapshot.vehicles.Count().ToString();
+        summary += " events=" + snapshot.events.Count().ToString();
+        summary += " bases=" + snapshot.bases.Count().ToString();
+        summary += " actions=" + snapshot.actions.Count().ToString();
+        Print(summary);
     }
 
     /**
@@ -584,15 +662,9 @@ class ServerSentryLiveApi
 
         ServerSentryLiveSnapshot snapshot = new ServerSentryLiveSnapshot();
 
-        snapshot.currentFPS = GetGame().GetLastFPS();
         string worldName;
-	    g_Game.GetWorldName(worldName);
+        GetGame().GetWorldName(worldName);
         snapshot.mapName = worldName;
-        float minFps;
-        float maxFps;
-        float avgFps;
-
-        GetGame().GetFPSStats(minFps, maxFps, avgFps, 64);
 
         snapshot.currentFPS = ServerSentryPerformance.CurrentServerFps;
         snapshot.minFPS = ServerSentryPerformance.MinServerFps;
@@ -763,48 +835,92 @@ class ServerSentryLiveApi
     protected static void FillBases(ServerSentryLiveSnapshot snapshot)
     {
         if (!snapshot || !s_Bases)
-        {
             return;
-        }
 
+        int nowMs = GetGame().GetTime();
+        int lifetimeMs = ServerSentryConfigManager.Get().GetLiveBaseDetailsCacheMs();
+        PruneBaseCache();
         for (int i = s_Bases.Count() - 1; i >= 0; i--)
         {
             EntityAI entity = s_Bases.Get(i);
-            if (!entity)
+            if (!entity || !IsBaseFlagObject(entity))
             {
+                if (entity)
+                    InvalidateBaseDetails(entity);
                 s_Bases.Remove(i);
                 continue;
             }
-
-            if (!IsBaseFlagObject(entity))
-            {
-                s_Bases.Remove(i);
-                continue;
-            }
-
-            ServerSentryLiveBaseDto dto = new ServerSentryLiveBaseDto();
-            dto.type = "base_flagpole";
-            dto.className = entity.GetType();
-            dto.displayName = ResolveBaseDisplayName(entity);
-            dto.objectId = entity.ToString();
-            dto.position.FromVector(entity.GetPosition());
-            dto.orientation.FromVector(entity.GetOrientation());
-            dto.health = SafeGetEntityHealth(entity);
-            dto.radius = 60;
-
-            AddDetail(dto, "type", "Type", dto.type);
-            AddDetail(dto, "className", "Class", dto.className);
-            AddDetail(dto, "objectId", "Object", dto.objectId);
-            AddDetail(dto, "position", "Position", "X " + Math.Round(dto.position.x).ToString() + " · Z " + Math.Round(dto.position.z).ToString());
-            AddDetail(dto, "health", "Health", FormatHealthValue(dto.health));
-            AddDetail(dto, "radius", "Radius", Math.Round(dto.radius).ToString() + " m");
-            AddBaseFlagDetails(dto, entity);
-            AddBaseDespawnDetails(dto, entity);
-
-            ServerSentryLiveBaseDetailRegistry.Apply(entity, dto);
-            AddRegisteredActionsForTarget(dto.actions, dto.type);
-            snapshot.bases.Insert(dto);
+            snapshot.bases.Insert(GetBaseSnapshot(entity, nowMs, lifetimeMs));
         }
+    }
+
+    /**
+        \brief Reuses unchanged base details for the configured interval.
+        \param entity \p registered live base.
+        \param nowMs \p current game time.
+        \param lifetimeMs \p maximum permitted cache age.
+        \return \p completed base DTO, including provider output.
+    */
+    protected static ServerSentryLiveBaseDto GetBaseSnapshot(EntityAI entity, int nowMs, int lifetimeMs)
+    {
+        int id = entity.GetID();
+        ServerSentryLiveBaseCacheEntry entry = s_BaseCache.Get(id);
+        if (entry && entry.IsFresh(entity, nowMs, lifetimeMs))
+            return entry.dto;
+
+        entry = new ServerSentryLiveBaseCacheEntry();
+        entry.entity = entity;
+        entry.position = entity.GetPosition();
+        entry.orientation = entity.GetOrientation();
+        entry.capturedAtMs = nowMs;
+        entry.dto = BuildBaseSnapshot(entity);
+        s_BaseCache.Set(id, entry);
+        s_BaseGeneration++;
+        return entry.dto;
+    }
+
+    /** \brief Releases entries whose weak native base reference has expired. */
+    protected static void PruneBaseCache()
+    {
+        for (int i = s_BaseCache.Count() - 1; i >= 0; i--)
+        {
+            ServerSentryLiveBaseCacheEntry entry = s_BaseCache.GetElement(i);
+            if (!entry || !entry.entity)
+                s_BaseCache.Remove(s_BaseCache.GetKey(i));
+        }
+    }
+
+    /**
+        \brief Builds Vanilla rows once before applying integration overrides.
+        \param entity \p live base to capture.
+        \return \p completed base DTO.
+    */
+    protected static ServerSentryLiveBaseDto BuildBaseSnapshot(EntityAI entity)
+    {
+        ServerSentryLiveBaseDto dto = new ServerSentryLiveBaseDto();
+        dto.type = "base_flagpole";
+        dto.className = entity.GetType();
+        dto.displayName = ResolveBaseDisplayName(entity);
+        dto.objectId = entity.ToString();
+        dto.position.FromVector(entity.GetPosition());
+        dto.orientation.FromVector(entity.GetOrientation());
+        dto.health = SafeGetEntityHealth(entity);
+        dto.radius = 60;
+
+        AddDetail(dto, "type", "Type", dto.type);
+        AddDetail(dto, "className", "Class", dto.className);
+        AddDetail(dto, "objectId", "Object", dto.objectId);
+        string positionLabel = "X " + Math.Round(dto.position.x).ToString();
+        positionLabel += " · Z " + Math.Round(dto.position.z).ToString();
+        AddDetail(dto, "position", "Position", positionLabel);
+        AddDetail(dto, "health", "Health", FormatHealthValue(dto.health));
+        AddDetail(dto, "radius", "Radius", Math.Round(dto.radius).ToString() + " m");
+        AddBaseFlagDetails(dto, entity);
+        AddBaseDespawnDetails(dto, entity);
+
+        ServerSentryLiveBaseDetailRegistry.Apply(entity, dto);
+        AddRegisteredActionsForTarget(dto.actions, dto.type);
+        return dto;
     }
 
     /**
@@ -1098,190 +1214,6 @@ class ServerSentryLiveApi
     }
 
     /**
-    	\brief Processes the live snapshot keep alive ms operation.
-    	\return \p The resulting integer value or status code.
-    */
-    protected static int LiveSnapshotKeepAliveMs()
-    {
-        return 10000;
-    }
-
-    /**
-    	\brief Builds snapshot fingerprint.
-    	\param snapshot \p snapshot used by the operation.
-    	\return \p The resulting string value.
-    */
-    protected static string BuildSnapshotFingerprint(ServerSentryLiveSnapshot snapshot)
-    {
-        if (!snapshot)
-        {
-            return "";
-        }
-
-        string value = "";
-        value = value + "map=" + snapshot.mapName + ";";
-        value = value + "tick=" + snapshot.performance.averageTickTimeMs.ToString() + ";";
-        value = value + "tickMax=" + snapshot.performance.maxTickTimeMs.ToString() + ";";
-        value = value + "tickSamples=" + snapshot.performance.tickSampleCount.ToString() + ";";
-        value = value + "groundItems=" + snapshot.performance.groundItemCount.ToString() + ";";
-        value = value + "loadedItems=" + snapshot.performance.loadedItemCount.ToString() + ";";
-        value = value + "p=" + snapshot.players.Count().ToString() + ";";
-        foreach (ServerSentryLivePlayerDto player: snapshot.players)
-        {
-            string aliveValue = BoolFingerprintValue(player.isAlive);
-            value = value + player.steamId;
-            value = value + "@";
-            value = value + RoundedVectorKey(player.position);
-            value = value + ":";
-            value = value + Math.Round(player.health).ToString();
-            value = value + ":";
-            value = value + Math.Round(player.blood).ToString();
-            value = value + ":";
-            value = value + aliveValue;
-            value = value + ";";
-        }
-
-        value = value + "v=" + snapshot.vehicles.Count().ToString() + ";";
-        foreach (ServerSentryLiveVehicleDto vehicle: snapshot.vehicles)
-        {
-            string engineOnValue = BoolFingerprintValue(vehicle.engineOn);
-            value = value + vehicle.objectId;
-            value = value + "@";
-            value = value + RoundedVectorKey(vehicle.position);
-            value = value + ":";
-            value = value + Math.Round(vehicle.health).ToString();
-            value = value + ":";
-            value = value + vehicle.crewSize.ToString();
-            value = value + ":";
-            value = value + engineOnValue;
-            value = value + ";";
-        }
-
-        value = value + "e=" + snapshot.events.Count().ToString() + ";";
-        foreach (ServerSentryLiveWorldEventDto eventDto: snapshot.events)
-        {
-            value = value + eventDto.objectId;
-            value = value + "@";
-            value = value + eventDto.eventType;
-            value = value + "@";
-            value = value + RoundedVectorKey(eventDto.position);
-            value = value + ":";
-            value = value + Math.Round(eventDto.radius).ToString();
-            value = value + ":";
-            value = value + eventDto.shape;
-            value = value + ":";
-            value = value + eventDto.icon;
-            value = value + ":";
-            value = value + eventDto.displayName;
-            value = value + ":";
-            value = value + eventDto.points.Count().ToString();
-            foreach (ServerSentryVectorDto routePoint: eventDto.points)
-            {
-                value = value + "[" + routePoint.x.ToString() + "," + routePoint.y.ToString() + "," + routePoint.z.ToString() + "]";
-            }
-            value = value + ":";
-            value = value + eventDto.actions.Count().ToString();
-            value = value + ":";
-            value = value + BuildDetailFingerprint(eventDto.details);
-            value = value + ";";
-        }
-
-        value = value + "b=" + snapshot.bases.Count().ToString() + ";";
-        foreach (ServerSentryLiveBaseDto baseDto: snapshot.bases)
-        {
-            value = value + baseDto.objectId;
-            value = value + "@";
-            value = value + baseDto.className;
-            value = value + "@";
-            value = value + RoundedVectorKey(baseDto.position);
-            value = value + ":";
-            value = value + Math.Round(baseDto.health).ToString();
-            value = value + ":";
-            value = value + BuildDetailFingerprint(baseDto.details);
-            value = value + ";";
-        }
-
-        value = value + "a=" + snapshot.actions.Count().ToString() + ";";
-        foreach (ServerSentryLiveModActionDescriptorDto action: snapshot.actions)
-        {
-            value = value + action.id + ":" + action.targetType + ";";
-        }
-
-        return value;
-    }
-
-    /**
-    	\brief Builds a deterministic fingerprint for Live Map detail values.
-    	\param details \p details included in the snapshot.
-    	\return \p the concatenated detail fingerprint.
-    */
-    protected static string BuildDetailFingerprint(array<ref ServerSentryLiveDetailDto> details)
-    {
-        if (!details)
-        {
-            return "";
-        }
-
-        string value = "";
-        foreach (ServerSentryLiveDetailDto detail: details)
-        {
-            if (detail)
-            {
-                value = value + detail.key + "=" + detail.label + "=" + detail.value + "|";
-            }
-        }
-
-        return value;
-    }
-
-    /**
-    	\brief Processes the bool fingerprint value operation.
-    	\param value \p value to process or assign.
-    	\return \p The resulting string value.
-    */
-    protected static string BoolFingerprintValue(bool value)
-    {
-        if (value)
-        {
-            return "1";
-        }
-
-        return "0";
-    }
-
-    /**
-    	\brief Processes the bool log value operation.
-    	\param value \p value to process or assign.
-    	\return \p The resulting string value.
-    */
-    protected static string BoolLogValue(bool value)
-    {
-        if (value)
-        {
-            return "true";
-        }
-
-        return "false";
-    }
-
-    /**
-    	\brief Processes the rounded vector key operation.
-    	\param position \p world position used by the operation.
-    	\return \p The resulting string value.
-    */
-    protected static string RoundedVectorKey(ServerSentryVectorDto position)
-    {
-        if (!position)
-        {
-            return "no-position";
-        }
-
-        return Math.Round(position.x).ToString() + "," + Math.Round(position.y).ToString() + "," + Math.Round(position.z).ToString();
-    }
-
-
-
-    /**
     	\brief Returns marker polygon center.
     	\param positions \p positions used by the operation.
     	\return \p The resulting vector value.
@@ -1521,10 +1453,8 @@ class ServerSentryLiveApi
             s_Bases = new array<EntityAI>();
         }
 
-        if (s_LastSnapshotFingerprint == "")
-        {
-            s_LastSnapshotFingerprint = "";
-        }
+        if (!s_BaseCache)
+            s_BaseCache = new map<int, ref ServerSentryLiveBaseCacheEntry>();
     }
 
     /**

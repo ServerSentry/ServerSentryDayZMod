@@ -35,9 +35,15 @@ class ServerSentryConfigManager
         if (!FileExist(CONFIG_FILENAME))
         {
             m_ServerConfig = new ServerSentryLoggingConfig();
-            m_ServerConfig.InitDefaultValues();
-            JsonFileLoader<ServerSentryLoggingConfig>.JsonSaveFile(CONFIG_FILENAME, m_ServerConfig);
-            Print("[Server Sentry] Created Default config!");
+            m_ServerConfig.ConfigVersion = ServerSentryConfigMigration.CURRENT_VERSION;
+            string saveError;
+            if (!JsonFileLoader<ServerSentryLoggingConfig>.SaveFile(CONFIG_FILENAME, m_ServerConfig, saveError))
+            {
+                Print("[ServerSentry][Config] Cannot save default config: " + saveError);
+                return;
+            }
+
+            Print("[ServerSentry][Config] Created default config version " + m_ServerConfig.ConfigVersion);
             return;
         }
 
@@ -46,7 +52,13 @@ class ServerSentryConfigManager
         // added properties such as LogAnimalKills. Values present in JSON override
         // these defaults during deserialization.
         m_ServerConfig = new ServerSentryLoggingConfig();
-        JsonFileLoader<ServerSentryLoggingConfig>.JsonLoadFile(CONFIG_FILENAME, m_ServerConfig);
+        string error;
+        if (!ServerSentryConfigMigration.LoadFile(CONFIG_FILENAME, m_ServerConfig, error))
+        {
+            Print("[ServerSentry] Cannot load config; using defaults without changing the file: " + error);
+            m_ServerConfig = new ServerSentryLoggingConfig();
+            return;
+        }
     }
 
     /**
@@ -82,7 +94,17 @@ class ServerSentryConfigManager
     */
     float GetLiveUpdatePollingDelay()
     {
-        return m_ServerConfig.LiveDataUpdateIntervalSeconds * 1000;
+        return Math.Max(1000, m_ServerConfig.LiveDataUpdateIntervalSeconds * 1000);
+    }
+
+    /**
+        \brief Returns the bounded base-detail cache duration; zero disables caching.
+        \return \p cache duration between zero and five minutes, in milliseconds.
+    */
+    int GetLiveBaseDetailsCacheMs()
+    {
+        int seconds = Math.Clamp(m_ServerConfig.LiveBaseDetailsCacheSeconds, 0, 300);
+        return seconds * 1000;
     }
 
     /**
@@ -200,6 +222,53 @@ class ServerSentryConfigManager
     bool IsAllowedToLogDestroy()
     {
         return m_ServerConfig.LogActionDestroyPart;
+    }
+
+    /**
+        \brief Returns whether allowed to do character backup.
+        \return \p true when the condition is satisfied; otherwise false.
+    */
+    bool IsAllowedToDoCharacterBackup()
+    {
+        return GetCharacterBackupConfig().EnableCharacterBackup;
+    }
+
+    /**
+        \brief Returns backup settings, including defaults for a missing JSON section.
+        \return \p non-null character backup configuration.
+    */
+    ServerSentryCharBackupConfig GetCharacterBackupConfig()
+    {
+        if (!m_ServerConfig.CharBackupConfig)
+            m_ServerConfig.CharBackupConfig = new ServerSentryCharBackupConfig();
+        return m_ServerConfig.CharBackupConfig;
+    }
+
+    /**
+        \brief Returns the minimum inventory count despite the retained legacy method name.
+        \return \p minimum number of inventory items required for capture.
+    */
+    int MaxItemsInInventoryForBackup()
+    {
+        return GetCharacterBackupConfig().MinItemsInInventory;
+    }
+
+    /**
+        \brief Returns the minimum character lifetime for a death backup.
+        \return \p minimum age in seconds.
+    */
+    int MinCharacterLiveTimeForBackup()
+    {
+        return GetCharacterBackupConfig().MinCharacterLiveTimeSeconds;
+    }
+
+    /**
+        \brief Returns the configured per-player retention limit.
+        \return \p maximum number of committed snapshots.
+    */
+    int MaxBackupFilesToKeep()
+    {
+        return GetCharacterBackupConfig().MaxBackupFiles;
     }
 
     /**
