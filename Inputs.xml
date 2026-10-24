@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-<!-- Defines the ServerSentry support menu binding. -->
 <modded_inputs>
-    <!-- Declares actions exposed to the DayZ input settings menu. -->
     <inputs>
         <actions>
             <input name="UAToggleSupportMenu" loc="Support Menu" />
         </actions>
-        <sorting name="sentry" loc="ServerSentry">
+        <sorting name="ServerSentry" loc="ServerSentry">
             <input name="UAToggleSupportMenu" />
         </sorting>
     </inputs>
-    <!-- Assigns the default keyboard binding. -->
     <preset>
         <input name="UAToggleSupportMenu">
             <btn name="kL" />
