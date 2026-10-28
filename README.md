@@ -96,6 +96,8 @@ The configuration controls the main runtime features and individual telemetry ca
 | `LogInventoryMovement` | Controls player inventory movement events. |
 | `LogPlayerHits` / `LogPlayerKills` | Controls player combat events. |
 | `LogBaseBuilding` | Controls base-building events. |
+| `LogBaseDamage` | Records positive base-building damage callbacks; defaults to `false`. Requires `EnableTelemtryLogging`. |
+| `LogBaseDestruction` | Records confirmed built-to-unbuilt transitions through a ruined health level; defaults to `false`. Requires `EnableTelemtryLogging`. |
 | `LogActionDismantlePart` | Controls dismantle events. |
 | `LogActionDestroyPart` | Controls destroy-part events. |
 
@@ -179,6 +181,18 @@ $profile:ServerSentry/events
 ```
 
 Every line is an independent JSON event. Events include schema information, a logical server ID, a boot ID, a sequence number, timestamps, actors, targets, actions, and event-specific data.
+
+### Base damage
+
+Enable `LogBaseDamage` and `EnableTelemtryLogging` to record `basebuilding_damage` events from `BaseBuildingBase.EEHitBy`. This is independent of building, dismantling and destroy-action settings. Each event captures one callback, its engine damage type, source class and positive named-zone damage values. Explosive damage is retained when the responsible player cannot be resolved. The payload describes the engine result, not a measured health delta or a successful raid.
+
+See [Base damage logging](docs/BASE_DAMAGE_LOGGING.md) for the payload contract, integration steps, attribution limits and native test matrix.
+
+### Base-part destruction
+
+Enable `LogBaseDestruction` and `EnableTelemtryLogging` to record `basebuilding_part_destroyed` events. The hook wraps `Construction.OnHealthLevelChanged`, preserves the inherited destruction logic, and emits only when a previously built part becomes unbuilt during a transition to `STATE_RUINED`. The callback has no attacker or ammunition data, so attribution remains explicitly unknown.
+
+`LogBaseDamage` can stay disabled when only destruction outcomes are needed. If both are enabled, a final hit can produce a damage observation and a separate destruction outcome. See [Base-part destruction logging](docs/BASE_DESTRUCTION_LOGGING.md) for the implementation contract and native test cases, or [Einbauhinweise](EINBAU_BASE_LOGGING.md) for the German setup guide.
 
 ### Live Map export performance
 

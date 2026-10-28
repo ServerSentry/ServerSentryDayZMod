@@ -75,7 +75,7 @@ class ServerSentryLiveWorldEventDto
         health = 0;
         radius = 0;
         shape = "point";
-        icon = "";
+        icon = "event";
         points = new array<ref ServerSentryVectorDto>();
         details = new array<ref ServerSentryLiveDetailDto>();
         actions = new array<string>();

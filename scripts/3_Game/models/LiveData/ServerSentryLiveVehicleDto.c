@@ -46,6 +46,11 @@ class ServerSentryLiveVehicleDto
     bool engineStateKnown;
 
     /**
+    	\brief Stores the icon.
+    */
+    string icon;
+
+    /**
     	\brief Initializes a new ServerSentryLiveVehicleDto instance.
     */
     void ServerSentryLiveVehicleDto()
@@ -53,6 +58,7 @@ class ServerSentryLiveVehicleDto
         className = "";
         displayName = "";
         objectId = "";
+        icon = "vehicle";
         position = new ServerSentryVectorDto();
         orientation = new ServerSentryVectorDto();
         health = 0;

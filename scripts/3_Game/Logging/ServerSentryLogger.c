@@ -114,6 +114,18 @@ class ServerSentryLogger
             return EmitBuildActionEvent(buildActionEv);
         }
 
+        ServerSentryBaseDamageEvent baseDamageEv;
+        if (Class.CastTo(baseDamageEv, ev))
+        {
+            return EmitBaseDamageEvent(baseDamageEv);
+        }
+
+        ServerSentryBaseDestructionEvent baseDestructionEv;
+        if (Class.CastTo(baseDestructionEv, ev))
+        {
+            return EmitBaseDestructionEvent(baseDestructionEv);
+        }
+
         PrepareEvent(ev);
 
         string json;
@@ -248,6 +260,56 @@ class ServerSentryLogger
         if (!JsonFileLoader<ServerSentryBuildActionEvent>.MakeData(ev, json, error, false) || json == "")
         {
             Print("[ServerSentry] Failed to serialize build action event: " + error);
+            return false;
+        }
+
+        return EnqueueJson(json, ev.severity);
+    }
+
+    /**
+        \brief Serializes and queues a base-building damage event with its typed payload.
+        \param ev \p immutable base-building damage snapshot.
+        \return \p true when the serialized event was accepted by the queue.
+    */
+    bool EmitBaseDamageEvent(ServerSentryBaseDamageEvent ev)
+    {
+        if (!GetGame() || !GetGame().IsServer() || !ev)
+        {
+            return false;
+        }
+
+        PrepareEvent(ev);
+
+        string json;
+        string error;
+        if (!JsonFileLoader<ServerSentryBaseDamageEvent>.MakeData(ev, json, error, false) || json == "")
+        {
+            Print("[ServerSentry] Failed to serialize base damage event: " + error);
+            return false;
+        }
+
+        return EnqueueJson(json, ev.severity);
+    }
+
+    /**
+        \brief Serializes and queues an observed construction-part destruction event.
+        \param ev \p confirmed part-destruction observation with its typed payload.
+        \return \p true when the serialized event was accepted by the queue.
+    */
+    bool EmitBaseDestructionEvent(ServerSentryBaseDestructionEvent ev)
+    {
+        if (!GetGame() || !GetGame().IsServer() || !ev)
+        {
+            return false;
+        }
+
+        PrepareEvent(ev);
+
+        string json;
+        string error;
+        if (!JsonFileLoader<ServerSentryBaseDestructionEvent>.MakeData(ev, json, error, false) || json == "")
+        {
+            Print("[ServerSentry] Failed to serialize base destruction event: " + error);
             return false;
         }
 

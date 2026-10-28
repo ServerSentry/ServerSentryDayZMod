@@ -207,6 +207,24 @@ class ServerSentryConfigManager
     }
 
     /**
+        \brief Returns whether base-building damage events are enabled.
+        \return \p true when the administrator enabled base damage logging.
+    */
+    bool IsAllowedToLogBaseDamage()
+    {
+        return m_ServerConfig.LogBaseDamage;
+    }
+
+    /**
+        \brief Returns whether observed construction-part destruction events are enabled.
+        \return \p true when the administrator enabled base destruction logging.
+    */
+    bool IsAllowedToLogBaseDestruction()
+    {
+        return m_ServerConfig.LogBaseDestruction;
+    }
+
+    /**
     	\brief Returns whether allowed to log dismantle.
     	\return \p true when the condition is satisfied; otherwise false.
     */

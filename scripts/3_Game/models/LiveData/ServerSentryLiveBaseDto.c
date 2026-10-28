@@ -49,6 +49,8 @@ class ServerSentryLiveBaseDto
     */
     ref array<string> actions;
 
+    string icon;
+
     /**
     	\brief Initializes a new ServerSentryLiveBaseDto instance.
     */
@@ -56,6 +58,7 @@ class ServerSentryLiveBaseDto
     {
         type = "base_flagpole";
         className = "";
+        icon = "base";
         displayName = "Base / Flag Pole";
         objectId = "";
         position = new ServerSentryVectorDto();

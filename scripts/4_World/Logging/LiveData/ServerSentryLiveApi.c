@@ -764,6 +764,23 @@ class ServerSentryLiveApi
                 dto.engineOn = car.EngineIsOn();
             }
 
+            if (vehicle.IsInherited(HelicopterScript))
+            {
+                dto.icon = "helicopter";
+            }
+            else if (vehicle.IsInherited(Truck_01_Base))
+            {
+                dto.icon = "truck";
+            }
+            else if (vehicle.IsInherited(Boat))
+            {
+                dto.icon = "boat";
+            }
+            else if (vehicle.IsInherited(MotorbikeScript))
+            {
+                dto.icon = "motorcycle";
+            }
+
             snapshot.vehicles.Insert(dto);
         }
     }
@@ -802,6 +819,16 @@ class ServerSentryLiveApi
             dto.objectId = entity.ToString();
             dto.position.FromVector(entity.GetPosition());
             dto.orientation.FromVector(entity.GetOrientation());
+            
+            if (eventType == "contaminated_area")
+            {
+                dto.icon = "toxic";
+            }
+            else if (eventType == "heli_crash")
+            {
+                dto.icon = "event";
+            }
+
             // Many vanilla event marker/static objects do not have DamageSystemData
             // (for example Wreck_UH1Y, Land_Wreck_C130J, ContaminatedArea_Static).
             // Calling GetHealth/GetMaxHealth on those classes throws a VM exception and
