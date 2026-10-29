@@ -12,6 +12,8 @@ class ServerSentryLivePlayerDto
     	\brief Stores the name.
     */
     string name;
+    /** \brief CMS marker icon name: bundled SVG first, then Lucide. */
+    string icon;
     /**
     	\brief Steam ID of the target player.
     */
@@ -55,6 +57,7 @@ class ServerSentryLivePlayerDto
     void ServerSentryLivePlayerDto()
     {
         name = "";
+        icon = "UserRound";
         steamId = "";
         bohemiaId = "";
         objectId = "";

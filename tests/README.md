@@ -25,3 +25,15 @@ Character-backup checks requiring a connected client:
 7. Restart with retained snapshots and sidecars; verify persistent identities reconnect as world items and player inventories load. Verify consumed backups remain unavailable after restart. Simulate a pending restore marker and confirm it fails closed. Test offline/unloaded inventory separately: replacement is allowed by policy and can leave a duplicate when the old item loads later.
 
 API contracts and examples are documented in [DEVELOPER_API.md](../DEVELOPER_API.md).
+
+Map marker icon runtime checks (CMS and Agent with icon support):
+
+- Compile and load the Mod; confirm living/dead players export `UserRound`/`Skull`.
+- Check ordinary cars, trucks, helicopters, motorcycles and boats export their
+  respective names. Check base and custom-event icon names in the live JSON.
+- Inspect the same entity in the live map and log/AI context map. A `truck` marker
+  must use the bundled SVG; a `Sailboat`/`Plane` marker must use Lucide when there
+  is no same-name SVG. An unknown name must use a pin in both views.
+- Change only a marker icon while preserving identity/position; verify the next
+  incremental update refreshes the glyph in both views. Retest after reconnect.
+- Verify an older Mod payload without icons keeps its semantic type defaults.

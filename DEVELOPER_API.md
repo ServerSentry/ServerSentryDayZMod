@@ -417,3 +417,21 @@ Each file contains the game build, UTC time, game-reported Mod names/versions, n
 Work is bounded to one attempt per encountered class and 128 classes per mission, with at most 64 zones and 64 components per zone. `truncated` marks omitted zone/component entries. Existing class files are replaced on the next mission's first observation; old files from other classes are retained. Repeated hits on an already observed class perform only the class/cache lookup. Inspect both a class diagnostic and its normal combat records when validating finer body-part attribution.
 
 Updated scripts must be packed and loaded by the game before these exports can be produced. API entry point for an existing server entity: `ServerSentryDamageZoneExporter.Observe(entity)` in `4_World` or `5_Mission` code.
+
+### Map marker icon contract
+
+The Mod supplies the `icon` name for players, vehicles, bases and world events.
+The CMS resolves the name against its bundled `map-markers/*.svg` filenames
+first, then the Lucide icon registry. Matching ignores case, spaces, underscores
+and hyphens. Supply a name, not an image URL, path, SVG document or data URI.
+Custom SVG assets are bundled with the CMS; the Mod does not upload image files.
+
+Defaults are `UserRound` for living players, `Skull` for dead players, `vehicle`
+for ordinary vehicles, `truck`, `helicopter`, `motorcycle`, `Sailboat` for boats,
+`base` for bases, `helicopter` for helicopter-crash events and `MapPin` for generic events. The main and context maps use
+one resolver. An explicit supported icon overrides the entity type. Unknown
+names use a neutral map pin. Older payloads missing `icon` retain type defaults.
+
+Network and process-I/O counters are sampled by the Windows Agent, not Enforce.
+Network rates describe the whole Agent host; process-I/O describes the selected
+DayZ process and is not a physical-disk utilization measurement.

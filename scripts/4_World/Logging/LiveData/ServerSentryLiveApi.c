@@ -714,6 +714,8 @@ class ServerSentryLiveApi
             dto.blood = player.GetHealth("", "Blood");
             dto.shock = player.GetHealth("", "Shock");
             dto.isAlive = player.IsAlive();
+            if (!dto.isAlive)
+                dto.icon = "Skull";
 
             PlayerIdentity identity = player.GetIdentity();
             if (identity)
@@ -774,7 +776,7 @@ class ServerSentryLiveApi
             }
             else if (vehicle.IsInherited(Boat))
             {
-                dto.icon = "boat";
+                dto.icon = "Sailboat";
             }
             else if (vehicle.IsInherited(MotorbikeScript))
             {
@@ -826,7 +828,7 @@ class ServerSentryLiveApi
             }
             else if (eventType == "heli_crash")
             {
-                dto.icon = "event";
+                dto.icon = "helicopter";
             }
 
             // Many vanilla event marker/static objects do not have DamageSystemData
