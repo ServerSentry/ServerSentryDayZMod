@@ -22,7 +22,7 @@ class ServerSentryBaseDamageFactory
     }
 
     /**
-        \brief Copies one positive-health-damage callback into an owned event.
+        \brief Copies positive damage from a hit confirmed to have ruined the target or a zone.
         \param target \p base-building entity receiving the callback.
         \param damageResult \p engine-owned result, used only during this call.
         \param damageType \p numeric DamageType value supplied by the engine.
@@ -32,9 +32,9 @@ class ServerSentryBaseDamageFactory
         \param ammo \p ammunition or damage configuration name.
         \param modelPosition \p callback position in the target's model space.
         \return \p owned event, or null when disabled or no positive Health damage exists.
-        \note One callback is one observation, not necessarily one shot or explosion.
+        \note The caller confirms the ruined transition before invoking this factory.
     */
-    static ServerSentryBaseDamageEvent CreateHitSnapshot(BaseBuildingBase target, TotalDamageResult damageResult, int damageType, EntityAI source, int component, string damageZone, string ammo, vector modelPosition)
+    static ServerSentryBaseDamageEvent CreateHitSnapshot(EntityAI target, TotalDamageResult damageResult, int damageType, EntityAI source, int component, string damageZone, string ammo, vector modelPosition)
     {
         if (!IsEnabled() || !target || !damageResult)
         {
@@ -102,7 +102,7 @@ class ServerSentryBaseDamageFactory
         \param damageResult \p engine result for this callback only.
         \note Zone values and global damage must not be summed as independent HP loss.
     */
-    protected static void CaptureZones(ServerSentryBaseDamageData data, BaseBuildingBase target, TotalDamageResult damageResult)
+    protected static void CaptureZones(ServerSentryBaseDamageData data, EntityAI target, TotalDamageResult damageResult)
     {
         array<string> zoneNames = new array<string>();
         target.GetDamageZones(zoneNames);
@@ -134,13 +134,19 @@ class ServerSentryBaseDamageFactory
     }
 
     /**
-        \brief Resolves a source player or firearm/melee holder without guessing explosive ownership.
+        \brief Uses the common explosive resolver or the direct firearm/melee source.
         \param ev \p event receiving identity and attribution method.
         \param source \p physical damage source, possibly null.
-        \note Explosions require a direct player source; inventory ownership alone is not attribution.
+        \note Explosive provenance is shared with combat hits and kills.
     */
     protected static void FillAttacker(ServerSentryBaseDamageEvent ev, EntityAI source)
     {
+        if (ev.data.damageType == DamageType.EXPLOSION)
+        {
+            ev.data.attackerResolution = ServerSentryExplosiveResolver.FillActor(ev.actor, source, ev.data.explosive);
+            return;
+        }
+
         ev.actor.type = "unknown";
         ev.actor.entityKind = "unknown";
         ev.actor.name = "Unknown attacker";

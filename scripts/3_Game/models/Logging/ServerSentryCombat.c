@@ -8,6 +8,8 @@
 */
 class ServerSentryCombat
 {
+    /** \brief Explosive provenance shared by hit and kill events, null for other damage. */
+    ref ServerSentryExplosiveAttribution explosive;
     /**
     	\brief Stores the hit ID.
     */

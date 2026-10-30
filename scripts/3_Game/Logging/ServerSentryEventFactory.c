@@ -1030,6 +1030,7 @@ class ServerSentryEventFactory
         ev.weapon.distance = ctx.distance;
 
         ev.combat.hitId = ctx.hitId;
+        ev.combat.explosive = ctx.explosive;
         ev.combat.hitSequence = ctx.eventSequence;
         ev.combat.damage = ctx.healthDamage;
         ev.combat.bloodDamage = ctx.bloodDamage;

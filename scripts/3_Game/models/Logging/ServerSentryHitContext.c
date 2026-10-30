@@ -16,6 +16,8 @@ class ServerSentryHitContext
     	\brief Stores the target.
     */
     ref ServerSentryTarget target;
+    /** \brief Shared explosive provenance, copied before resolving hit or kill classification. */
+    ref ServerSentryExplosiveAttribution explosive;
 
     /**
     	\brief Stores the hit ID.

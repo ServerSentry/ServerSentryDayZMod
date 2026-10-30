@@ -28,6 +28,16 @@ class ServerSentryHitRequest
         \brief Stores the entity reported as the damage source.
     */
     EntityAI source;
+    /** \brief Explosion actor copied before inherited callbacks can delete the source. */
+    ref ServerSentryActor explosionActor;
+    /** \brief Owned source provenance shared by this hit's final combat classification. */
+    ref ServerSentryExplosiveAttribution explosive;
+    /** \brief Physical source class copied during the hit callback. */
+    string explosionSourceClass;
+    /** \brief Blast position, distinct from the player's current position. */
+    vector explosionPosition;
+    /** \brief Whether a physical source position was available. */
+    bool hasExplosionPosition;
 
     /**
         \brief Stores the DayZ damage type.
@@ -95,15 +105,7 @@ class ServerSentryHitRequest
         \param hitDamageZone \p engine damage-zone name.
         \param hitAmmoType \p ammunition or damage class name.
     */
-    void ServerSentryHitRequest(
-        EntityAI hitVictim,
-        ServerSentryCombatState combatState,
-        TotalDamageResult result,
-        int hitDamageType,
-        EntityAI hitSource,
-        int hitComponent,
-        string hitDamageZone,
-        string hitAmmoType)
+    void ServerSentryHitRequest(EntityAI hitVictim, ServerSentryCombatState combatState, TotalDamageResult result, int hitDamageType, EntityAI hitSource, int hitComponent, string hitDamageZone, string hitAmmoType)
     {
         victim = hitVictim;
         state = combatState;
@@ -123,6 +125,29 @@ class ServerSentryHitRequest
         targetSteamId = "";
         targetBohemiaId = "";
         targetName = "";
+        CaptureExplosionSource();
+    }
+
+    /** \brief Captures explosive provenance before inherited victim callbacks can alter its source. */
+    protected void CaptureExplosionSource()
+    {
+        if (damageType != DamageType.EXPLOSION || !ServerSentryExplosiveResolver.IsServer())
+            return;
+
+        explosionActor = new ServerSentryActor();
+        ServerSentryExplosiveResolver.FillActor(explosionActor, source, explosive);
+        if (!source)
+            return;
+
+        explosionSourceClass = source.GetType();
+        explosionPosition = source.GetPosition();
+        if (explosive && explosive.sourcePosition)
+        {
+            explosionPosition[0] = explosive.sourcePosition.x;
+            explosionPosition[1] = explosive.sourcePosition.y;
+            explosionPosition[2] = explosive.sourcePosition.z;
+        }
+        hasExplosionPosition = true;
     }
 
     /**

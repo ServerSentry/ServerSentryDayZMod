@@ -82,8 +82,20 @@ class ServerSentryCombatFactory
 
         ctx.isLethal = IsLethalHit(ctx);
         ctx.isHeadshot = IsHeadshotZone(ctx.hitZone);
-        ctx.isExplosion = ammo.Contains("Explosion") || ammo.Contains("Grenade");
+        ctx.isExplosion = damageType == DamageType.EXPLOSION;
         ctx.isMelee = damageType == DT_CLOSE_COMBAT;
+
+        if (ctx.isExplosion)
+        {
+            ServerSentryEventFactory.CopyActor(request.explosionActor, ctx.attacker);
+            ctx.explosive = request.explosive;
+            ctx.isMelee = false;
+            ctx.weaponClassName = request.explosionSourceClass;
+            if (request.hasExplosionPosition)
+                ctx.distance = vector.Distance(request.explosionPosition, ctx.victimPosition);
+
+            return ctx;
+        }
 
         if (!source)
         {

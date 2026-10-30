@@ -82,8 +82,6 @@ class ServerSentryLoggingConfig
     bool LogBaseBuilding;
     /** \brief Enables damage events independently of base-building actions. */
     bool LogBaseDamage;
-    /** \brief Enables observed part destruction independently of damage and action events. */
-    bool LogBaseDestruction;
     /**
     	\brief Indicates whether log action dismantle part.
     */
@@ -132,7 +130,6 @@ class ServerSentryLoggingConfig
         LogPlayerKills = true;
         LogBaseBuilding = false;
         LogBaseDamage = false;
-        LogBaseDestruction = false;
         LogActionDismantlePart = false;
         LogActionDestroyPart = false;
         CharBackupConfig = new ServerSentryCharBackupConfig();

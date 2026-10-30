@@ -25,6 +25,8 @@ class ServerSentryBaseDamageZone
 */
 class ServerSentryBaseDamageData
 {
+    /** \brief The same explosive provenance contract used by combat hit and kill events. */
+    ref ServerSentryExplosiveAttribution explosive;
     /** \brief DayZ callback that supplied the snapshot. */
     string sourceHook;
     /** \brief Target object ID scoped to the event's server and boot session. */

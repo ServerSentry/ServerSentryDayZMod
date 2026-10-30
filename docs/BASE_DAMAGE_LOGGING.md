@@ -2,7 +2,7 @@
 
 ## Scope and status
 
-This implementation observes positive Health damage results delivered to `BaseBuildingBase.EEHitBy` on the server. It covers inherited callbacks on vanilla base entities and compatible mod subclasses. It uses the existing ServerSentry event queue and JSONL writer.
+This implementation emits `basebuilding_damage` only for a hit that changes a `BaseBuildingBase` or `BuildingBase` entity, or one of its damage zones, to ruined on the server. Ordinary hits, initialization and further hits on already ruined zones are ignored. It uses the existing ServerSentry event queue and JSONL writer.
 
 The patch has been reviewed against the uploaded project and Bohemia's script declarations. It has **not** been compiled with the DayZ toolchain or exercised on a running DayZ server. Complete the native checks below before distributing a PBO.
 
@@ -29,7 +29,7 @@ This is a configuration fragment, not a replacement for the complete file. Prese
 
 | File | Responsibility |
 | --- | --- |
-| `scripts/4_World/hooks/BaseBuildingBase.c` | Captures the callback, always calls inherited behavior once, then submits the owned event. |
+| `scripts/4_World/hooks/BaseBuildingBase.c` | Observes accepted damage and ruined transitions on both base classes, then submits only the qualifying hit. Always preserves inherited behavior. |
 | `scripts/4_World/Logging/ServerSentryBaseDamageFactory.c` | Applies server/config guards and copies source, target, damage and attribution values. |
 | `scripts/3_Game/models/Logging/ServerSentryBaseDamageData.c` | Plain data and per-zone DTOs; no world/entity references. |
 | `scripts/3_Game/models/Logging/ServerSentryBaseDamageEvent.c` | Typed event wrapper. |
@@ -39,7 +39,9 @@ This is a configuration fragment, not a replacement for the complete file. Prese
 
 Keep the data classes in `3_Game` and world-entity logic in `4_World`. No new addon dependency or script-module path is required in the supplied `config.cpp`.
 
-The hook copies values before its `super.EEHitBy` call so later inherited behavior cannot change the data being submitted. This is not a pre-damage health measurement. The snapshot contains no `TotalDamageResult`, player or target references; there is no delayed access to engine-owned callback data.
+`EEOnDamageCalculated` starts a fresh observation only when the inherited decision accepts damage and logging is enabled. Its return value is preserved. `EEHealthLevelChanged` marks an actual transition from an existing non-ruined health level to `STATE_RUINED`, before inherited construction cleanup can remove or reset the zone. `EEHitBy` consumes that observation and builds an event only when such a transition occurred. This includes ruined construction zones even when global health remains positive.
+
+The qualifying hook copies values before its `super.EEHitBy` call. This is not a pre-damage health measurement: engine damage has already been applied. State is cleared on every damage calculation and hit callback, so observations are not reused for subsequent hits. The snapshot contains no `TotalDamageResult`, player or target references; there is no delayed access to engine-owned callback data. Mods must preserve all three inherited callbacks for this correlation to work.
 
 ## Event contract
 
@@ -56,7 +58,7 @@ The hook copies values before its `super.EEHitBy` call so later inherited behavi
 
 | Data field | Meaning |
 | --- | --- |
-| `sourceHook` | `BaseBuildingBase.EEHitBy`. |
+| `sourceHook` | `BaseBuildingBase.EEHitBy` or `BuildingBase.EEHitBy`. |
 | `targetId` | Runtime `GetID()` of the target. Scope it to server and boot; it is not a persistent base/owner ID. |
 | `damageType` | Original numeric DayZ `DamageType` value. |
 | `damageKind` | `firearm`, `explosion`, `melee`, `stun`, `custom`, or `other`, derived from the enum. |
@@ -65,6 +67,7 @@ The hook copies values before its `super.EEHitBy` call so later inherited behavi
 | `ammoType` | Original ammunition/damage configuration name. |
 | `sourceClassName` | Physical source class when available. It is not necessarily a weapon or a player. |
 | `attackerResolution` | Attribution method described below. |
+| `explosive` | Shared explosive provenance used by combat hits and kills; null for other damage. |
 | `globalHealthDamage` | Positive `GetDamage("", "Health")`, otherwise zero. |
 | `highestHealthDamage` | Positive `GetHighestDamage("Health")`, otherwise zero. This is a maximum, not a sum. |
 | `modelPosition` | Original callback position in the target's model coordinates. |
@@ -82,22 +85,24 @@ The factory enumerates only the receiving object's configured damage zones. It d
 | `hierarchy_root_player` | For firearm/melee damage, a player with identity is the source's current hierarchy root. |
 | `player_entity_without_identity` | A player entity was found, but its identity was unavailable. No IDs are fabricated. |
 | `unresolved` | No supported player attribution was available. The damage observation is still emitted. |
+| `detonated_by` | Explicit remote operator or actor whose damage caused the detonation. |
+| `released_by` | Verified player who released the live grenade from their hands. |
+| `armed_by` | Recorded arming actor, including persistent mines and trap controllers. |
+| `source_weapon_player` | Explosion supplied a firing weapon as its source, as with grenade-launcher damage. |
 
 For an unresolved actor, `actor.type` and `actor.entityKind` are `unknown`, and identity fields remain empty. Missing identity is not automatically classified as AI.
 
 Physical explosive sources do not use their current inventory owner as the attacker. A grenade may already be on the ground, or it may explode in a carrier's inventory due to another cause. The current holder is not proof of the initiator. A mod explicitly supplying a player as the explosion source can still use the direct-player path.
 
-For reliable explosive attribution, add an explicit integration that captures released-by, placed-by, armed-by or triggered-by identities at the corresponding server operation. Copy identities at that time, preserve the relationship type and propagate it to actual IED charge objects. A generic last-holder cache or nearest-player lookup is insufficient. This extra integration is not included in this patch.
+The shared `ServerSentryExplosiveResolver` now captures verified roles from grenade pin/release operations, trap placement/arming and remote activation. IED and tripwire provenance is copied to the actual charges before activation. Device roles persist through CF ModStorage without extending vanilla item data. The triggering victim is recorded separately and never selected as the responsible actor. See [Explosive attribution](EXPLOSIVE_ATTRIBUTION.md) for the shared hit/kill/base-damage contract and remaining integration limits.
 
 ## Damage, destruction and actions
 
 `EEHitBy` supplies the damage observation. Do not fabricate `ActionData` or route it through the existing build-action lifecycle: that lifecycle expects a player action target and has a 500 ms deduplication window.
 
-The patch intentionally has no time-based hit deduplication. Rapid hits must remain distinct observations. It emits at most one event for each callback it receives, with multiple zone entries inside that event. The engine can invoke callbacks for multiple targets or zones; event count is not a guaranteed bullet or explosion count.
+The filter uses actual ruined transitions rather than a time-based deduplication window. It emits at most one event per qualifying hit callback, even if that hit ruins multiple zones. Rebuilding or repairing a zone permits a later hit to ruin it again and produce a new event. Event count is not a guaranteed bullet or explosion count.
 
-The separate `basebuilding_part_destroyed` event is now available through `LogBaseDestruction`. It wraps `Construction.OnHealthLevelChanged` and confirms a built-to-unbuilt transition after inherited handling. See [Base-part destruction logging](BASE_DESTRUCTION_LOGGING.md). The health-level callback supplies no attacker; do not correlate it with a stale cached hit or infer a successful raid from whole-object `GetHealth()`.
-
-`EEOnDamageCalculated` is a pre-application decision hook. A result observed there may still be rejected. This patch does not override it or change its return value.
+`EEOnDamageCalculated` is a pre-application decision hook. Its calculated result alone never produces an event: both a ruined health transition and the subsequent hit callback are required. Damage rejected by inherited logic is not tracked.
 
 ## Consumer and performance integration
 
@@ -107,7 +112,7 @@ The queue's existing limits and dropped-event reporting still apply. This is not
 
 Update any downstream event allowlist/schema to accept `basebuilding_damage`, the typed `data.zones` array, and `action.result: observed`. If records are uploaded again, use the original `eventId` for idempotency. A timestamp/source/ammo combination is not a safe duplicate key for rapid hits. This patch does not modify an external Agent, CMS, dashboard or alert rule.
 
-If notifications become noisy, group observations separately for presentation while retaining raw records. Do not silently discard hits to reduce notifications, and do not sum copied results into an exact HP-loss total.
+Non-final hits are intentionally discarded before event allocation, zone enumeration or serialization. The event is still a hit observation, not a measured exact HP-loss total or a proof that a raid succeeded.
 
 ## Native validation
 
@@ -116,14 +121,15 @@ Run these checks on the actual DayZ version and mod combination, using the norma
 | Scenario | Expected observation |
 | --- | --- |
 | Build and start | Enforce modules compile; no missing symbol, duplicate override or serializer error. |
-| One shot into a built fence zone | `basebuilding_damage` appears, source/ammo/zone are sensible, and `data` is an object. |
-| Fast automatic fire | No 500 ms suppression; distinct callbacks receive distinct event IDs. |
+| Non-final shot into a built fence zone | No `basebuilding_damage` event. |
+| Fast automatic fire | Only callbacks that actually ruin a zone produce an event; no per-hit debug prints. |
 | Two simultaneous attackers | Each observation uses its own source; there is no shared last-attacker state. |
-| Ground grenade, mine or IED | Positive callbacks are retained with physical source/ammo; unresolved attribution has no invented Steam ID. |
+| Ground grenade, mine or IED | Only ruined-transition hits are retained with physical source/ammo; unresolved attribution has no invented Steam ID. |
 | Explosive in a player's inventory | A current carrier is not automatically assigned as the attacker. |
-| Multiple affected zones/objects | Positive zone entries are present; events are interpreted as callbacks, not unique explosions. |
-| Final hit destroys a part | Damage is recorded when a callback is delivered; remaining object health does not gate it. |
-| `source = null` or missing identity | Positive damage is retained with unknown/qualified attribution. |
+| Multiple affected zones/objects | At most one event per qualifying callback; events are not interpreted as unique explosions. |
+| Final hit destroys a part | One event is recorded even if global health remains positive or construction cleanup resets the zone. |
+| More hits on an already ruined zone | No new event until repair/rebuilding and another actual ruined transition. |
+| `source = null` or missing identity | A qualifying ruined-transition hit is retained with unknown/qualified attribution. |
 | Zero/non-positive Health damage | No base-damage record is emitted. |
 | Telemetry disabled, then category disabled | Either switch suppresses this event path independently. |
 | Vanilla base damage disabled / raid-protection mod | Verify actual callback behavior and zero/blocked results; no damage-setting changes are introduced by this logger. |

@@ -96,8 +96,7 @@ The configuration controls the main runtime features and individual telemetry ca
 | `LogInventoryMovement` | Controls player inventory movement events. |
 | `LogPlayerHits` / `LogPlayerKills` | Controls player combat events. |
 | `LogBaseBuilding` | Controls base-building events. |
-| `LogBaseDamage` | Records positive base-building damage callbacks; defaults to `false`. Requires `EnableTelemtryLogging`. |
-| `LogBaseDestruction` | Records confirmed built-to-unbuilt transitions through a ruined health level; defaults to `false`. Requires `EnableTelemtryLogging`. |
+| `LogBaseDamage` | Records only hits that ruin a base entity or damage zone; defaults to `false`. Requires `EnableTelemtryLogging`. |
 | `LogActionDismantlePart` | Controls dismantle events. |
 | `LogActionDestroyPart` | Controls destroy-part events. |
 
@@ -184,15 +183,19 @@ Every line is an independent JSON event. Events include schema information, a lo
 
 ### Base damage
 
-Enable `LogBaseDamage` and `EnableTelemtryLogging` to record `basebuilding_damage` events from `BaseBuildingBase.EEHitBy`. This is independent of building, dismantling and destroy-action settings. Each event captures one callback, its engine damage type, source class and positive named-zone damage values. Explosive damage is retained when the responsible player cannot be resolved. The payload describes the engine result, not a measured health delta or a successful raid.
+Enable `LogBaseDamage` and `EnableTelemtryLogging` to record only hits that change a base entity or one of its damage zones to ruined. This covers `BaseBuildingBase` and `BuildingBase`, including a destroyed fence section while the rest of the fence remains intact. Ordinary hits and further hits on already ruined zones produce no event. A qualifying `basebuilding_damage` event retains the damage type, source class and positive named-zone damage values. Explosive attribution uses the same resolver as combat hits and kills.
 
 See [Base damage logging](docs/BASE_DAMAGE_LOGGING.md) for the payload contract, integration steps, attribution limits and native test matrix.
 
-### Base-part destruction
+Building, dismantling and destroy-action logs remain independent of this final-hit filter. Direct scripted health changes without a hit callback do not produce a base-damage event.
 
-Enable `LogBaseDestruction` and `EnableTelemtryLogging` to record `basebuilding_part_destroyed` events. The hook wraps `Construction.OnHealthLevelChanged`, preserves the inherited destruction logic, and emits only when a previously built part becomes unbuilt during a transition to `STATE_RUINED`. The callback has no attacker or ammunition data, so attribution remains explicitly unknown.
+### Explosive attribution
 
-`LogBaseDamage` can stay disabled when only destruction outcomes are needed. If both are enabled, a final hit can produce a damage observation and a separate destruction outcome. See [Base-part destruction logging](docs/BASE_DESTRUCTION_LOGGING.md) for the implementation contract and native test cases, or [Einbauhinweise](EINBAU_BASE_LOGGING.md) for the German setup guide.
+Fragmentation grenades, landmines, claymores, plastic explosives, IED charges and tripwire grenades retain separate placement, arming, live-release, remote/damage-detonation and triggering-victim identities. The common resolver uses explicit detonation provenance first, then a known live release, then the arming identity. A player stepping on a mine is not assigned their own death merely because they triggered it. Unknown actors remain unknown; current explosive carriers and nearby players are never used as guesses.
+
+Attribution appears in `combat.explosive` for hits/kills and `data.explosive` for base damage. Each physical detonation has a shared UUID and blast position; each activated IED charge has its own device/detonation identity and a parent-device link. Player IDs and names are copied at the server operation, so the responsible player can disconnect before the explosion. `weapon.distance` for explosion hits measures blast origin to victim; it does not claim the offline player's current position.
+
+Device roles persist in the isolated `ServerSentry` CF ModStorage stream (`CfgMods.ServerSentry.storageVersion = 1`). Vanilla persistence fields are unchanged. Existing devices without these records remain unattributed until a new observed arming/release operation. IED and tripwire roles are transferred before charges detach. Unsupported mod activation paths and later poison/bleeding deaths require a separate integration rather than invented attribution. See [Explosive attribution](docs/EXPLOSIVE_ATTRIBUTION.md) for the integration contract and native verification steps.
 
 ### Live Map export performance
 
