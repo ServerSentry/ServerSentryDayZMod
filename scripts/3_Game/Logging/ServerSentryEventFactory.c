@@ -1029,6 +1029,18 @@ class ServerSentryEventFactory
         ev.weapon.ammoType = ctx.ammoType;
         ev.weapon.distance = ctx.distance;
 
+        // Only a source captured in this same callback may supply item identity.
+        // A guessed class/attacker's later held weapon never supplies a PID.
+        if (ctx.sourceItem && ctx.sourceItem.className != "" && ctx.sourceItem.className == ctx.weaponClassName)
+        {
+            ev.weapon.displayName = ctx.sourceItem.displayName;
+            ev.weapon.persistentId = ctx.sourceItem.persistentId;
+            // Combat uses item for its verified instrument, as build actions do.
+            // This feeds the existing exact-PID item index; preserve custom subjects.
+            if (ev.item && ev.item.className == "" && ev.item.persistentId == "")
+                ev.item = ctx.sourceItem;
+        }
+
         ev.combat.hitId = ctx.hitId;
         ev.combat.explosive = ctx.explosive;
         ev.combat.hitSequence = ctx.eventSequence;

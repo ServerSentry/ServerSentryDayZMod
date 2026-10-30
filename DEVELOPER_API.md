@@ -435,3 +435,21 @@ names use a neutral map pin. Older payloads missing `icon` retain type defaults.
 Network and process-I/O counters are sampled by the Windows Agent, not Enforce.
 Network rates describe the whole Agent host; process-I/O describes the selected
 DayZ process and is not a physical-disk utilization measurement.
+
+
+### Canonical combat source identity
+
+Combat hit/kill records may include `weapon.persistentId` when the engine supplies
+an identifiable physical source item. The same owned snapshot is emitted under
+`item` so existing exact-item history indexing includes its combat uses. Target
+identity stays under `target`; item never becomes the victim's identity.
+
+The native `dayz-pid-v1:b1:b2:b3:b4` format is shared with item movement/build logs.
+All-zero/unavailable blocks stay empty. Explosive `deviceId`/`detonationId` and
+runtime object IDs are different identities and are never converted to item IDs.
+Ranged callbacks that identify only a player cannot establish the fired gun from
+that player's later held weapon. Melee may capture the current tool during its
+immediate callback. Existing historical records cannot be backfilled reliably.
+
+Base-damage events also capture a physical source item when still available.
+These additive fields pass through the existing Agent JSON transport unchanged.

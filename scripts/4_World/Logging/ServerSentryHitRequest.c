@@ -28,6 +28,8 @@ class ServerSentryHitRequest
         \brief Stores the entity reported as the damage source.
     */
     EntityAI source;
+    /** \brief Source item captured before inherited hit callbacks can delete or detach it. */
+    ref ServerSentryItem sourceItem;
     /** \brief Explosion actor copied before inherited callbacks can delete the source. */
     ref ServerSentryActor explosionActor;
     /** \brief Owned source provenance shared by this hit's final combat classification. */
@@ -125,6 +127,7 @@ class ServerSentryHitRequest
         targetSteamId = "";
         targetBohemiaId = "";
         targetName = "";
+        sourceItem = ServerSentryCombatSourceSnapshot.Capture(source, damageType);
         CaptureExplosionSource();
     }
 

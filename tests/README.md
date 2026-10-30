@@ -37,3 +37,21 @@ Map marker icon runtime checks (CMS and Agent with icon support):
 - Change only a marker icon while preserving identity/position; verify the next
   incremental update refreshes the glyph in both views. Retest after reconnect.
 - Verify an older Mod payload without icons keeps its semantic type defaults.
+
+
+Combat source persistence checks (requires native DayZ compilation/runtime):
+
+- Fire two distinct rifles of the same class. Verify each hit/kill carries the
+  actual `weapon.persistentId` and matching `item.persistentId`, and that inventory
+  move, hit and kill observations join only that exact item on the same server.
+- Repeat a melee hit with a persistent tool, then bare hands, AI and infected
+  attacks. Physical tools may have an ID; bare hands/environment must stay empty.
+- Trigger a grenade, placed charge and chain explosion. Capture source data before
+  inherited hit callbacks remove the device. Never substitute deviceId,
+  detonationId, runtime GetID(), the controller or the player's currently held gun.
+- When a ranged source is only the player (or projectile cannot establish a gun),
+  verify no identity is guessed from a weapon switched into hands later.
+- Verify all-zero native persistence blocks remain an empty ID. Repeat after
+  restart and compare item history across inventory moves and combat records.
+- Retest damage, kill classification, deduplication and base ruined-zone logging;
+  compare callback overhead with the same hit rate. This change adds no world scan.

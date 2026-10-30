@@ -323,8 +323,8 @@ The key binding is declared as `UAToggleSupportMenu` in `Inputs.xml` and can be 
 
 The repository includes two API documents:
 
-- [`API_OVERVIEW.md`](API_OVERVIEW.md) — modules and primary extension points
-- [`DEVELOPER_API.md`](DEVELOPER_API.md) — complete Enforce Script examples and compatibility rules
+- [`API_OVERVIEW.md`](API_OVERVIEW.md) - modules and primary extension points
+- [`DEVELOPER_API.md`](DEVELOPER_API.md) - complete Enforce Script examples and compatibility rules
 
 ### Script modules
 

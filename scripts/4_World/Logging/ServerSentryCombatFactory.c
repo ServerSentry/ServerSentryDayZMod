@@ -41,6 +41,7 @@ class ServerSentryCombatFactory
         ctx.occurredAtUtc = ServerSentryTime.NowUtc();
         ctx.hitId = "hit-" + ctx.eventSequence.ToString() + "-" + timestampMs.ToString();
         ctx.damageType = damageType;
+        ctx.sourceItem = request.sourceItem;
         ctx.component = component;
         ctx.hitZone = ResolveHitZone(victim, component, dmgZone);
         // EEHitBy component indices refer to fire geometry. Preserve every

@@ -32,6 +32,8 @@ class ServerSentryHitContext
     	\brief Stores the weapon class name.
     */
     string weaponClassName;
+    /** \brief Owned physical source snapshot captured during this callback. */
+    ref ServerSentryItem sourceItem;
     /**
     	\brief Stores the ammo type.
     */

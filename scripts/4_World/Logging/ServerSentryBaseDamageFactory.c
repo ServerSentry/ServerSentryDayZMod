@@ -91,6 +91,16 @@ class ServerSentryBaseDamageFactory
         }
         FillAttacker(ev, source);
 
+        ServerSentryItem sourceItem = ServerSentryCombatSourceSnapshot.Capture(source, damageType);
+        if (sourceItem)
+        {
+            ev.weapon.className = sourceItem.className;
+            ev.weapon.displayName = sourceItem.displayName;
+            ev.weapon.persistentId = sourceItem.persistentId;
+            ev.weapon.ammoType = ammo;
+            ev.item = sourceItem;
+        }
+
         ev.message = "Base damage observed: " + ev.target.className + " (" + data.damageKind + ")";
         return ev;
     }
