@@ -1,0 +1,498 @@
+FrameWidgetClass ServerSentryTicketRoot {
+ size 1 1
+ hexactpos 0
+ vexactpos 0
+ hexactsize 0
+ vexactsize 0
+ {
+  PanelWidgetClass BackgroundDim {
+   ignorepointer 1
+   position 0 0
+   size 1 1
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   color 0 0 0 .82
+   style rover_sim_colorable
+  }
+  PanelWidgetClass SupportWindow {
+   ignorepointer 1
+   size .74 .76
+   halign center_ref
+   valign center_ref
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   color .008 .011 .017 1
+   style rover_sim_colorable
+   {
+    PanelWidgetClass Sidebar {
+     ignorepointer 1
+     position 0 0
+     size 0.2 1
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     color .004 .006 .010 1
+     style rover_sim_colorable
+     {
+      PanelWidgetClass Monogram {
+       ignorepointer 1
+       position 0.14 0.065
+       size 0.18 0.065
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .025 .13 .10 1
+       style rover_sim_colorable
+       {
+        TextWidgetClass MonogramText {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "SS"
+         font "gui/fonts/sdf_MetronLight24"
+         color .08 .56 .38 1
+         "exact text" 1
+         "exact text size" 19
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+      TextWidgetClass BrandTop {
+       ignorepointer 1
+       position 0.38 0.063
+       size 0.54 0.033
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "SERVER"
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 12
+       "text valign" center
+      }
+      TextWidgetClass BrandBottom {
+       ignorepointer 1
+       position 0.38 0.096
+       size 0.54 0.036
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "SENTRY"
+       font "gui/fonts/sdf_MetronLight24"
+       color .85 .90 .95 1
+       "exact text" 1
+       "exact text size" 18
+       "text valign" center
+      }
+      TextWidgetClass RailSection {
+       ignorepointer 1
+       position 0.14 0.205
+       size 0.76 0.03
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "SUPPORT CENTER"
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 11
+       "text valign" center
+      }
+      PanelWidgetClass ActiveSection {
+       ignorepointer 1
+       position 0.09 0.267
+       size 0.82 0.084
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .012 .039 .042 1
+       style rover_sim_colorable
+       {
+        PanelWidgetClass ActiveMarker {
+         ignorepointer 1
+         position 0 0.18
+         size 0.012 0.64
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .08 .56 .38 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass ActiveLabel {
+         ignorepointer 1
+         position 0.09 0
+         size 0.87 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "New ticket"
+         font "gui/fonts/sdf_MetronLight24"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+        }
+       }
+      }
+     }
+    }
+    PanelWidgetClass SidebarDivider {
+     ignorepointer 1
+     position 0.2 0
+     size 0.0008 1
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     color .032 .045 .060 1
+     style rover_sim_colorable
+    }
+    FrameWidgetClass Content {
+     position 0.246 0
+     size 0.707 1
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     ignorepointer 1
+     {
+      TextWidgetClass Breadcrumb {
+       ignorepointer 1
+       position 0 0.055
+       size 0.82 0.03
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "SUPPORT  /  NEW REQUEST"
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 11
+       "text valign" center
+      }
+      ButtonWidgetClass SupportClose {
+       position 0.948 0.044
+       size 0.052 0.052
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       {
+        PanelWidgetClass SupportClose_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .019 .027 .038 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass SupportClose_Label {
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "x"
+         font "gui/fonts/sdf_MetronLight24"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+      TextWidgetClass TitleLabel {
+       ignorepointer 1
+       position 0 0.109
+       size 0.94 0.065
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "Let's get it sorted."
+       font "gui/fonts/sdf_MetronLight24"
+       color .85 .90 .95 1
+       "exact text" 1
+       "exact text size" 30
+       "text valign" center
+      }
+      MultilineTextWidgetClass IntroLabel {
+       ignorepointer 1
+       position 0 0.185
+       size 1 0.045
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "Tell us what happened. Your server team will take it from here."
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 15
+       wrap 1
+      }
+      PanelWidgetClass HeaderDivider {
+       ignorepointer 1
+       position 0 0.253
+       size 1 0.0012
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .032 .045 .060 1
+       style rover_sim_colorable
+      }
+      TextWidgetClass SubjectLabel {
+       ignorepointer 1
+       position 0 0.287
+       size 1 0.028
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "SUBJECT"
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 11
+       "text valign" center
+      }
+      PanelWidgetClass SubjectField {
+       ignorepointer 1
+       position 0 0.334
+       size 1 0.07
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .013 .019 .027 1
+       style rover_sim_colorable
+       {
+        PanelWidgetClass SubjectUnderline {
+         ignorepointer 1
+         position 0 0.982
+         size 1 0.018
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .032 .045 .060 1
+         style rover_sim_colorable
+        }
+        EditBoxWidgetClass EditTicketSubject {
+         position 0.018 0.12
+         size 0.964 0.76
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         style Editor
+         font "gui/fonts/sdf_MetronLight24"
+        }
+       }
+      }
+      TextWidgetClass DescriptionLabel {
+       ignorepointer 1
+       position 0 0.446
+       size 1 0.028
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "WHAT HAPPENED?"
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 11
+       "text valign" center
+      }
+      PanelWidgetClass MessageField {
+       ignorepointer 1
+       position 0 0.495
+       size 1 0.274
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .013 .019 .027 1
+       style rover_sim_colorable
+       {
+        MultilineEditBoxWidgetClass EditTicketMessage {
+         position 0.018 0.04
+         size 0.964 0.92
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         style DayZNormal
+         font "gui/fonts/sdf_MetronLight24"
+        }
+       }
+      }
+      PanelWidgetClass ServiceNotice {
+       ignorepointer 1
+       position 0 0.804
+       size 1 0.064
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .045 .033 .015 1
+       style rover_sim_colorable
+       {
+        TextWidgetClass NoticeMark {
+         ignorepointer 1
+         position 0.02 0
+         size 0.03 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "!"
+         font "gui/fonts/sdf_MetronLight24"
+         color .72 .48 .13 1
+         "exact text" 1
+         "exact text size" 16
+         "text valign" center
+         "text halign" center
+        }
+        MultilineTextWidgetClass TicketStatus {
+         ignorepointer 1
+         position 0.07 0.17
+         size 0.9 0.65
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Ticket service unavailable. Please try again later."
+         font "gui/fonts/sdf_MetronLight24"
+         color .72 .56 .30 1
+         "exact text" 1
+         "exact text size" 13
+         wrap 1
+        }
+       }
+      }
+      PanelWidgetClass FooterDivider {
+       ignorepointer 1
+       position 0 0.888
+       size 1 0.0012
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .032 .045 .060 1
+       style rover_sim_colorable
+      }
+      ButtonWidgetClass BtnClose {
+       position 0 0.912
+       size 0.26 0.055
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       {
+        PanelWidgetClass BtnClose_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .019 .027 .038 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass BtnClose_Label {
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Back"
+         font "gui/fonts/sdf_MetronLight24"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+      ButtonWidgetClass BtnSubmitTicket {
+       position 0.59 0.912
+       size 0.41 0.055
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       disabled 1
+       {
+        PanelWidgetClass BtnSubmitTicket_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .013 .019 .027 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass BtnSubmitTicket_Label {
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Send ticket  >"
+         font "gui/fonts/sdf_MetronLight24"
+         color .28 .36 .45 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

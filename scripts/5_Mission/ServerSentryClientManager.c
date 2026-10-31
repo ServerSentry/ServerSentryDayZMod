@@ -9,91 +9,116 @@
 */
 class ServerSentryClientManager: CF_ModuleWorld
 {
-    /**
-    	\brief Instance state for menu.
-    */
-    protected ref ServerSentrySupportMenu m_Menu;
-    /**
-    	\brief Instance state for is waiting for response.
-    */
     protected bool m_IsWaitingForResponse;
+    protected int m_RequestId;
+    protected ref UIScriptedMenu m_RequestParent;
+
+    static ServerSentryClientManager Get()
+    {
+        return ServerSentryClientManager.Cast(CF_ModuleCoreManager.Get(ServerSentryClientManager));
+    }
 
     /**
-    	\brief Handles the DayZ Init callback.
+        \brief Handles the DayZ Init callback.
     */
     override void OnInit()
     {
-        Print("On Init Client Menu.");
         super.OnInit();
         m_CF_Bindings.Bind("RequestSupportCaseFromServer", "UAToggleSupportMenu", false);
 
-        GetRPCManager().AddRPC("ServerSentryBot", "SupportCaseResponse", this, SingleplayerExecutionType.Client);
+        GetRPCManager().AddRPC("ServerSentryBot", "SupportStateResponse", this, SingleplayerExecutionType.Client);
     }
 
     /**
-    	\brief Processes the support case response operation.
-    	\param type \p type name or value type used by the operation.
-    	\param ctx \p action context containing request, target, and input data.
-    	\param sender \p identity of the RPC sender.
-    	\param target \p target object associated with the operation.
+        \brief Opens menu.
     */
-    void SupportCaseResponse(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    protected void OpenResult(ServerSentrySupportCase data, UIScriptedMenu parent)
     {
-        if (type != CallType.Client)
-            return;
-
-        Print("[ServerSentry] -> recived server data!");
-        m_IsWaitingForResponse = false;
-
-        Print("[ServerSentry] -> chance waiting state!");
-        Param1<ServerSentrySupportCase> data;
-        if (!ctx.Read(data))
+        if (data)
         {
-            Print("[ServerSentry] -> nope ctx cant read!");
-            return;
-        }
-
-        if (!data.param1)
-        {
-            Print("Player has not case active! skipping!");
-            return;
-        }
-
-        OpenMenu();
-        if(!m_Menu) return;
-
-        m_Menu.SetCaseData(data.param1);
-    }
-
-    /**
-    	\brief Opens menu.
-    */
-    void OpenMenu()
-    {
-        if(GetGame().GetUIManager().GetMenu() == NULL && m_Menu == null)
-        {
-            m_Menu = ServerSentrySupportMenu.Cast(GetGame().GetUIManager().EnterScriptedMenu(4771341, null));
+            ServerSentrySupportMenu caseMenu = ServerSentrySupportMenu.Cast(GetGame().GetUIManager().EnterScriptedMenu(4771341, parent));
+            if (caseMenu)
+                caseMenu.SetCaseData(data);
         }
         else
         {
-            if(GetGame().GetUIManager().GetMenu() == NULL && !m_Menu.IsVisible())
-            {
-                GetGame().GetUIManager().ShowScriptedMenu(m_Menu, NULL);
-            }
+            GetGame().GetUIManager().EnterScriptedMenu(ServerSentrySupportDeskMenu.MENU_ID, parent);
         }
     }
 
     /**
-    	\brief Requests support case from server.
+        \brief Requests support case from server.
     */
     void RequestSupportCaseFromServer()
     {
-        Print("[ServerSentry] -> Pressed input!");
-        if (m_IsWaitingForResponse) return;
+        if (m_IsWaitingForResponse)
+            return;
 
-        Print("[ServerSentry] -> not waiting for response!");
+        UIScriptedMenu parent = GetGame().GetUIManager().GetMenu();
+        if (parent && !InGameMenu.Cast(parent))
+            return;
 
+        m_RequestParent = parent;
         m_IsWaitingForResponse = true;
-        GetRPCManager().SendRPC("ServerSentryBot", "GetSupportCase", null, true);
+        m_RequestId++;
+        SetParentLoading(true);
+        GetGame().GetCallQueue(CALL_CATEGORY_GUI).CallLater(OnSupportTimeout, 10000, false, m_RequestId);
+        GetRPCManager().SendRPC("ServerSentryBot", "GetSupportState", new Param1<int>(m_RequestId), true);
+    }
+
+    void SupportStateResponse(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    {
+        if (type != CallType.Client || !m_IsWaitingForResponse)
+            return;
+
+        Param2<int, ServerSentrySupportCase> response;
+        if (!ctx.Read(response) || !response)
+        {
+            FinishRequest();
+            ShowSupportError();
+            return;
+        }
+        if (response.param1 != m_RequestId)
+            return;
+
+        UIScriptedMenu parent = m_RequestParent;
+        bool canOpen = GetGame().GetUIManager().GetMenu() == parent;
+        FinishRequest();
+        if (canOpen)
+            OpenResult(response.param2, parent);
+    }
+
+    protected void SetParentLoading(bool loading)
+    {
+        if (GetGame().GetUIManager().GetMenu() != m_RequestParent)
+            return;
+
+        InGameMenu pauseMenu = InGameMenu.Cast(m_RequestParent);
+        if (pauseMenu)
+            pauseMenu.SetSupportLoading(loading);
+    }
+
+    protected void FinishRequest()
+    {
+        m_IsWaitingForResponse = false;
+        GetGame().GetCallQueue(CALL_CATEGORY_GUI).Remove(OnSupportTimeout);
+        SetParentLoading(false);
+        m_RequestParent = null;
+    }
+
+    protected void OnSupportTimeout(int requestId)
+    {
+        if (!m_IsWaitingForResponse || requestId != m_RequestId)
+            return;
+
+        bool stillOnParent = GetGame().GetUIManager().GetMenu() == m_RequestParent;
+        FinishRequest();
+        if (stillOnParent)
+            ShowSupportError();
+    }
+
+    protected void ShowSupportError()
+    {
+        NotificationSystem.AddNotificationExtended(6, "Support unavailable", "Please try again in a moment.");
     }
 };

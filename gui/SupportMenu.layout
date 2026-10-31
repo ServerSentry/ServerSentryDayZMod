@@ -1,157 +1,561 @@
-FrameWidgetClass rootFrame {
- size 0.35 0.467
- halign center_ref
- valign center_ref
+FrameWidgetClass ServerSentryCaseRoot {
+ size 1 1
  hexactpos 0
  vexactpos 0
  hexactsize 0
  vexactsize 0
  {
-  PanelWidgetClass Main {
+  PanelWidgetClass BackgroundDim {
    ignorepointer 1
-   position 0 0.002
+   position 0 0
    size 1 1
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   color 0 0 0 .82
+   style rover_sim_colorable
+  }
+  PanelWidgetClass SupportWindow {
+   ignorepointer 1
+   size .74 .76
    halign center_ref
    valign center_ref
    hexactpos 0
    vexactpos 0
    hexactsize 0
    vexactsize 0
-   style rover_sim_black
+   color .008 .011 .017 1
+   style rover_sim_colorable
    {
-    PanelWidgetClass Header {
+    PanelWidgetClass Sidebar {
      ignorepointer 1
      position 0 0
-     size 1 0.089
-     halign center_ref
+     size 0.2 1
      hexactpos 0
      vexactpos 0
      hexactsize 0
      vexactsize 0
-     style rover_sim_black
+     color .004 .006 .010 1
+     style rover_sim_colorable
      {
-      ButtonWidgetClass CloseBtn {
-       color 0.502 0 0 1
-       position 0.015 0.047
-       size 0.043 0.684
-       halign right_ref
-       valign center_ref
-       hexactpos 0
-       vexactpos 0
-       hexactsize 0
-       vexactsize 0
-       style Colorable
-       text "X"
-       font "gui/fonts/metron22"
-      }
-      TextWidgetClass HeaderLbl {
+      PanelWidgetClass Monogram {
        ignorepointer 1
-       position 0.09 0.04
-       size 0.787 0.8
-       valign center_ref
+       position 0.14 0.065
+       size 0.18 0.065
        hexactpos 0
        vexactpos 0
        hexactsize 0
        vexactsize 0
-       text "SUPPORT MENU "
-       font "gui/fonts/amorserifpro28"
-       "size to text h" 1
-       "size to text v" 1
-       "text halign" center
+       color .025 .13 .10 1
+       style rover_sim_colorable
+       {
+        TextWidgetClass MonogramText {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "SS"
+         font "gui/fonts/sdf_MetronLight24"
+         color .08 .56 .38 1
+         "exact text" 1
+         "exact text size" 19
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+      TextWidgetClass BrandTop {
+       ignorepointer 1
+       position 0.38 0.063
+       size 0.54 0.033
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "SERVER"
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 12
        "text valign" center
       }
-      ImageWidgetClass Logo {
+      TextWidgetClass BrandBottom {
        ignorepointer 1
-       position 0.02 0
-       size 0.055 0.766
-       valign center_ref
+       position 0.38 0.096
+       size 0.54 0.036
        hexactpos 0
        vexactpos 0
        hexactsize 0
        vexactsize 0
-       imageTexture "{B9718DA855602A9D}ServerSentryDayZMod/gui/ServerSentryLogo.edds"
-       mode blend
-       "src alpha" 1
-       "clamp mode" invalid
-       "stretch mode" stretch_w_h
+       text "SENTRY"
+       font "gui/fonts/sdf_MetronLight24"
+       color .85 .90 .95 1
+       "exact text" 1
+       "exact text size" 18
+       "text valign" center
+      }
+      TextWidgetClass RailSection {
+       ignorepointer 1
+       position 0.14 0.205
+       size 0.76 0.03
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "SUPPORT CENTER"
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 11
+       "text valign" center
+      }
+      PanelWidgetClass ActiveSection {
+       ignorepointer 1
+       position 0.09 0.267
+       size 0.82 0.084
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .012 .039 .042 1
+       style rover_sim_colorable
+       {
+        PanelWidgetClass ActiveMarker {
+         ignorepointer 1
+         position 0 0.18
+         size 0.012 0.64
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .08 .56 .38 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass ActiveLabel {
+         ignorepointer 1
+         position 0.09 0
+         size 0.87 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Reimbursements"
+         font "gui/fonts/sdf_MetronLight24"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+        }
+       }
       }
      }
     }
-    PanelWidgetClass Outline {
+    PanelWidgetClass SidebarDivider {
      ignorepointer 1
-     color 0.157 0.624 0.624 1
-     size 1 1
-     halign center_ref
-     valign center_ref
+     position 0.2 0
+     size 0.0008 1
      hexactpos 0
      vexactpos 0
      hexactsize 0
      vexactsize 0
-     style Outline
+     color .032 .045 .060 1
+     style rover_sim_colorable
     }
-    TextWidgetClass PlayerName {
+    FrameWidgetClass Content {
+     position 0.246 0
+     size 0.707 1
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
      ignorepointer 1
-     position 0 0.13
-     size 0.947 0.102
-     halign center_ref
-     hexactpos 0
-     vexactpos 0
-     hexactsize 0
-     vexactsize 0
-     text "Welcome: Krypton91"
-     font "gui/fonts/metron28"
-     "size to text h" 0
-     "size to text v" 0
-     "text halign" center
-     "text valign" center
-    }
-    TextWidgetClass Note {
-     ignorepointer 1
-     position 0.03 -0.14
-     size 0.107 0.071
-     valign center_ref
-     hexactpos 0
-     vexactpos 0
-     hexactsize 0
-     vexactsize 0
-     text "Reason:"
-     font "gui/fonts/metron22"
-     "size to text h" 1
-     "size to text v" 1
-     "text valign" center
-    }
-    ButtonWidgetClass BtnSpawn {
-     color 0 0.502 0.125 1
-     position 0.02 0.3
-     size 0.325 0.104
-     halign right_ref
-     valign center_ref
-     hexactpos 0
-     vexactpos 0
-     hexactsize 0
-     vexactsize 0
-     style Colorable
-     text "Claim"
-     font "gui/fonts/metron22"
-    }
-    MultilineTextWidgetClass NoteValue {
-     ignorepointer 1
-     position 0.02 0.073
-     size 0.961 0.297
-     valign center_ref
-     hexactpos 0
-     vexactpos 0
-     hexactsize 0
-     vexactsize 0
-     style DayZNormal
-     text "Rollback Cheater Kill"
-     font "gui/fonts/metron22"
-     "size to text h" 0
-     "size to text v" 0
-     "text halign" center
-     "text valign" center
-     wrap 1
-     "strip newlines" 1
+     {
+      TextWidgetClass Breadcrumb {
+       ignorepointer 1
+       position 0 0.055
+       size 0.82 0.03
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "SUPPORT  /  ITEM RETURNS"
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 11
+       "text valign" center
+      }
+      ButtonWidgetClass SupportClose {
+       position 0.948 0.044
+       size 0.052 0.052
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       {
+        PanelWidgetClass SupportClose_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .019 .027 .038 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass SupportClose_Label {
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "x"
+         font "gui/fonts/sdf_MetronLight24"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+      TextWidgetClass TitleLabel {
+       ignorepointer 1
+       position 0 0.109
+       size 0.94 0.065
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "Your reimbursement"
+       font "gui/fonts/sdf_MetronLight24"
+       color .85 .90 .95 1
+       "exact text" 1
+       "exact text size" 30
+       "text valign" center
+      }
+      MultilineTextWidgetClass IntroLabel {
+       ignorepointer 1
+       position 0 0.185
+       size 1 0.045
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "Everything prepared for your return, in one place."
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 15
+       wrap 1
+      }
+      PanelWidgetClass HeaderDivider {
+       ignorepointer 1
+       position 0 0.253
+       size 1 0.0012
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .032 .045 .060 1
+       style rover_sim_colorable
+      }
+      PanelWidgetClass ReferenceCard {
+       ignorepointer 1
+       position 0 0.281
+       size 0.48 0.087
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .013 .019 .027 1
+       style rover_sim_colorable
+       {
+        TextWidgetClass ReferenceCaption {
+         ignorepointer 1
+         position 0.045 0.12
+         size 0.91 0.25
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "CASE REFERENCE"
+         font "gui/fonts/sdf_MetronLight24"
+         color .28 .36 .45 1
+         "exact text" 1
+         "exact text size" 10
+         "text valign" center
+        }
+        TextWidgetClass CaseId {
+         ignorepointer 1
+         position 0.045 0.47
+         size 0.91 0.33
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Support case"
+         font "gui/fonts/sdf_MetronLight24"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+        }
+       }
+      }
+      PanelWidgetClass RecipientCard {
+       ignorepointer 1
+       position 0.505 0.281
+       size 0.495 0.087
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .013 .019 .027 1
+       style rover_sim_colorable
+       {
+        TextWidgetClass RecipientCaption {
+         ignorepointer 1
+         position 0.045 0.12
+         size 0.91 0.25
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "RECIPIENT"
+         font "gui/fonts/sdf_MetronLight24"
+         color .28 .36 .45 1
+         "exact text" 1
+         "exact text size" 10
+         "text valign" center
+        }
+        TextWidgetClass PlayerName {
+         ignorepointer 1
+         position 0.045 0.47
+         size 0.91 0.33
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Prepared for you"
+         font "gui/fonts/sdf_MetronLight24"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+        }
+       }
+      }
+      PanelWidgetClass ReasonCard {
+       ignorepointer 1
+       position 0 0.391
+       size 1 0.127
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .013 .019 .027 1
+       style rover_sim_colorable
+       {
+        TextWidgetClass ReasonLabel {
+         ignorepointer 1
+         position 0.022 0.1
+         size 0.95 0.21
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "A NOTE FROM YOUR SERVER TEAM"
+         font "gui/fonts/sdf_MetronLight24"
+         color .28 .36 .45 1
+         "exact text" 1
+         "exact text size" 10
+         "text valign" center
+        }
+        MultilineTextWidgetClass NoteValue {
+         ignorepointer 1
+         position 0.022 0.4
+         size 0.95 0.5
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Your reimbursement details will appear here."
+         font "gui/fonts/sdf_MetronLight24"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 16
+         wrap 1
+        }
+       }
+      }
+      TextWidgetClass ItemsLabel {
+       ignorepointer 1
+       position 0 0.545
+       size 0.65 0.03
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "YOUR ITEMS"
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 11
+       "text valign" center
+      }
+      TextWidgetClass ItemCount {
+       ignorepointer 1
+       position 0.72 0.545
+       size 0.28 0.03
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "READY TO RETURN"
+       font "gui/fonts/sdf_MetronLight24"
+       color .08 .56 .38 1
+       "exact text" 1
+       "exact text size" 11
+       "text valign" center
+      }
+      ScrollWidgetClass CaseItemsScroll {
+       position 0 0.59
+       size 1 0.235
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style blank
+       "Scrollbar V" 1
+       {
+        WrapSpacerWidgetClass CaseItemsList {
+         ignorepointer 1
+         size 1 0
+         hexactpos 0
+         vexactpos 1
+         hexactsize 0
+         vexactsize 1
+         Padding 5
+         Margin 0
+         "Size To Content V" 1
+        }
+       }
+      }
+      MultilineTextWidgetClass ClaimStatus {
+       ignorepointer 1
+       position 0 0.846
+       size 1 0.032
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "Delivered to your inventory, or placed at your feet if it is full."
+       font "gui/fonts/sdf_MetronLight24"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 12
+       wrap 1
+      }
+      PanelWidgetClass FooterDivider {
+       ignorepointer 1
+       position 0 0.888
+       size 1 0.0012
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .032 .045 .060 1
+       style rover_sim_colorable
+      }
+      ButtonWidgetClass CloseBtn {
+       position 0 0.912
+       size 0.26 0.055
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       {
+        PanelWidgetClass CloseBtn_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .019 .027 .038 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass CloseBtn_Label {
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Back"
+         font "gui/fonts/sdf_MetronLight24"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+      ButtonWidgetClass BtnSpawn {
+       position 0.59 0.912
+       size 0.41 0.055
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       {
+        PanelWidgetClass BtnSpawn_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .055 .42 .29 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass BtnSpawn_Label {
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Claim reimbursement  >"
+         font "gui/fonts/sdf_MetronLight24"
+         color .003 .015 .011 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+     }
     }
    }
   }

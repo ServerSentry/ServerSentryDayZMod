@@ -16,34 +16,30 @@ class ServerSentryServerManager: CF_ModuleWorld
     {
         super.OnInit();
 
-        GetRPCManager().AddRPC("ServerSentryBot", "GetSupportCase",     this, SingleplayerExecutionType.Server);
+        GetRPCManager().AddRPC("ServerSentryBot", "GetSupportState",    this, SingleplayerExecutionType.Server);
         GetRPCManager().AddRPC("ServerSentryBot", "SpawnSupportCase",     this, SingleplayerExecutionType.Server);
     }
 
     /**
-    	\brief Returns support case.
+        \brief Returns the current support case with the request token.
     	\param type \p type name or value type used by the operation.
     	\param ctx \p action context containing request, target, and input data.
     	\param sender \p identity of the RPC sender.
     	\param target \p target object associated with the operation.
     */
-    void GetSupportCase(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    void GetSupportState(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
     {
         if (type != CallType.Server || !sender)
             return;
 
-        ServerSentrySupportCase data = ServerSentrySupportCaseLoader.Load(sender.GetPlainId());
+        Param1<int> request;
+        if (!ctx.Read(request) || !request)
+            return;
 
-        GetRPCManager().SendRPC("ServerSentryBot", "SupportCaseResponse", new Param1<ServerSentrySupportCase>(data), true, sender);
+        ServerSentrySupportCase data = ServerSentrySupportCaseLoader.Load(sender.GetPlainId());
+        GetRPCManager().SendRPC("ServerSentryBot", "SupportStateResponse", new Param2<int, ServerSentrySupportCase>(request.param1, data), true, sender);
     }
 
-    /**
-    	\brief Spawns support case.
-    	\param type \p type name or value type used by the operation.
-    	\param ctx \p action context containing request, target, and input data.
-    	\param sender \p identity of the RPC sender.
-    	\param target \p target object associated with the operation.
-    */
     void SpawnSupportCase(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
     {
         if (type != CallType.Server || !sender)
