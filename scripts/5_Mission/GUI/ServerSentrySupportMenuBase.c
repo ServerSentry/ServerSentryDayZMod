@@ -16,7 +16,7 @@ class ServerSentrySupportMenuBase extends UIScriptedMenu
         TextWidget label = TextWidget.Cast(button.FindAnyWidget(button.GetName() + "_Label"));
         if (!fill || !label) return false;
 
-        bool primary = button.GetName() == "BtnSpawn" || button.GetName() == "BtnSubmitTicket";
+        bool primary = button.GetName() == "BtnSpawn" || button.GetName() == "BtnSubmitTicket" || button.GetName() == "BtnLinkAccount" || button.GetName() == "BtnNewTicket";
         if (button.GetFlags() & WidgetFlags.DISABLED)
         {
             fill.SetColor(ARGB(255, 3, 5, 7));

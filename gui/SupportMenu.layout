@@ -516,6 +516,45 @@ FrameWidgetClass ServerSentryCaseRoot {
         }
        }
       }
+      ButtonWidgetClass BtnMyTickets {
+       position 0.28 0.912
+       size 0.28 0.055
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       {
+        PanelWidgetClass BtnMyTickets_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .019 .027 .038 1
+         style rover_sim_colorable
+        }
+        TextWidgetClass BtnMyTickets_Label {
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "My tickets"
+         font "gui/fonts/sdf_MetronLight24"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
       ButtonWidgetClass BtnSpawn {
        position 0.59 0.912
        size 0.41 0.055

@@ -1,0 +1,66 @@
+ButtonWidgetClass TicketRow {
+ size 1 76
+ hexactpos 0
+ vexactpos 1
+ hexactsize 0
+ vexactsize 1
+ style Empty
+ {
+  PanelWidgetClass TicketRow_Fill {
+   ignorepointer 1
+   size 1 0.93
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   color .013 .019 .027 1
+   style rover_sim_colorable
+  }
+  TextWidgetClass TicketRow_Label {
+   ignorepointer 1
+   position 0.02 0.12
+   size 0.88 0.36
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   text "Ticket subject"
+   font "gui/fonts/sdf_MetronLight24"
+   color .85 .90 .95 1
+   "exact text" 1
+   "exact text size" 16
+   "text valign" center
+  }
+  TextWidgetClass TicketRow_Meta {
+   ignorepointer 1
+   position 0.02 0.56
+   size 0.88 0.25
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   text "Support / Waiting for support"
+   font "gui/fonts/sdf_MetronLight24"
+   color .42 .53 .65 1
+   "exact text" 1
+   "exact text size" 12
+   "text valign" center
+  }
+  TextWidgetClass TicketRow_Arrow {
+   ignorepointer 1
+   position 0.94 0
+   size 0.04 0.93
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   text ">"
+   font "gui/fonts/sdf_MetronLight24"
+   color .08 .56 .38 1
+   "exact text" 1
+   "exact text size" 22
+   "text valign" center
+   "text halign" center
+  }
+ }
+}

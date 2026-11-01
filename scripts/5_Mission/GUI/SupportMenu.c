@@ -16,6 +16,7 @@ class ServerSentrySupportMenu extends ServerSentrySupportMenuBase
     	\brief Instance state for close btn.
     */
     protected ButtonWidget          m_CloseBtn;
+    protected ButtonWidget          m_TicketsBtn;
     /**
     	\brief Instance state for note box.
     */
@@ -47,6 +48,7 @@ class ServerSentrySupportMenu extends ServerSentrySupportMenuBase
             return null;
         m_SpawnItemsBtn = ButtonWidget.Cast(layoutRoot.FindAnyWidget("BtnSpawn"));
         m_CloseBtn = ButtonWidget.Cast(layoutRoot.FindAnyWidget("CloseBtn"));
+        m_TicketsBtn = ButtonWidget.Cast(layoutRoot.FindAnyWidget("BtnMyTickets"));
         m_WelcomeLbl = TextWidget.Cast(layoutRoot.FindAnyWidget("PlayerName"));
 
         m_NoteBox = MultilineTextWidget.Cast(layoutRoot.FindAnyWidget("NoteValue"));
@@ -182,6 +184,11 @@ class ServerSentrySupportMenu extends ServerSentrySupportMenuBase
     */
     override bool OnClick(Widget w, int x, int y, int button)
 	{
+        if (m_TicketsBtn && w == m_TicketsBtn)
+        {
+            GetGame().GetUIManager().EnterScriptedMenu(ServerSentryTicketsMenu.MENU_ID, this);
+            return true;
+        }
         if(m_CloseBtn && w == m_CloseBtn)
         {
             GetGame().GetUIManager().Back();

@@ -21,6 +21,9 @@ modded class MissionBase
         {
             switch (id) 
             {
+                case ServerSentryTicketsMenu.MENU_ID:
+                    menu = new ServerSentryTicketsMenu;
+                break;
                 case ServerSentrySupportDeskMenu.MENU_ID:
                     menu = new ServerSentrySupportDeskMenu;
                 break;
