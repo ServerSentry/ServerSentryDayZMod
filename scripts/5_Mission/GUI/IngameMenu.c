@@ -19,6 +19,8 @@ modded class InGameMenu
 
     private void LoadSupportBtn()
     {
+        ServerSentryClientManager manager = ServerSentryClientManager.Get();
+        if (!manager || !manager.HasSupportFeatures()) return;
         if (!m_StackPanel || !m_ExitButton || m_SupportBtn)
             return;
 

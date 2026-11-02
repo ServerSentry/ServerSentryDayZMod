@@ -8,23 +8,23 @@ class ServerSentryTicketListResult
 class ServerSentryTicketSummary
 {
     string ticketId;
-    string subject;
     string ticketTypeName;
     string ticketNumber;
     string createdAtUtc;
     bool isClaimed;
+    bool isWaitingForPlayer;
 
     string GetStatusLabel()
     {
-        if (isClaimed)
-            return "In progress";
+        if (isWaitingForPlayer)
+            return "Waiting for you";
         return "Waiting for support";
     }
 
     string GetReference()
     {
         if (ticketNumber != "")
-            return "#" + ticketNumber;
+            return "Ticket " + ticketNumber;
         return ticketId;
     }
 

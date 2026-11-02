@@ -1,0 +1,52 @@
+<WidgetStyles>
+ <Widget Name="PanelWidget">
+  <Style Name="ServerSentryRound" Font="" ImageSet="ServerSentrySupport" Color="4294967295">
+   <State Name="Normal">
+    <Item Name="LeftTop" Image="RoundLeftTop" />
+    <Item Name="Top" Image="RoundTop" />
+    <Item Name="RightTop" Image="RoundRightTop" />
+    <Item Name="Left" Image="RoundLeft" />
+    <Item Name="Center" Image="RoundCenter" />
+    <Item Name="Right" Image="RoundRight" />
+    <Item Name="LeftBottom" Image="RoundLeftBottom" />
+    <Item Name="Bottom" Image="RoundBottom" />
+    <Item Name="RightBottom" Image="RoundRightBottom" />
+   </State>
+   <State Name="Disabled">
+    <Item Name="LeftTop" Image="RoundLeftTop" />
+    <Item Name="Top" Image="RoundTop" />
+    <Item Name="RightTop" Image="RoundRightTop" />
+    <Item Name="Left" Image="RoundLeft" />
+    <Item Name="Center" Image="RoundCenter" />
+    <Item Name="Right" Image="RoundRight" />
+    <Item Name="LeftBottom" Image="RoundLeftBottom" />
+    <Item Name="Bottom" Image="RoundBottom" />
+    <Item Name="RightBottom" Image="RoundRightBottom" />
+   </State>
+  </Style>
+  <Style Name="ServerSentryPill" Font="" ImageSet="ServerSentrySupport" Color="4294967295">
+   <State Name="Normal">
+    <Item Name="LeftTop" Image="PillLeftTop" />
+    <Item Name="Top" Image="PillTop" />
+    <Item Name="RightTop" Image="PillRightTop" />
+    <Item Name="Left" Image="PillLeft" />
+    <Item Name="Center" Image="PillCenter" />
+    <Item Name="Right" Image="PillRight" />
+    <Item Name="LeftBottom" Image="PillLeftBottom" />
+    <Item Name="Bottom" Image="PillBottom" />
+    <Item Name="RightBottom" Image="PillRightBottom" />
+   </State>
+   <State Name="Disabled">
+    <Item Name="LeftTop" Image="PillLeftTop" />
+    <Item Name="Top" Image="PillTop" />
+    <Item Name="RightTop" Image="PillRightTop" />
+    <Item Name="Left" Image="PillLeft" />
+    <Item Name="Center" Image="PillCenter" />
+    <Item Name="Right" Image="PillRight" />
+    <Item Name="LeftBottom" Image="PillLeftBottom" />
+    <Item Name="Bottom" Image="PillBottom" />
+    <Item Name="RightBottom" Image="PillRightBottom" />
+   </State>
+  </Style>
+ </Widget>
+</WidgetStyles>

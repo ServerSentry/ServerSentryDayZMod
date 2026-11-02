@@ -1,19 +1,19 @@
 class ServerSentryTicketSubmission
 {
-    static const int MAX_SUBJECT_LENGTH = 120;
     static const int MAX_MESSAGE_LENGTH = 4000;
 
     string requestId;
     string panelId;
     string ticketTypeId;
-    string subject;
     string message;
+    bool includePlayerInfo;
 
     static bool IsValidRequestId(string value)
     {
         // UUIDApi.FormatString produces this canonical UUID format.
         if (value.Length() != 36)
             return false;
+        value.ToLower();
         string hexadecimal = "0123456789abcdef";
         for (int i = 0; i < value.Length(); i++)
         {
@@ -33,19 +33,35 @@ class ServerSentryTicketSubmission
 
     bool IsValid()
     {
-        return IsValidRequestId(requestId) && panelId.Trim() != "" && ticketTypeId.Trim() != "" && subject.Trim() != "" && subject.Length() <= MAX_SUBJECT_LENGTH && message.Trim() != "" && message.Length() <= MAX_MESSAGE_LENGTH;
+        return IsValidRequestId(requestId) && panelId.Trim() != "" && ticketTypeId.Trim() != "" && message.Trim() != "" && message.Length() <= MAX_MESSAGE_LENGTH;
     }
 }
 
 class ServerSentryTicketCreationRequest extends ServerSentryTicketSubmission
 {
     string steamId64;
+    ref ServerSentryTicketPlayerInfo playerInfo;
+}
+
+class ServerSentryTicketPlayerInfo
+{
+    float x;
+    float y;
+    float z;
+    float health;
+    float blood;
+    float shock;
+    float water;
+    float energy;
+    int bleedingSources;
+    bool unconscious;
 }
 
 class ServerSentryTicketCreationResult
 {
     string requestId;
     bool success;
+    bool canEdit;
     string ticketId;
     string message;
 }

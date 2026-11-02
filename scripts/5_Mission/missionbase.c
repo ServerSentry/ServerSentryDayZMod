@@ -19,15 +19,23 @@ modded class MissionBase
         menu = super.CreateScriptedMenu(id);
         if (!menu) 
         {
+            ServerSentryClientManager manager = ServerSentryClientManager.Get();
             switch (id) 
             {
+                case ServerSentryTicketConversationMenu.MENU_ID:
+                    if (!manager || !manager.IsTicketsEnabled()) break;
+                    menu = new ServerSentryTicketConversationMenu;
+                break;
                 case ServerSentryTicketsMenu.MENU_ID:
+                    if (!manager || !manager.IsTicketsEnabled()) break;
                     menu = new ServerSentryTicketsMenu;
                 break;
                 case ServerSentrySupportDeskMenu.MENU_ID:
+                    if (!manager || !manager.IsTicketsEnabled()) break;
                     menu = new ServerSentrySupportDeskMenu;
                 break;
                 case 4771341:
+                    if (!manager || !manager.IsSupportCasesEnabled()) break;
                     menu = new ServerSentrySupportMenu;
                 break;
             }

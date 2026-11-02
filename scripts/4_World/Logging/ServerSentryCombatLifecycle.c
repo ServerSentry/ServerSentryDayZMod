@@ -67,7 +67,9 @@ class ServerSentryCombatLifecycle
             return;
         }
 
-        ServerSentryLogger.Get().CombatHit(null, ctx);
+        ServerSentryEvent combatEvent = ServerSentryEventFactory.CreateCombatHit(null, ctx);
+        if (ServerSentryLogger.Get().Emit(combatEvent) && ctx.isLethal && ServerSentryConfigManager.Get().IsDeathReportingEnabled())
+            ServerSentryDeathReportStore.Remember(combatEvent);
     }
 
     /**

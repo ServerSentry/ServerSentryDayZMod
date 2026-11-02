@@ -3,14 +3,19 @@
     <inputs>
         <actions>
             <input name="UAToggleSupportMenu" loc="Support Menu" />
+            <input name="UAOpenSupportNotification" loc="Open notified support ticket" />
         </actions>
         <sorting name="ServerSentry" loc="ServerSentry">
             <input name="UAToggleSupportMenu" />
+            <input name="UAOpenSupportNotification" />
         </sorting>
     </inputs>
     <preset>
         <input name="UAToggleSupportMenu">
             <btn name="kL" />
+        </input>
+        <input name="UAOpenSupportNotification">
+            <btn name="kJ" />
         </input>
     </preset>
 </modded_inputs>

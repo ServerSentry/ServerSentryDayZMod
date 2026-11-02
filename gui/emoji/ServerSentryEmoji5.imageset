@@ -1,0 +1,546 @@
+ImageSetClass {
+ Name "ServerSentryEmoji5"
+ RefSize 1024 1024
+ Textures {
+  ImageSetTextureClass {
+   mpix 0
+   path "ServerSentryDayZMod/gui/emoji/emoji5_ca.paa"
+  }
+ }
+ Images {
+  ImageSetDefClass e_26f9_1f3ff {
+   Name "e_26f9_1f3ff"
+   Pos 2 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_26f9_1f3ff_200d_2640_fe0f {
+   Name "e_26f9_1f3ff_200d_2640_fe0f"
+   Pos 38 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_26f9_1f3ff_200d_2642_fe0f {
+   Name "e_26f9_1f3ff_200d_2642_fe0f"
+   Pos 74 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_26f9_fe0f_200d_2640_fe0f {
+   Name "e_26f9_fe0f_200d_2640_fe0f"
+   Pos 110 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_26f9_fe0f_200d_2642_fe0f {
+   Name "e_26f9_fe0f_200d_2642_fe0f"
+   Pos 146 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_26fa {
+   Name "e_26fa"
+   Pos 182 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_26fd {
+   Name "e_26fd"
+   Pos 218 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2702 {
+   Name "e_2702"
+   Pos 254 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2705 {
+   Name "e_2705"
+   Pos 290 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2708 {
+   Name "e_2708"
+   Pos 326 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2709 {
+   Name "e_2709"
+   Pos 362 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270a {
+   Name "e_270a"
+   Pos 398 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270a_1f3fb {
+   Name "e_270a_1f3fb"
+   Pos 434 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270a_1f3fc {
+   Name "e_270a_1f3fc"
+   Pos 470 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270a_1f3fd {
+   Name "e_270a_1f3fd"
+   Pos 506 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270a_1f3fe {
+   Name "e_270a_1f3fe"
+   Pos 542 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270a_1f3ff {
+   Name "e_270a_1f3ff"
+   Pos 578 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270b {
+   Name "e_270b"
+   Pos 614 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270b_1f3fb {
+   Name "e_270b_1f3fb"
+   Pos 650 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270b_1f3fc {
+   Name "e_270b_1f3fc"
+   Pos 686 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270b_1f3fd {
+   Name "e_270b_1f3fd"
+   Pos 722 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270b_1f3fe {
+   Name "e_270b_1f3fe"
+   Pos 758 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270b_1f3ff {
+   Name "e_270b_1f3ff"
+   Pos 794 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270c {
+   Name "e_270c"
+   Pos 830 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270c_1f3fb {
+   Name "e_270c_1f3fb"
+   Pos 866 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270c_1f3fc {
+   Name "e_270c_1f3fc"
+   Pos 902 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270c_1f3fd {
+   Name "e_270c_1f3fd"
+   Pos 938 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270c_1f3fe {
+   Name "e_270c_1f3fe"
+   Pos 974 2
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270c_1f3ff {
+   Name "e_270c_1f3ff"
+   Pos 2 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270d {
+   Name "e_270d"
+   Pos 38 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270d_1f3fb {
+   Name "e_270d_1f3fb"
+   Pos 74 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270d_1f3fc {
+   Name "e_270d_1f3fc"
+   Pos 110 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270d_1f3fd {
+   Name "e_270d_1f3fd"
+   Pos 146 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270d_1f3fe {
+   Name "e_270d_1f3fe"
+   Pos 182 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270d_1f3ff {
+   Name "e_270d_1f3ff"
+   Pos 218 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_270f {
+   Name "e_270f"
+   Pos 254 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2712 {
+   Name "e_2712"
+   Pos 290 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2714 {
+   Name "e_2714"
+   Pos 326 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2716 {
+   Name "e_2716"
+   Pos 362 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_271d {
+   Name "e_271d"
+   Pos 398 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2721 {
+   Name "e_2721"
+   Pos 434 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2728 {
+   Name "e_2728"
+   Pos 470 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2733 {
+   Name "e_2733"
+   Pos 506 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2734 {
+   Name "e_2734"
+   Pos 542 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2744 {
+   Name "e_2744"
+   Pos 578 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2747 {
+   Name "e_2747"
+   Pos 614 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_274c {
+   Name "e_274c"
+   Pos 650 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_274e {
+   Name "e_274e"
+   Pos 686 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2753 {
+   Name "e_2753"
+   Pos 722 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2754 {
+   Name "e_2754"
+   Pos 758 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2755 {
+   Name "e_2755"
+   Pos 794 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2757 {
+   Name "e_2757"
+   Pos 830 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2763 {
+   Name "e_2763"
+   Pos 866 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2764 {
+   Name "e_2764"
+   Pos 902 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2764_fe0f_200d_1f525 {
+   Name "e_2764_fe0f_200d_1f525"
+   Pos 938 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2764_fe0f_200d_1fa79 {
+   Name "e_2764_fe0f_200d_1fa79"
+   Pos 974 38
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2795 {
+   Name "e_2795"
+   Pos 2 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2796 {
+   Name "e_2796"
+   Pos 38 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2797 {
+   Name "e_2797"
+   Pos 74 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_27a1 {
+   Name "e_27a1"
+   Pos 110 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_27b0 {
+   Name "e_27b0"
+   Pos 146 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_27bf {
+   Name "e_27bf"
+   Pos 182 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2934 {
+   Name "e_2934"
+   Pos 218 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2935 {
+   Name "e_2935"
+   Pos 254 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2a_20e3 {
+   Name "e_2a_20e3"
+   Pos 290 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2b05 {
+   Name "e_2b05"
+   Pos 326 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2b06 {
+   Name "e_2b06"
+   Pos 362 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2b07 {
+   Name "e_2b07"
+   Pos 398 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2b1b {
+   Name "e_2b1b"
+   Pos 434 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2b1c {
+   Name "e_2b1c"
+   Pos 470 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2b50 {
+   Name "e_2b50"
+   Pos 506 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_2b55 {
+   Name "e_2b55"
+   Pos 542 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_30_20e3 {
+   Name "e_30_20e3"
+   Pos 578 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_3030 {
+   Name "e_3030"
+   Pos 614 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_303d {
+   Name "e_303d"
+   Pos 650 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_31_20e3 {
+   Name "e_31_20e3"
+   Pos 686 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_32_20e3 {
+   Name "e_32_20e3"
+   Pos 722 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_3297 {
+   Name "e_3297"
+   Pos 758 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_3299 {
+   Name "e_3299"
+   Pos 794 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_33_20e3 {
+   Name "e_33_20e3"
+   Pos 830 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_34_20e3 {
+   Name "e_34_20e3"
+   Pos 866 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_35_20e3 {
+   Name "e_35_20e3"
+   Pos 902 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_36_20e3 {
+   Name "e_36_20e3"
+   Pos 938 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_37_20e3 {
+   Name "e_37_20e3"
+   Pos 974 74
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_38_20e3 {
+   Name "e_38_20e3"
+   Pos 2 110
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_39_20e3 {
+   Name "e_39_20e3"
+   Pos 38 110
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_a9 {
+   Name "e_a9"
+   Pos 74 110
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_ae {
+   Name "e_ae"
+   Pos 110 110
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass e_e50a {
+   Name "e_e50a"
+   Pos 146 110
+   Size 32 32
+   Flags 0
+  }
+ }
+}

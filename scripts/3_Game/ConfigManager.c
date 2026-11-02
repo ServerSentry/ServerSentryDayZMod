@@ -88,6 +88,32 @@ class ServerSentryConfigManager
         return m_ServerConfig.EnableTelemtryLogging;
     }
 
+    /** Reports require the server's opt-in and the kill telemetry used by the CMS. */
+    bool IsDeathReportingEnabled()
+    {
+        return GetGame() && GetGame().IsServer() && m_ServerConfig.EnableDeathReports && m_ServerConfig.EnableTelemtryLogging && m_ServerConfig.LogPlayerKills;
+    }
+
+    bool IsTicketsEnabled() { return m_ServerConfig.EnableTickets; }
+    bool IsSupportCasesEnabled() { return m_ServerConfig.EnableSupportCases; }
+
+    ServerSentryModFeatures GetModFeatures()
+    {
+        ServerSentryModFeatures features = new ServerSentryModFeatures;
+        features.tickets = IsTicketsEnabled();
+        features.supportCases = IsSupportCasesEnabled();
+        features.deathReports = IsDeathReportingEnabled();
+        return features;
+    }
+
+    /** Publishes loaded settings once, independently of optional live telemetry. */
+    void PublishModFeatures()
+    {
+        string error;
+        if (!JsonFileLoader<ServerSentryModFeatures>.SaveFile(CONFIG_DIR + "/features.json", GetModFeatures(), error))
+            Print("[ServerSentry][Config] Cannot publish mod features: " + error);
+    }
+
     /**
     	\brief Returns live update polling delay.
     	\return \p The resulting floating-point value.

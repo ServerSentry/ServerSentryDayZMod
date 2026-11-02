@@ -49,6 +49,7 @@ class ServerSentrySupportMenu extends ServerSentrySupportMenuBase
         m_SpawnItemsBtn = ButtonWidget.Cast(layoutRoot.FindAnyWidget("BtnSpawn"));
         m_CloseBtn = ButtonWidget.Cast(layoutRoot.FindAnyWidget("CloseBtn"));
         m_TicketsBtn = ButtonWidget.Cast(layoutRoot.FindAnyWidget("BtnMyTickets"));
+        if (m_TicketsBtn) m_TicketsBtn.Show(false);
         m_WelcomeLbl = TextWidget.Cast(layoutRoot.FindAnyWidget("PlayerName"));
 
         m_NoteBox = MultilineTextWidget.Cast(layoutRoot.FindAnyWidget("NoteValue"));
@@ -58,6 +59,7 @@ class ServerSentrySupportMenu extends ServerSentrySupportMenuBase
         m_ItemsList = WrapSpacerWidget.Cast(layoutRoot.FindAnyWidget("CaseItemsList"));
         SetSupportButtonEnabled(m_SpawnItemsBtn, false);
 
+        InitSupportControls();
         return layoutRoot;
     }
 
@@ -114,14 +116,15 @@ class ServerSentrySupportMenu extends ServerSentrySupportMenuBase
             m_ItemCountLbl.SetText(itemCount.ToString() + " ITEMS");
         if (m_CaseIdLbl)
         {
-            string caseLabel = "SUPPORT CASE";
+            string caseLabel = "NO REIMBURSEMENT";
             if (m_CaseData && m_CaseData.SupportCaseId != "")
                 caseLabel = m_CaseData.SupportCaseId;
             m_CaseIdLbl.SetText(caseLabel);
         }
         if (m_NoteBox)
         {
-            string reason = "No additional details were provided.";
+            string reason = "You have no reimbursement available. You can still open your tickets under Tickets.";
+            if (m_CaseData) reason = "No additional details were provided.";
             if (m_CaseData && m_CaseData.Reason != "")
                 reason = m_CaseData.Reason;
             m_NoteBox.SetText(reason);
@@ -196,6 +199,8 @@ class ServerSentrySupportMenu extends ServerSentrySupportMenuBase
         }
         else if(m_SpawnItemsBtn && w == m_SpawnItemsBtn)
         {
+            ServerSentryClientManager manager = ServerSentryClientManager.Get();
+            if (!manager || !manager.IsSupportCasesEnabled()) return true;
             if (!m_CanClaim || m_IsClaiming)
                 return true;
             m_IsClaiming = true;
@@ -214,16 +219,7 @@ class ServerSentrySupportMenu extends ServerSentrySupportMenuBase
     override void OnShow() 
     {
         super.OnShow();
-		PPEffects.SetBlurMenu(0.5);
 		SetFocus( layoutRoot );
     }
 
-    /**
-    	\brief Handles the DayZ Hide callback.
-    */
-    override void OnHide()
-	{
-		super.OnHide();
-		PPEffects.SetBlurMenu(0);
-	}
 };

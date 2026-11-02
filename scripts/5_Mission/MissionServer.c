@@ -19,6 +19,7 @@ modded class MissionServer
     override void OnMissionStart()
     {
         super.OnMissionStart();
+        ServerSentryConfigManager.Get().PublishModFeatures();
         ServerSentryCharacterBackupService.Get().Start();
         ServerSentryItemLifecycle.Start();
         // ServerSentryDamageZoneExporter.Reset(); // Development diagnostics only; disabled in production.
@@ -101,6 +102,9 @@ modded class MissionServer
     {
         super.OnClientReadyEvent(identity, player);
 
+        if (identity)
+            GetRPCManager().SendRPC("ServerSentryBot", "ModFeatures", new Param1<ServerSentryModFeatures>(ServerSentryConfigManager.Get().GetModFeatures()), true, identity);
+
         // ServerSentryDamageZoneExporter.Observe(player); // Development diagnostics only; disabled in production.
         ServerSentryApplyVoiceMuteState(player, identity);
         ServerSentryEmitLoginOnce(player, identity);
@@ -113,7 +117,11 @@ modded class MissionServer
     */
     override void OnClientRespawnEvent(PlayerIdentity identity, PlayerBase player)
     {
+        // Inherited respawn handling can kill/detach the old character.
+        string steamId = "";
+        if (identity) steamId = identity.GetPlainId();
         super.OnClientRespawnEvent(identity, player);
+        ServerSentryDeathReportStore.Forget(steamId);
         // ServerSentryDamageZoneExporter.Observe(player); // Development diagnostics only; disabled in production.
         
 
@@ -131,6 +139,12 @@ modded class MissionServer
 
         // ServerSentryDamageZoneExporter.Observe(player); // Development diagnostics only; disabled in production.
         ServerSentryApplyVoiceMuteState(player, identity);
+    }
+
+    override void OnClientDisconnectedEvent(PlayerIdentity identity, PlayerBase player, int logoutTime, bool authFailed)
+    {
+        if (identity) ServerSentryDeathReportStore.Forget(identity.GetPlainId());
+        super.OnClientDisconnectedEvent(identity, player, logoutTime, authFailed);
     }
 
     /**

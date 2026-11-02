@@ -86,6 +86,9 @@ The configuration controls the main runtime features and individual telemetry ca
 | `EnableItemExport` | Enables generation of the item catalog files. |
 | `EnableTelemtryLogging` | Enables structured event/telemetry logging. The property name intentionally matches the current source schema. |
 | `EnableLiveDataLogging` | Enables live snapshots and the live-action poller. |
+| `EnableDeathReports` | Opt-in death reporting; defaults to `false`. Requires telemetry and player-kill logging. Restart the server after changing it. |
+| `EnableTickets` | Enables in-game tickets, chat and notifications; defaults to `true`. Disabled tickets create no client chat state or server ticket bridges. |
+| `EnableSupportCases` | Enables in-game refunds/support-case delivery; defaults to `true`. Disabled cases cannot be claimed or provisioned through the updated Agent. |
 | `LiveDataUpdateIntervalSeconds` | Controls how often the live snapshot is refreshed. |
 | `LiveBaseDetailsCacheSeconds` | Reuses base/provider details for 30 seconds by default; `0` disables caching. |
 | `LogAnimalHits` / `LogAnimalKills` | Controls animal combat events. |

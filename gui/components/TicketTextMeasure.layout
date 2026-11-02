@@ -1,0 +1,32 @@
+FrameWidgetClass TicketTextMeasure {
+ ignorepointer 1
+ size 1 24
+ hexactsize 1
+ vexactsize 1
+ {
+  TextWidgetClass MeasureText {
+   ignorepointer 1
+   inheritalpha 1
+   size 100 24
+   hexactsize 1
+   vexactsize 1
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "exact text size" 16
+   "size to text h" 1
+  }
+  TextWidgetClass MeasureCode {
+   ignorepointer 1
+   inheritalpha 1
+   size 100 24
+   hexactsize 1
+   vexactsize 1
+   style Normal_SDF
+   font "gui/fonts/robotomono_msdf_28"
+   "exact text" 1
+   "exact text size" 16
+   "size to text h" 1
+  }
+ }
+}

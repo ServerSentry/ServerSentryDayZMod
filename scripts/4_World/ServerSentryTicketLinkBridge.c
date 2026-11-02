@@ -26,8 +26,9 @@ class ServerSentryTicketLinkBridge
         m_Pending.Clear();
     }
 
-    void Request(PlayerIdentity identity, int clientRequestId)
+    void Request(PlayerIdentity identity, ServerSentryTicketLinkQuery query)
     {
+        if (!ServerSentryConfigManager.Get().IsTicketsEnabled()) return;
         foreach (ServerSentryPendingTicketLink existing : m_Pending)
         {
             if (existing.identity == identity)
@@ -36,7 +37,7 @@ class ServerSentryTicketLinkBridge
 
         ServerSentryPendingTicketLink pending = new ServerSentryPendingTicketLink;
         pending.identity = identity;
-        pending.clientRequestId = clientRequestId;
+        pending.clientRequestId = query.requestId;
         pending.deadline = GetGame().GetTime() + 20000;
 
         int uuid[4];
@@ -56,6 +57,8 @@ class ServerSentryTicketLinkBridge
         ServerSentryTicketLinkRequest request = new ServerSentryTicketLinkRequest;
         request.requestId = pending.requestId;
         request.steamId64 = identity.GetPlainId();
+        request.includeTickets = query.includeTickets;
+        request.refreshOptions = query.refreshOptions;
         string requestPath = ROOT + "/requests/" + pending.requestId;
         string error;
         if (!JsonFileLoader<ServerSentryTicketLinkRequest>.SaveFile(requestPath + ".json", request, error))

@@ -11,6 +11,8 @@ class ServerSentryServerManager: CF_ModuleWorld
 {
     protected ref ServerSentryTicketLinkBridge m_TicketLinkBridge;
     protected ref ServerSentryTicketCreationBridge m_TicketCreationBridge;
+    protected ref ServerSentryTicketConversationBridge m_TicketConversationBridge;
+    protected ref ServerSentryTicketNotificationBridge m_TicketNotifications;
 
     /**
     	\brief Handles the DayZ Init callback.
@@ -19,13 +21,24 @@ class ServerSentryServerManager: CF_ModuleWorld
     {
         super.OnInit();
 
-        m_TicketLinkBridge = new ServerSentryTicketLinkBridge;
-        m_TicketCreationBridge = new ServerSentryTicketCreationBridge;
         EnableMissionFinish();
-        GetRPCManager().AddRPC("ServerSentryBot", "GetTicketLinkStatus", this, SingleplayerExecutionType.Server);
-        GetRPCManager().AddRPC("ServerSentryBot", "CreateTicket", this, SingleplayerExecutionType.Server);
-        GetRPCManager().AddRPC("ServerSentryBot", "GetSupportState",    this, SingleplayerExecutionType.Server);
-        GetRPCManager().AddRPC("ServerSentryBot", "SpawnSupportCase",     this, SingleplayerExecutionType.Server);
+        if (!GetGame().IsServer()) return;
+        if (ServerSentryConfigManager.Get().IsTicketsEnabled())
+        {
+            m_TicketLinkBridge = new ServerSentryTicketLinkBridge;
+            m_TicketCreationBridge = new ServerSentryTicketCreationBridge;
+            m_TicketConversationBridge = new ServerSentryTicketConversationBridge;
+            m_TicketNotifications = new ServerSentryTicketNotificationBridge;
+            m_TicketNotifications.Start();
+            GetRPCManager().AddRPC("ServerSentryBot", "TicketConversation", this, SingleplayerExecutionType.Server);
+            GetRPCManager().AddRPC("ServerSentryBot", "GetTicketLinkStatus", this, SingleplayerExecutionType.Server);
+            GetRPCManager().AddRPC("ServerSentryBot", "CreateTicket", this, SingleplayerExecutionType.Server);
+        }
+        if (ServerSentryConfigManager.Get().IsSupportCasesEnabled())
+        {
+            GetRPCManager().AddRPC("ServerSentryBot", "GetSupportState", this, SingleplayerExecutionType.Server);
+            GetRPCManager().AddRPC("ServerSentryBot", "SpawnSupportCase", this, SingleplayerExecutionType.Server);
+        }
     }
 
     /**
@@ -37,7 +50,7 @@ class ServerSentryServerManager: CF_ModuleWorld
     */
     void GetSupportState(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
     {
-        if (type != CallType.Server || !sender)
+        if (type != CallType.Server || !sender || !ServerSentryConfigManager.Get().IsSupportCasesEnabled())
             return;
 
         Param1<int> request;
@@ -51,32 +64,45 @@ class ServerSentryServerManager: CF_ModuleWorld
     override void OnMissionFinish(Class sender, CF_EventArgs args)
     {
         super.OnMissionFinish(sender, args);
-        m_TicketLinkBridge.Stop();
-        m_TicketCreationBridge.Stop();
+        ServerSentryDeathReportStore.Clear();
+        if (m_TicketLinkBridge) m_TicketLinkBridge.Stop();
+        if (m_TicketCreationBridge) m_TicketCreationBridge.Stop();
+        if (m_TicketConversationBridge) m_TicketConversationBridge.Stop();
+        if (m_TicketNotifications) m_TicketNotifications.Stop();
     }
 
     void GetTicketLinkStatus(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
     {
-        if (type != CallType.Server || !sender)
+        if (type != CallType.Server || !sender || !m_TicketLinkBridge || !ServerSentryConfigManager.Get().IsTicketsEnabled())
             return;
 
-        Param1<int> request;
+        Param1<ServerSentryTicketLinkQuery> request;
         if (ctx.Read(request) && request)
-            m_TicketLinkBridge.Request(sender, request.param1);
+        {
+            if (request.param1) m_TicketLinkBridge.Request(sender, request.param1);
+        }
     }
 
     void CreateTicket(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
     {
-        if (type != CallType.Server || !sender)
+        if (type != CallType.Server || !sender || !m_TicketCreationBridge || !ServerSentryConfigManager.Get().IsTicketsEnabled())
             return;
         Param1<ServerSentryTicketSubmission> request;
         if (ctx.Read(request) && request && request.param1)
             m_TicketCreationBridge.Request(sender, request.param1);
     }
 
+    void TicketConversation(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    {
+        if (type != CallType.Server || !sender || !m_TicketConversationBridge || !ServerSentryConfigManager.Get().IsTicketsEnabled()) return;
+        Param1<ServerSentryTicketConversationRequest> request;
+        if (ctx.Read(request) && request && request.param1)
+            m_TicketConversationBridge.Request(sender, request.param1);
+    }
+
     void SpawnSupportCase(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
     {
-        if (type != CallType.Server || !sender)
+        if (type != CallType.Server || !sender || !ServerSentryConfigManager.Get().IsSupportCasesEnabled())
             return;
 
         Print("[ServerSentry] -> Recived: SpawnSupportCase() from=" + sender.GetPlainId());

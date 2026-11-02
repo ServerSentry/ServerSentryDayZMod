@@ -27,9 +27,10 @@ class ServerSentryTicketCreationBridge
 
     void Request(PlayerIdentity identity, ServerSentryTicketSubmission submission)
     {
+        if (!ServerSentryConfigManager.Get().IsTicketsEnabled()) return;
         if (!submission.IsValid())
         {
-            Reply(identity, submission.requestId, Failure("Choose a ticket type and enter a subject and message within the length limits."));
+            Reply(identity, submission.requestId, Failure("Choose a ticket type and enter a message of up to 4000 characters.", true));
             return;
         }
         foreach (ServerSentryPendingTicketCreation existing : m_Pending)
@@ -69,8 +70,14 @@ class ServerSentryTicketCreationBridge
         request.steamId64 = pending.identity.GetPlainId();
         request.panelId = submission.panelId;
         request.ticketTypeId = submission.ticketTypeId;
-        request.subject = submission.subject;
         request.message = submission.message;
+        request.includePlayerInfo = submission.includePlayerInfo;
+        if (submission.includePlayerInfo)
+        {
+            request.playerInfo = CapturePlayerInfo(PlayerBase.Cast(pending.identity.GetPlayer()));
+            if (!request.playerInfo)
+                return false;
+        }
         string path = ROOT + "/requests/" + pending.fileKey;
         string error;
         if (!JsonFileLoader<ServerSentryTicketCreationRequest>.SaveFile(path + ".json", request, error))
@@ -83,6 +90,26 @@ class ServerSentryTicketCreationBridge
             return false;
         CloseFile(marker);
         return true;
+    }
+
+    protected ServerSentryTicketPlayerInfo CapturePlayerInfo(PlayerBase player)
+    {
+        if (!player)
+            return null;
+        ServerSentryTicketPlayerInfo info = new ServerSentryTicketPlayerInfo;
+        vector position = player.GetPosition();
+        info.x = position[0];
+        info.y = position[1];
+        info.z = position[2];
+        info.health = player.GetHealth01("", "Health") * 100;
+        info.blood = player.GetHealth01("", "Blood") * 100;
+        info.shock = player.GetHealth01("", "Shock") * 100;
+        info.water = player.GetStatWater().GetNormalized() * 100;
+        info.energy = player.GetStatEnergy().GetNormalized() * 100;
+        info.unconscious = player.IsUnconscious();
+        if (player.GetBleedingManagerServer())
+            info.bleedingSources = player.GetBleedingManagerServer().GetBleedingSourcesCount();
+        return info;
     }
 
     protected void Poll()
@@ -127,10 +154,11 @@ class ServerSentryTicketCreationBridge
             GetRPCManager().SendRPC("ServerSentryBot", "TicketCreationResponse", new Param2<string, ServerSentryTicketCreationResult>(requestId, result), true, identity);
     }
 
-    protected ServerSentryTicketCreationResult Failure(string message)
+    protected ServerSentryTicketCreationResult Failure(string message, bool canEdit = false)
     {
         ServerSentryTicketCreationResult result = new ServerSentryTicketCreationResult;
         result.message = message;
+        result.canEdit = canEdit;
         return result;
     }
 }

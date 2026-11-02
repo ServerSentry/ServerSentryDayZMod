@@ -3,6 +3,7 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
 {
     static const int MENU_ID = 4771342;
 
+    protected ref ServerSentryPlayerInfoSwitch m_InfoSwitch;
     protected Widget m_CloseButton;
     protected ButtonWidget m_SubmitButton;
     protected TextWidget m_SubmitLabel;
@@ -11,7 +12,7 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
     protected TextWidget m_CheckAgainLabel;
     protected MultilineTextWidget m_StatusText;
     protected TextWidget m_StatusMark;
-    protected EditBoxWidget m_Subject;
+    protected CheckBoxWidget m_IncludePlayerInfo;
     protected MultilineEditBoxWidget m_Message;
     protected XComboBoxWidget m_TicketTypes;
     protected ref array<ref ServerSentryTicketOption> m_Options;
@@ -34,10 +35,13 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
         m_CheckAgainLabel = TextWidget.Cast(layoutRoot.FindAnyWidget("BtnCheckAgain_Label"));
         m_StatusText = MultilineTextWidget.Cast(layoutRoot.FindAnyWidget("TicketStatus"));
         m_StatusMark = TextWidget.Cast(layoutRoot.FindAnyWidget("NoticeMark"));
-        m_Subject = EditBoxWidget.Cast(layoutRoot.FindAnyWidget("EditTicketSubject"));
-        m_Message = MultilineEditBoxWidget.Cast(layoutRoot.FindAnyWidget("EditTicketMessage"));
+        m_IncludePlayerInfo = CheckBoxWidget.Cast(layoutRoot.FindAnyWidget("IncludePlayerInfo"));
+        m_InfoSwitch = new ServerSentryPlayerInfoSwitch(layoutRoot.FindAnyWidget("PlayerInfoSwitchSlot"), m_IncludePlayerInfo);
+        m_Composer = new ServerSentryMessageComposer(layoutRoot.FindAnyWidget("MessageField"), this);
+        m_Message = m_Composer.GetInput();
         m_TicketTypes = XComboBoxWidget.Cast(layoutRoot.FindAnyWidget("TicketTypeSelector"));
         SetSupportButtonEnabled(m_SubmitButton, false);
+        InitSupportControls();
         return layoutRoot;
     }
 
@@ -48,8 +52,8 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
         if (manager && manager.GetTicketSubmission())
         {
             ServerSentryTicketSubmission draft = manager.GetTicketSubmission();
-            m_Subject.SetText(draft.subject);
-            m_Message.SetText(draft.message);
+            m_Composer.SetText(draft.message);
+            m_IncludePlayerInfo.SetChecked(draft.includePlayerInfo);
         }
         CheckAccountLink();
     }
@@ -57,19 +61,20 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
     override void Update(float timeslice)
     {
         super.Update(timeslice);
+        m_InfoSwitch.Update();
         if (GetUApi().GetInputByID(UAUIBack).LocalPress())
         {
-            Close();
+            if (!m_Composer.DismissPicker()) Close();
             return;
         }
         RefreshView();
     }
 
-    protected void CheckAccountLink()
+    protected void CheckAccountLink(bool refreshOptions = false)
     {
         ServerSentryClientManager manager = ServerSentryClientManager.Get();
         if (manager)
-            manager.RequestTicketLinkStatus();
+            manager.RequestTicketLinkStatus(false, refreshOptions);
         m_HasViewState = false;
         RefreshView();
     }
@@ -100,8 +105,8 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
         SetSupportButtonEnabled(m_CheckAgainButton, !checking && !creating);
         m_CheckAgainLabel.SetText("Check again");
         m_SubmitLabel.SetText("Send ticket  >");
-        bool editable = !manager.GetTicketSubmission();
-        m_Subject.Enable(editable);
+        bool editable = !manager.GetTicketSubmission() || (result && result.canEdit);
+        m_IncludePlayerInfo.Enable(editable);
         m_Message.Enable(editable);
         m_TicketTypes.Enable(editable);
 
@@ -113,7 +118,7 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
         }
         if (result && result.success)
         {
-            m_SubmitLabel.SetText("New ticket");
+            m_SubmitLabel.SetText("Open conversation");
             SetSupportButtonEnabled(m_SubmitButton, true);
             SetSupportButtonEnabled(m_CheckAgainButton, false);
             SetTicketStatus("Ticket created. Your support team has received your request.", "+", ARGB(255, 139, 203, 174));
@@ -142,8 +147,13 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
         }
         if (m_CreationResult)
         {
-            m_SubmitLabel.SetText("Retry request");
-            SetSupportButtonEnabled(m_SubmitButton, true);
+            if (m_CreationResult.canEdit)
+                SetSupportButtonEnabled(m_SubmitButton, ValidateDraft() == "");
+            else
+            {
+                m_SubmitLabel.SetText("Retry request");
+                SetSupportButtonEnabled(m_SubmitButton, true);
+            }
             SetTicketStatus(m_CreationResult.message, "!", ARGB(255, 232, 171, 143));
             return;
         }
@@ -210,14 +220,9 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
     {
         if (!GetSelectedTicketType())
             return "Choose a ticket type.";
-        string subject = m_Subject.GetText().Trim();
         string message;
-        m_Message.GetText(message);
+        message = m_Composer.GetText();
         message = message.Trim();
-        if (subject == "")
-            return "Enter a subject.";
-        if (subject.Length() > ServerSentryTicketSubmission.MAX_SUBJECT_LENGTH)
-            return "The subject must not exceed 120 characters.";
         if (message == "")
             return "Describe what happened.";
         if (message.Length() > ServerSentryTicketSubmission.MAX_MESSAGE_LENGTH)
@@ -227,7 +232,7 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
 
     protected void RefreshSendButton()
     {
-        if (!m_LinkStatus || !m_LinkStatus.success || !m_LinkStatus.discordLinked || m_WasCheckingLink || m_WasCreating || m_CreationResult)
+        if (!m_LinkStatus || !m_LinkStatus.success || !m_LinkStatus.discordLinked || m_WasCheckingLink || m_WasCreating || (m_CreationResult && !m_CreationResult.canEdit))
             return;
         string error = ValidateDraft();
         SetSupportButtonEnabled(m_SubmitButton, error == "");
@@ -242,16 +247,18 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
         ServerSentryClientManager manager = ServerSentryClientManager.Get();
         if (manager && m_CreationResult && m_CreationResult.success)
         {
-            manager.StartNewTicket();
-            m_Subject.SetText("");
-            m_Message.SetText("");
-            m_HasViewState = false;
-            RefreshView();
+            ServerSentryTicketSummary ticket = new ServerSentryTicketSummary;
+            ticket.ticketId = m_CreationResult.ticketId;
+            ServerSentryTicketOption option = GetSelectedTicketType();
+            ticket.ticketTypeName = "Support";
+            if (option) ticket.ticketTypeName = option.label;
+            ServerSentryTicketConversationMenu menu = ServerSentryTicketConversationMenu.Cast(GetGame().GetUIManager().EnterScriptedMenu(ServerSentryTicketConversationMenu.MENU_ID, this));
+            if (menu) menu.SetTicket(ticket);
             return;
         }
         if (!manager || !m_LinkStatus || !m_LinkStatus.success || !m_LinkStatus.discordLinked || m_WasCheckingLink)
             return;
-        if (!manager.GetTicketSubmission())
+        if (!manager.GetTicketSubmission() || (m_CreationResult && m_CreationResult.canEdit))
         {
             string error = ValidateDraft();
             if (error != "")
@@ -261,8 +268,8 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
             }
         }
         string message;
-        m_Message.GetText(message);
-        manager.SubmitTicket(GetSelectedTicketType(), m_Subject.GetText(), message);
+        message = m_Composer.GetText();
+        manager.SubmitTicket(GetSelectedTicketType(), message, m_IncludePlayerInfo.IsChecked());
         m_HasViewState = false;
         RefreshView();
     }
@@ -277,13 +284,20 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
 
     override bool OnChange(Widget w, int x, int y, bool finished)
     {
-        if (w == m_Subject || w == m_Message || w == m_TicketTypes)
+        if (w == m_Message || w == m_TicketTypes)
             RefreshSendButton();
         return super.OnChange(w, x, y, finished);
     }
 
     override bool OnClick(Widget w, int x, int y, int button)
     {
+        if (m_InfoSwitch.Toggle(w)) return true;
+        if (w && w.GetName() == "PlayerInfoLabel")
+        {
+            if ((m_IncludePlayerInfo.GetFlags() & WidgetFlags.DISABLED) == 0)
+                m_IncludePlayerInfo.SetChecked(!m_IncludePlayerInfo.IsChecked());
+            return true;
+        }
         if (m_CloseButton && w == m_CloseButton)
         {
             Close();
@@ -291,7 +305,7 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
         }
         if (w == m_CheckAgainButton)
         {
-            CheckAccountLink();
+            CheckAccountLink(true);
             return true;
         }
         if (w == m_SubmitButton)

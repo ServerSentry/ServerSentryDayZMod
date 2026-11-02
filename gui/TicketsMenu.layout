@@ -39,116 +39,109 @@ FrameWidgetClass ServerSentryTicketsRoot {
      color .004 .006 .010 1
      style rover_sim_colorable
      {
-      PanelWidgetClass Monogram {
+
+      ImageWidgetClass Monogram {
        ignorepointer 1
-       position 0.14 0.065
-       size 0.18 0.065
-       hexactpos 0
-       vexactpos 0
-       hexactsize 0
-       vexactsize 0
-       color .025 .13 .10 1
-       style rover_sim_colorable
-       {
-        TextWidgetClass MonogramText {
-         ignorepointer 1
-         position 0 0
-         size 1 1
-         hexactpos 0
-         vexactpos 0
-         hexactsize 0
-         vexactsize 0
-         text "SS"
-         font "gui/fonts/sdf_MetronLight24"
-         color .08 .56 .38 1
-         "exact text" 1
-         "exact text size" 19
-         "text valign" center
-         "text halign" center
-        }
-       }
+       position 0 28
+       size 128 128
+       halign center_ref
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       scaled 0
+       color 1 1 1 1
+       image0 "ServerSentryDayZMod/gui/skin/serversentry_logo.edds"
+       mode blend
+       "src alpha" 1
+       stretch 1
       }
+
       TextWidgetClass BrandTop {
+       scaled 0
        ignorepointer 1
-       position 0.38 0.063
-       size 0.54 0.033
+       position .07 170
+       size .86 28
        hexactpos 0
-       vexactpos 0
+       vexactpos 1
        hexactsize 0
-       vexactsize 0
-       text "SERVER"
-       font "gui/fonts/sdf_MetronLight24"
-       color .28 .36 .45 1
+       vexactsize 1
+       style Normal_SDF
+       font "gui/fonts/sdf_MetronBook72"
+       text "ServerSentry"
        "exact text" 1
-       "exact text size" 12
+       "exact text size" 20
+       "text halign" center
        "text valign" center
+       color .91 .95 1 1
       }
+
       TextWidgetClass BrandBottom {
+       scaled 0
        ignorepointer 1
-       position 0.38 0.096
-       size 0.54 0.036
+       position .07 206
+       size .86 20
        hexactpos 0
-       vexactpos 0
+       vexactpos 1
        hexactsize 0
-       vexactsize 0
-       text "SENTRY"
-       font "gui/fonts/sdf_MetronLight24"
-       color .85 .90 .95 1
-       "exact text" 1
-       "exact text size" 18
-       "text valign" center
-      }
-      TextWidgetClass RailSection {
-       ignorepointer 1
-       position 0.14 0.205
-       size 0.76 0.03
-       hexactpos 0
-       vexactpos 0
-       hexactsize 0
-       vexactsize 0
-       text "SUPPORT CENTER"
-       font "gui/fonts/sdf_MetronLight24"
-       color .28 .36 .45 1
+       vexactsize 1
+       style Normal_SDF
+       font "gui/fonts/sdf_MetronBook72"
+       text "PLAYER SUPPORT"
        "exact text" 1
        "exact text size" 11
+       "text halign" center
        "text valign" center
+       color .42 .51 .63 1
       }
-      PanelWidgetClass ActiveSection {
+
+      FrameWidgetClass ActiveSection {
+       scaled 0
        ignorepointer 1
-       position 0.09 0.267
-       size 0.82 0.084
+       position .08 260
+       size .84 48
        hexactpos 0
-       vexactpos 0
+       vexactpos 1
        hexactsize 0
-       vexactsize 0
-       color .012 .039 .042 1
-       style rover_sim_colorable
+       vexactsize 1
        {
-        PanelWidgetClass ActiveMarker {
+        FrameWidgetClass ActiveSection_Fill {
          ignorepointer 1
-         position 0 0.18
-         size 0.012 0.64
-         hexactpos 0
-         vexactpos 0
+         size 1 1
          hexactsize 0
          vexactsize 0
-         color .08 .56 .38 1
-         style rover_sim_colorable
+        }
+        ImageWidgetClass ActiveIcon {
+         scaled 0
+         ignorepointer 1
+         position .07 0
+         size 32 32
+         hexactpos 0
+         vexactpos 1
+         hexactsize 1
+         vexactsize 1
+         valign center_ref
+         image0 "ServerSentryDayZMod/gui/skin/ticket.edds"
+         color .5 .76 1 1
+         mode blend
+         "src alpha" 1
+         stretch 1
         }
         TextWidgetClass ActiveLabel {
          ignorepointer 1
-         position 0.09 0
-         size 0.87 1
+         position .29 0
+         size .65 1
          hexactpos 0
          vexactpos 0
          hexactsize 0
          vexactsize 0
+         style Normal_SDF
+         font "gui/fonts/sdf_MetronBook72"
          text "My tickets"
-         font "gui/fonts/sdf_MetronLight24"
-         color .85 .90 .95 1
          "exact text" 1
-         "exact text size" 15
+         "exact text size" 14
          "text valign" center
+         color .85 .9 .98 1
         }
        }
       }
@@ -175,6 +168,8 @@ FrameWidgetClass ServerSentryTicketsRoot {
      ignorepointer 1
      {
       TextWidgetClass Breadcrumb {
+ style Normal_SDF
+ priority 10
        ignorepointer 1
        position 0 0.055
        size 0.82 0.03
@@ -183,52 +178,50 @@ FrameWidgetClass ServerSentryTicketsRoot {
        hexactsize 0
        vexactsize 0
        text "SUPPORT  /  MY TICKETS"
-       font "gui/fonts/sdf_MetronLight24"
+       font "gui/fonts/sdf_MetronBook72"
        color .28 .36 .45 1
        "exact text" 1
        "exact text size" 11
        "text valign" center
       }
+
       ButtonWidgetClass SupportClose {
-       position 0.948 0.044
-       size 0.052 0.052
+       position .948 .044
+       size 36 36
        hexactpos 0
        vexactpos 0
-       hexactsize 0
-       vexactsize 0
+       hexactsize 1
+       vexactsize 1
        style Empty
-       color 1 1 1 1
+       "no focus" 1
        {
-        PanelWidgetClass SupportClose_Fill {
+        FrameWidgetClass SupportClose_Fill {
+         ignorepointer 1
+         size 1 1
+         hexactsize 0
+         vexactsize 0
+        }
+        ImageWidgetClass SupportClose_Icon {
          ignorepointer 1
          position 0 0
-         size 1 1
-         hexactpos 0
-         vexactpos 0
-         hexactsize 0
-         vexactsize 0
-         color .019 .027 .038 1
-         style rover_sim_colorable
-        }
-        TextWidgetClass SupportClose_Label {
-         ignorepointer 1
-         position 0.04 0
-         size 0.92 1
-         hexactpos 0
-         vexactpos 0
-         hexactsize 0
-         vexactsize 0
-         text "x"
-         font "gui/fonts/sdf_MetronLight24"
-         color .85 .90 .95 1
-         "exact text" 1
-         "exact text size" 15
-         "text valign" center
-         "text halign" center
+         size 32 32
+         scaled 0
+         hexactpos 1
+         vexactpos 1
+         hexactsize 1
+         vexactsize 1
+         halign center_ref
+         valign center_ref
+         image0 "ServerSentryDayZMod/gui/skin/close.edds"
+         mode blend
+         "src alpha" 1
+         stretch 1
         }
        }
       }
       TextWidgetClass TitleLabel {
+ style Normal_SDF
+ priority 10
        ignorepointer 1
        position 0 0.109
        size 0.94 0.065
@@ -237,13 +230,15 @@ FrameWidgetClass ServerSentryTicketsRoot {
        hexactsize 0
        vexactsize 0
        text "Your support tickets"
-       font "gui/fonts/sdf_MetronLight24"
+       font "gui/fonts/sdf_MetronBook72"
        color .85 .90 .95 1
        "exact text" 1
        "exact text size" 30
        "text valign" center
       }
       MultilineTextWidgetClass IntroLabel {
+ style None
+ priority 10
        ignorepointer 1
        position 0 0.185
        size 1 0.045
@@ -252,7 +247,7 @@ FrameWidgetClass ServerSentryTicketsRoot {
        hexactsize 0
        vexactsize 0
        text "View your open requests or contact your server team."
-       font "gui/fonts/sdf_MetronLight24"
+       font "gui/fonts/sdf_MetronBook72"
        color .28 .36 .45 1
        "exact text" 1
        "exact text size" 15
@@ -292,64 +287,9 @@ FrameWidgetClass ServerSentryTicketsRoot {
         }
        }
       }
-      FrameWidgetClass TicketDetail {
-       visible 0
-       ignorepointer 1
-       position 0 0.285
-       size 1 0.44
-       hexactpos 0
-       vexactpos 0
-       hexactsize 0
-       vexactsize 0
-       {
-        MultilineTextWidgetClass DetailSubject {
-         ignorepointer 1
-         position 0 0
-         size 1 0.22
-         hexactpos 0
-         vexactpos 0
-         hexactsize 0
-         vexactsize 0
-         text "Ticket subject"
-         font "gui/fonts/sdf_MetronLight24"
-         color .85 .90 .95 1
-         "exact text" 1
-         "exact text size" 22
-         wrap 1
-        }
-        MultilineTextWidgetClass DetailInfo {
-         ignorepointer 1
-         position 0 0.27
-         size 1 0.46
-         hexactpos 0
-         vexactpos 0
-         hexactsize 0
-         vexactsize 0
-         text "Ticket information"
-         font "gui/fonts/sdf_MetronLight24"
-         color .58 .68 .77 1
-         "exact text" 1
-         "exact text size" 14
-         wrap 1
-        }
-        MultilineTextWidgetClass ConversationNotice {
-         ignorepointer 1
-         position 0 0.81
-         size 1 0.18
-         hexactpos 0
-         vexactpos 0
-         hexactsize 0
-         vexactsize 0
-         text "Conversation messages are currently unavailable."
-         font "gui/fonts/sdf_MetronLight24"
-         color .28 .36 .45 1
-         "exact text" 1
-         "exact text size" 13
-         wrap 1
-        }
-       }
-      }
       MultilineTextWidgetClass TicketListStatus {
+ style None
+ priority 10
        ignorepointer 1
        position 0 0.77
        size 1 0.095
@@ -358,7 +298,7 @@ FrameWidgetClass ServerSentryTicketsRoot {
        hexactsize 0
        vexactsize 0
        text "Loading your tickets..."
-       font "gui/fonts/sdf_MetronLight24"
+       font "gui/fonts/sdf_MetronBook72"
        color .58 .68 .77 1
        "exact text" 1
        "exact text size" 14
@@ -385,7 +325,7 @@ FrameWidgetClass ServerSentryTicketsRoot {
        style Empty
        color 1 1 1 1
        {
-        PanelWidgetClass BtnClose_Fill {
+        FrameWidgetClass BtnClose_Fill {
          ignorepointer 1
          position 0 0
          size 1 1
@@ -394,9 +334,11 @@ FrameWidgetClass ServerSentryTicketsRoot {
          hexactsize 0
          vexactsize 0
          color .019 .027 .038 1
-         style rover_sim_colorable
+
         }
         TextWidgetClass BtnClose_Label {
+ style Normal_SDF
+ priority 10
          ignorepointer 1
          position 0.04 0
          size 0.92 1
@@ -405,7 +347,7 @@ FrameWidgetClass ServerSentryTicketsRoot {
          hexactsize 0
          vexactsize 0
          text "Back"
-         font "gui/fonts/sdf_MetronLight24"
+         font "gui/fonts/sdf_MetronBook72"
          color .85 .90 .95 1
          "exact text" 1
          "exact text size" 15
@@ -425,7 +367,7 @@ FrameWidgetClass ServerSentryTicketsRoot {
        color 1 1 1 1
        disabled 1
        {
-        PanelWidgetClass BtnRefresh_Fill {
+        FrameWidgetClass BtnRefresh_Fill {
          ignorepointer 1
          position 0 0
          size 1 1
@@ -434,9 +376,11 @@ FrameWidgetClass ServerSentryTicketsRoot {
          hexactsize 0
          vexactsize 0
          color .013 .019 .027 1
-         style rover_sim_colorable
+
         }
         TextWidgetClass BtnRefresh_Label {
+ style Normal_SDF
+ priority 10
          ignorepointer 1
          position 0.04 0
          size 0.92 1
@@ -445,7 +389,7 @@ FrameWidgetClass ServerSentryTicketsRoot {
          hexactsize 0
          vexactsize 0
          text "Refresh"
-         font "gui/fonts/sdf_MetronLight24"
+         font "gui/fonts/sdf_MetronBook72"
          color .28 .36 .45 1
          "exact text" 1
          "exact text size" 15
@@ -465,7 +409,7 @@ FrameWidgetClass ServerSentryTicketsRoot {
        color 1 1 1 1
        visible 0
        {
-        PanelWidgetClass BtnLinkAccount_Fill {
+        FrameWidgetClass BtnLinkAccount_Fill {
          ignorepointer 1
          position 0 0
          size 1 1
@@ -474,9 +418,11 @@ FrameWidgetClass ServerSentryTicketsRoot {
          hexactsize 0
          vexactsize 0
          color .013 .019 .027 1
-         style rover_sim_colorable
+
         }
         TextWidgetClass BtnLinkAccount_Label {
+ style Normal_SDF
+ priority 10
          ignorepointer 1
          position 0.04 0
          size 0.92 1
@@ -485,7 +431,7 @@ FrameWidgetClass ServerSentryTicketsRoot {
          hexactsize 0
          vexactsize 0
          text "Link account  >"
-         font "gui/fonts/sdf_MetronLight24"
+         font "gui/fonts/sdf_MetronBook72"
          color .28 .36 .45 1
          "exact text" 1
          "exact text size" 15
@@ -505,7 +451,7 @@ FrameWidgetClass ServerSentryTicketsRoot {
        color 1 1 1 1
        disabled 1
        {
-        PanelWidgetClass BtnNewTicket_Fill {
+        FrameWidgetClass BtnNewTicket_Fill {
          ignorepointer 1
          position 0 0
          size 1 1
@@ -514,9 +460,11 @@ FrameWidgetClass ServerSentryTicketsRoot {
          hexactsize 0
          vexactsize 0
          color .013 .019 .027 1
-         style rover_sim_colorable
+
         }
         TextWidgetClass BtnNewTicket_Label {
+ style Normal_SDF
+ priority 10
          ignorepointer 1
          position 0.04 0
          size 0.92 1
@@ -525,7 +473,7 @@ FrameWidgetClass ServerSentryTicketsRoot {
          hexactsize 0
          vexactsize 0
          text "New ticket  >"
-         font "gui/fonts/sdf_MetronLight24"
+         font "gui/fonts/sdf_MetronBook72"
          color .28 .36 .45 1
          "exact text" 1
          "exact text size" 15

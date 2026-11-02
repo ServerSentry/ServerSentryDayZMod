@@ -1,7 +1,16 @@
+class ServerSentryTicketLinkQuery
+{
+    int requestId;
+    bool includeTickets = true;
+    bool refreshOptions;
+}
+
 class ServerSentryTicketLinkRequest
 {
     string requestId;
     string steamId64;
+    bool includeTickets = true;
+    bool refreshOptions;
 }
 
 class ServerSentryTicketLinkStatus
@@ -11,6 +20,7 @@ class ServerSentryTicketLinkStatus
     bool discordLinked;
     string accountLinkUrl;
     string message;
+    int optionsValidForSeconds;
     ref array<ref ServerSentryTicketOption> ticketOptions;
     ref ServerSentryTicketListResult ticketList;
 }

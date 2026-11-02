@@ -24,10 +24,12 @@ FrameWidgetClass SupportItemRow {
      vexactpos 0
      hexactsize 0
      vexactsize 0
-     color .025 .11 .09 1
+     color .035 .055 .12 1
      style rover_sim_colorable
      {
       TextWidgetClass ItemGlyph {
+ style Normal_SDF
+ priority 10
        ignorepointer 1
        position 0 0
        size 1 1
@@ -36,8 +38,8 @@ FrameWidgetClass SupportItemRow {
        hexactsize 0
        vexactsize 0
        text "+"
-       font "gui/fonts/sdf_MetronLight24"
-       color .08 .56 .38 1
+       font "gui/fonts/sdf_MetronBook72"
+       color .32 .75 1 1
        "exact text" 1
        "exact text size" 22
        "text valign" center
@@ -46,6 +48,8 @@ FrameWidgetClass SupportItemRow {
      }
     }
     TextWidgetClass ItemName {
+ style Normal_SDF
+ priority 10
      ignorepointer 1
      position 0.09 0.12
      size 0.72 0.4
@@ -54,13 +58,15 @@ FrameWidgetClass SupportItemRow {
      hexactsize 0
      vexactsize 0
      text "Item name"
-     font "gui/fonts/sdf_MetronLight24"
+     font "gui/fonts/sdf_MetronBook72"
      color .85 .90 .95 1
      "exact text" 1
      "exact text size" 16
      "text valign" center
     }
     TextWidgetClass ItemMeta {
+ style Normal_SDF
+ priority 10
      ignorepointer 1
      position 0.09 0.56
      size 0.72 0.24
@@ -69,13 +75,15 @@ FrameWidgetClass SupportItemRow {
      hexactsize 0
      vexactsize 0
      text "Reimbursement item"
-     font "gui/fonts/sdf_MetronLight24"
+     font "gui/fonts/sdf_MetronBook72"
      color .28 .36 .45 1
      "exact text" 1
      "exact text size" 12
      "text valign" center
     }
     TextWidgetClass ItemTag {
+ style Normal_SDF
+ priority 10
      ignorepointer 1
      position 0.84 0.2
      size 0.14 0.6
@@ -84,8 +92,8 @@ FrameWidgetClass SupportItemRow {
      hexactsize 0
      vexactsize 0
      text "READY"
-     font "gui/fonts/sdf_MetronLight24"
-     color .08 .56 .38 1
+     font "gui/fonts/sdf_MetronBook72"
+     color .32 .75 1 1
      "exact text" 1
      "exact text size" 10
      "text valign" center

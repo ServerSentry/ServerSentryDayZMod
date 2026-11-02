@@ -22,6 +22,12 @@ class ServerSentryLoggingConfig
     	\brief Indicates whether enable live data logging.
     */
     bool EnableLiveDataLogging;
+    /** \brief Enables death reporting; opt-in and independent from ordinary combat logging. */
+    bool EnableDeathReports;
+    /** \brief Enables in-game Discord tickets and notifications. */
+    bool EnableTickets;
+    /** \brief Enables support-case delivery and in-game refund claims. */
+    bool EnableSupportCases;
     /**
     	\brief Stores the live data update interval seconds.
     */
@@ -100,8 +106,8 @@ class ServerSentryLoggingConfig
     void ServerSentryLoggingConfig()
     {
         // JsonFileLoader constructs this class before applying values from disk.
-        // Initializing here keeps newly-added settings enabled for older config.json
-        // files where those properties do not exist yet. Explicit false values in
+        // Initializing here applies each setting's default for older config.json
+        // files where those properties do not exist yet. Explicit values in
         // the JSON are still applied afterwards.
         InitDefaultValues();
     }
@@ -114,6 +120,9 @@ class ServerSentryLoggingConfig
         EnableItemExport = true;
         EnableTelemtryLogging = true;
         EnableLiveDataLogging = true;
+        EnableDeathReports = false;
+        EnableTickets = true;
+        EnableSupportCases = true;
         LiveDataUpdateIntervalSeconds = 10;
         LiveBaseDetailsCacheSeconds = 30;
         LogAnimalHits = true;

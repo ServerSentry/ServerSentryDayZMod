@@ -1,0 +1,12 @@
+ImageWidgetClass ComposerEmoji {
+ scaled 0
+ ignorepointer 1
+ size 16 16
+ hexactpos 1
+ vexactpos 1
+ hexactsize 1
+ vexactsize 1
+ mode blend
+ "src alpha" 1
+ stretch 1
+}

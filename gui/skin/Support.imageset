@@ -1,0 +1,126 @@
+ImageSetClass {
+ Name "ServerSentrySupport"
+ RefSize 256 64
+ Textures {
+  ImageSetTextureClass {
+   mpix 0
+   path "ServerSentryDayZMod/gui/skin/support.edds"
+  }
+ }
+ Images {
+  ImageSetDefClass RoundLeftTop {
+   Name "RoundLeftTop"
+   Pos 0 0
+   Size 8 8
+   Flags 0
+  }
+  ImageSetDefClass RoundTop {
+   Name "RoundTop"
+   Pos 8 0
+   Size 48 8
+   Flags 0
+  }
+  ImageSetDefClass RoundRightTop {
+   Name "RoundRightTop"
+   Pos 56 0
+   Size 8 8
+   Flags 0
+  }
+  ImageSetDefClass RoundLeft {
+   Name "RoundLeft"
+   Pos 0 8
+   Size 8 48
+   Flags 0
+  }
+  ImageSetDefClass RoundCenter {
+   Name "RoundCenter"
+   Pos 8 8
+   Size 48 48
+   Flags 0
+  }
+  ImageSetDefClass RoundRight {
+   Name "RoundRight"
+   Pos 56 8
+   Size 8 48
+   Flags 0
+  }
+  ImageSetDefClass RoundLeftBottom {
+   Name "RoundLeftBottom"
+   Pos 0 56
+   Size 8 8
+   Flags 0
+  }
+  ImageSetDefClass RoundBottom {
+   Name "RoundBottom"
+   Pos 8 56
+   Size 48 8
+   Flags 0
+  }
+  ImageSetDefClass RoundRightBottom {
+   Name "RoundRightBottom"
+   Pos 56 56
+   Size 8 8
+   Flags 0
+  }
+  ImageSetDefClass PillLeftTop {
+   Name "PillLeftTop"
+   Pos 64 0
+   Size 16 16
+   Flags 0
+  }
+  ImageSetDefClass PillTop {
+   Name "PillTop"
+   Pos 80 0
+   Size 32 16
+   Flags 0
+  }
+  ImageSetDefClass PillRightTop {
+   Name "PillRightTop"
+   Pos 112 0
+   Size 16 16
+   Flags 0
+  }
+  ImageSetDefClass PillLeft {
+   Name "PillLeft"
+   Pos 64 16
+   Size 16 32
+   Flags 0
+  }
+  ImageSetDefClass PillCenter {
+   Name "PillCenter"
+   Pos 80 16
+   Size 32 32
+   Flags 0
+  }
+  ImageSetDefClass PillRight {
+   Name "PillRight"
+   Pos 112 16
+   Size 16 32
+   Flags 0
+  }
+  ImageSetDefClass PillLeftBottom {
+   Name "PillLeftBottom"
+   Pos 64 48
+   Size 16 16
+   Flags 0
+  }
+  ImageSetDefClass PillBottom {
+   Name "PillBottom"
+   Pos 80 48
+   Size 32 16
+   Flags 0
+  }
+  ImageSetDefClass PillRightBottom {
+   Name "PillRightBottom"
+   Pos 112 48
+   Size 16 16
+   Flags 0
+  }
+  ImageSetDefClass Circle {
+   Name "Circle"
+   Pos 128 0
+   Size 64 64
+   Flags 0
+  }
+ }
+}

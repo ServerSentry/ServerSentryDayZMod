@@ -1,0 +1,47 @@
+FrameWidgetClass UnrelatedDeathRoot {
+ ignorepointer 1
+ size 1 1
+ hexactsize 0
+ vexactsize 0
+ {
+  TextWidgetClass ThirdPartyTitle {
+   ignorepointer 1
+   position .2 .12
+   size .6 .08
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "text halign" center
+   text "CUSTOM DEATH SCREEN MOCK"
+   color .2 .85 1 1
+  }
+  TextWidgetClass ThirdPartySubtitle {
+   ignorepointer 1
+   position .2 .22
+   size .6 .06
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "text halign" center
+   text "Different layout, different widget names"
+   color .7 .8 .9 1
+  }
+  FrameWidgetClass ProvidedReportSlot {
+   ignorepointer 1
+   position .1 .35
+   size .8 .55
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+  }
+ }
+}

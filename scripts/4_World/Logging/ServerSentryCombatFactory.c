@@ -95,6 +95,8 @@ class ServerSentryCombatFactory
             if (request.hasExplosionPosition)
                 ctx.distance = vector.Distance(request.explosionPosition, ctx.victimPosition);
 
+            CaptureExplosiveAttackerPosition(ctx);
+
             return ctx;
         }
 
@@ -154,6 +156,21 @@ class ServerSentryCombatFactory
         ctx.weaponClassName = ResolveWeaponClassName(source, null, ctx.isMelee);
         ServerSentryEventFactory.FillActorFromEntity(ctx.attacker, source);
         return ctx;
+    }
+
+    /** Captures the resolved killer's position for player deaths, separately from the blast origin. */
+    protected static void CaptureExplosiveAttackerPosition(ServerSentryHitContext ctx)
+    {
+        if (!ServerSentryConfigManager.Get().IsDeathReportingEnabled()) return;
+        if (!ctx.isLethal || ctx.target.type != "player") return;
+        if (ctx.attacker.type != "player" || ctx.attacker.steamId == "") return;
+        ServerSentryModActionContext lookup = new ServerSentryModActionContext;
+        lookup.steamId = ctx.attacker.steamId;
+        PlayerBase attacker = ServerSentryLiveActionResolver.FindPlayer(lookup);
+        if (!attacker) return;
+
+        ctx.attackerPosition = attacker.GetPosition();
+        ctx.hasAttackerPosition = true;
     }
 
     /**

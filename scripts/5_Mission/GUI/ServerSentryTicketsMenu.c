@@ -13,17 +13,13 @@ class ServerSentryTicketsMenu extends ServerSentrySupportMenuBase
     protected MultilineTextWidget m_StatusText;
     protected Widget m_Scroll;
     protected WrapSpacerWidget m_List;
-    protected Widget m_Detail;
-    protected MultilineTextWidget m_DetailSubject;
-    protected MultilineTextWidget m_DetailInfo;
     protected ref map<Widget, ref ServerSentryTicketSummary> m_Rows = new map<Widget, ref ServerSentryTicketSummary>;
     protected ref ServerSentryTicketLinkStatus m_Status;
     protected ref ServerSentryTicketCreationResult m_CreationResult;
-    protected ref ServerSentryTicketSummary m_SelectedTicket;
-    protected string m_SelectedId;
     protected bool m_WasChecking;
     protected bool m_WasCreating;
     protected bool m_HasState;
+    protected bool m_RefreshWhenVisible;
 
     override Widget Init()
     {
@@ -40,23 +36,28 @@ class ServerSentryTicketsMenu extends ServerSentrySupportMenuBase
         m_StatusText = MultilineTextWidget.Cast(layoutRoot.FindAnyWidget("TicketListStatus"));
         m_Scroll = layoutRoot.FindAnyWidget("TicketsScroll");
         m_List = WrapSpacerWidget.Cast(layoutRoot.FindAnyWidget("TicketsList"));
-        m_Detail = layoutRoot.FindAnyWidget("TicketDetail");
-        m_DetailSubject = MultilineTextWidget.Cast(layoutRoot.FindAnyWidget("DetailSubject"));
-        m_DetailInfo = MultilineTextWidget.Cast(layoutRoot.FindAnyWidget("DetailInfo"));
         ShowList();
         SetSupportButtonEnabled(m_NewButton, false);
+        InitSupportControls();
         return layoutRoot;
     }
 
     override void OnShow()
     {
         super.OnShow();
-        RefreshTickets();
+        m_RefreshWhenVisible = true;
     }
 
     override void Update(float timeslice)
     {
         super.Update(timeslice);
+        // A direct ticket shortcut keeps this menu underneath the conversation.
+        if (GetGame().GetUIManager().GetMenu() != this) return;
+        if (m_RefreshWhenVisible)
+        {
+            m_RefreshWhenVisible = false;
+            RefreshTickets();
+        }
         if (GetUApi().GetInputByID(UAUIBack).LocalPress())
         {
             GoBack();
@@ -65,11 +66,11 @@ class ServerSentryTicketsMenu extends ServerSentrySupportMenuBase
         RefreshView();
     }
 
-    protected void RefreshTickets()
+    protected void RefreshTickets(bool refreshOptions = false)
     {
         ServerSentryClientManager manager = ServerSentryClientManager.Get();
         if (manager)
-            manager.RequestTicketLinkStatus();
+            manager.RequestTicketLinkStatus(true, refreshOptions);
         m_HasState = false;
         RefreshView();
     }
@@ -151,6 +152,7 @@ class ServerSentryTicketsMenu extends ServerSentrySupportMenuBase
         while (row)
         {
             Widget next = row.GetSibling();
+            m_Surfaces.Remove(row.FindAnyWidget("TicketRow_Fill"));
             row.Unlink();
             row = next;
         }
@@ -159,7 +161,6 @@ class ServerSentryTicketsMenu extends ServerSentrySupportMenuBase
     protected void RenderTickets(array<ref ServerSentryTicketSummary> tickets)
     {
         ClearTickets();
-        ServerSentryTicketSummary selected;
         if (tickets)
         {
             foreach (ServerSentryTicketSummary ticket : tickets)
@@ -167,28 +168,24 @@ class ServerSentryTicketsMenu extends ServerSentrySupportMenuBase
                 if (!ticket)
                     continue;
                 AddTicketRow(ticket);
-                if (ticket.ticketId == m_SelectedId)
-                    selected = ticket;
             }
         }
-        if (selected)
-        {
-            OpenTicket(selected);
-            return;
-        }
-        bool selectionClosed = m_SelectedId != "";
-        ShowList();
-        if (selectionClosed)
-            m_StatusText.SetText("This ticket is no longer open.");
-        else if (m_Rows.Count() == 0)
-            m_StatusText.SetText("You have no open tickets.");
+        if (m_Rows.Count() == 0)
+            SetListStatus("You have no open tickets.");
         else
         {
             string label = " open tickets. Select a ticket to view its details.";
             if (m_Rows.Count() == 1)
                 label = " open ticket. Select it to view its details.";
-            m_StatusText.SetText(m_Rows.Count().ToString() + label);
+            SetListStatus(m_Rows.Count().ToString() + label);
         }
+    }
+
+    protected void SetListStatus(string message)
+    {
+        if (m_Status && (!m_Status.ticketOptions || m_Status.ticketOptions.Count() == 0))
+            message += "\nNo ticket types are available. Please contact your server team.";
+        m_StatusText.SetText(message);
     }
 
     protected void AddTicketRow(ServerSentryTicketSummary ticket)
@@ -196,45 +193,28 @@ class ServerSentryTicketsMenu extends ServerSentrySupportMenuBase
         Widget row = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/TicketRow.layout", m_List);
         if (!row)
             return;
-        TextWidget subject = TextWidget.Cast(row.FindAnyWidget("TicketRow_Label"));
+        TextWidget title = TextWidget.Cast(row.FindAnyWidget("TicketRow_Label"));
         TextWidget info = TextWidget.Cast(row.FindAnyWidget("TicketRow_Meta"));
-        subject.SetText(ticket.subject);
-        info.SetText(ticket.GetReference() + " / " + ticket.ticketTypeName + " / " + ticket.GetStatusLabel());
+        title.SetText(ticket.ticketTypeName);
+        info.SetText(ticket.GetReference() + " / " + ticket.GetStatusLabel());
         m_Rows.Set(row, ticket);
+        PaintSupportButton(row, false);
     }
 
     protected void OpenTicket(ServerSentryTicketSummary ticket)
     {
-        m_SelectedId = ticket.ticketId;
-        m_SelectedTicket = ticket;
-        m_Scroll.Show(false);
-        m_Detail.Show(true);
-        m_Title.SetText("Ticket details");
-        m_Intro.SetText("Your active support request.");
-        m_DetailSubject.SetText(ticket.subject);
-        m_DetailInfo.SetText("Ticket: " + ticket.GetReference() + "\nID: " + ticket.ticketId + "\nType: " + ticket.ticketTypeName + "\nStatus: " + ticket.GetStatusLabel() + "\nCreated: " + ticket.GetCreatedLabel());
-        m_StatusText.SetText("Use Back to return to your tickets.");
+        ServerSentryTicketConversationMenu menu = ServerSentryTicketConversationMenu.Cast(GetGame().GetUIManager().EnterScriptedMenu(ServerSentryTicketConversationMenu.MENU_ID, this));
+        if (menu) menu.SetTicket(ticket);
     }
-
     protected void ShowList()
     {
-        m_SelectedId = "";
-        m_SelectedTicket = null;
         m_Scroll.Show(true);
-        m_Detail.Show(false);
         m_Title.SetText("Your support tickets");
         m_Intro.SetText("View your open requests or contact your server team.");
     }
 
     protected void GoBack()
     {
-        if (m_SelectedTicket)
-        {
-            ShowList();
-            m_HasState = false;
-            RefreshView();
-            return;
-        }
         Close();
     }
 
@@ -247,7 +227,7 @@ class ServerSentryTicketsMenu extends ServerSentrySupportMenuBase
         }
         if (w == m_RefreshButton)
         {
-            RefreshTickets();
+            RefreshTickets(true);
             return true;
         }
         if (w == m_NewButton)
@@ -255,7 +235,6 @@ class ServerSentryTicketsMenu extends ServerSentrySupportMenuBase
             ServerSentryClientManager manager = ServerSentryClientManager.Get();
             if (manager)
                 manager.StartNewTicket();
-            m_SelectedId = "";
             GetGame().GetUIManager().EnterScriptedMenu(ServerSentrySupportDeskMenu.MENU_ID, this);
             return true;
         }
