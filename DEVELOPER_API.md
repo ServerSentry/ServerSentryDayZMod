@@ -406,7 +406,8 @@ Placement uses only the selected hands, attachment slot or container. A full, oc
 
 The mod retains at most 128 player captures, with up to 512 items and 2,048 destinations per snapshot. Incomplete captures cannot authorize changes. Captures exist only in memory and are invalidated by a mod restart. CMS, Agent and mod must support the same inventory protocol; offline database estimates are read-only.
 
-See [tests/README.md](tests/README.md) for local regression commands and native runtime checks.
+Native test missions and probes are local development files under the ignored
+`tests/` directory. Keep them out of the production Mod's script directories and PBO.
 
 ## Runtime damage-zone diagnostics
 
