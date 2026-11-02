@@ -22,19 +22,40 @@ $editorScripts = Join-Path $runtime 'vanilla-stable\scripts'
 $debugMod = Join-Path $runtime '@ServerSentry'
 $editorSourceMod = Join-Path $runtime '@ServerSentrySources'
 
-if ($Action -eq 'Stop') {
-    $profileArgument = '-profiles=' + (Join-Path $runtime 'profiles') + '\'
+function Stop-ProjectDiagnostics {
+    $profileArguments = @('-profiles=' + $runtime + '\')
+    # Saved launch settings can use the mounted work drive (P:) instead of E:.
+    foreach ($role in @('server', 'client', 'offline')) {
+        $argumentFile = Join-Path $runtime "native-launch\$role.args"
+        if ((Test-Path -LiteralPath $argumentFile) -and
+            (Get-Content -LiteralPath $argumentFile -Raw) -match '"-profiles=([^"]+)"') {
+            $profileArguments += '-profiles=' + $Matches[1] + ' '
+        }
+    }
     Get-CimInstance Win32_Process -Filter "Name='DayZDiag_x64.exe'" |
-        Where-Object { $_.CommandLine -and $_.CommandLine.Contains($profileArgument) } |
+        Where-Object {
+            $commandLine = $_.CommandLine
+            $commandLine -and @($profileArguments | Where-Object {
+                $commandLine.Replace('"', '').IndexOf($_, [StringComparison]::OrdinalIgnoreCase) -ge 0
+            }).Count -gt 0
+        } |
         ForEach-Object {
-            Stop-Process -Id $_.ProcessId -Force
-            Wait-Process -Id $_.ProcessId -Timeout 15 -ErrorAction SilentlyContinue
+            $diagnosticProcess = Get-Process -Id $_.ProcessId -ErrorAction SilentlyContinue
+            if (!$diagnosticProcess) { return }
+            Stop-Process -InputObject $diagnosticProcess -Force
+            if (!$diagnosticProcess.WaitForExit(15000)) { throw 'The diagnostic process did not exit before the build.' }
+            $diagnosticProcess.Dispose()
             Write-Host "Stopped local diagnostic process $($_.ProcessId)."
         }
+}
+
+if ($Action -eq 'Stop') {
+    Stop-ProjectDiagnostics
     return
 }
 
 if ($Action -eq 'Stage') {
+    Stop-ProjectDiagnostics
     $existingPbo = Join-Path $debugMod 'addons\ServerSentryDayZMod.pbo'
     if (Test-Path -LiteralPath $existingPbo) {
         try {

@@ -1,0 +1,1 @@
+*.c;*.cpp;*.layout;*.xml;*.edds;*.paa;*.imageset;*.styles;*.txt;*.fnt

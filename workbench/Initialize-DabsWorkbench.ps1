@@ -127,13 +127,16 @@ $launchGame = $launchGame.Replace('super.Run();', $sessionSettings)
 $launchGame = $launchGame.Replace('"Lanches DayZ"', '"Restart the local Stable server and connect a diagnostic client"')
 Write-EditorSource $launchGameFile $launchGame
 
+$buildDefaultsFile = Join-Path $pluginRoot 'BuildSettings.c'
+$buildDefaults = (Get-Content -LiteralPath $buildDefaultsFile -Raw -Encoding UTF8).Replace('settings.Builder = BuilderType.PBO_PROJECT;', 'settings.Builder = BuilderType.ADDON_BUILDER;')
+Write-EditorSource $buildDefaultsFile $buildDefaults
 $buildFile = Join-Path $pluginRoot 'PluginDialogBase\PluginProject\PluginBuildMod.c'
 $build = Get-Content -LiteralPath $buildFile -Raw -Encoding UTF8
 $build = $build.Replace("`tvoid PluginBuildMod()", "`toverride void RunCommandline()`n`t{`n`t`tRun();`n`t}`n`n`tvoid PluginBuildMod()")
 $build = $build.Replace('string main_mod_folder = GetAbsolutePath(string.Format("$Workdrive:%1", mod_prefix));', @'
 string stage_command = string.Format("powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%1\\workbench\\Start-Dev.ps1\" -Action Stage", m_LaunchSettings.Repository);
         if (Workbench.RunCmd(stage_command, true) != 0) {
-            ErrorDialog("Staging failed. Close the diagnostic server/client before building and inspect the output.");
+            ErrorDialog("Staging failed. See the output for details; another process may be holding the development PBO open.");
             return;
         }
         string main_mod_folder = m_LaunchSettings.Repository + "\\.workbench\\staging\\ServerSentryDayZMod";
@@ -145,7 +148,11 @@ $addonMethod = @'
 int BuildUsingAddonBuilder(string mod_input, string mod_output)
     {
         string exe = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\DayZ Tools\\Bin\\AddonBuilder\\AddonBuilder.exe";
-        string command = string.Format("\"%1\" \"%2\" \"%3\\Addons\" -packonly -prefix=ServerSentryDayZMod %4", exe, mod_input, mod_output, m_BuildSettings.AddonBuilder_Args);
+        MakeDirectory(mod_output);
+        MakeDirectory(mod_output + "\\Addons");
+        string includes = m_LaunchSettings.Repository + "\\workbench\\addon-include.txt";
+        string command = string.Format("\"%1\" \"%2\" \"%3\\Addons\" -packonly -clear -prefix=ServerSentryDayZMod \"-include=%4\" %5", exe, mod_input, mod_output, includes, m_BuildSettings.AddonBuilder_Args);
+        PrintFormat("Building mod with Addon Builder: %1", command);
         return Workbench.RunCmd(command, true);
     }
 }
