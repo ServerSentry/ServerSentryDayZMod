@@ -103,6 +103,7 @@ class ServerSentryConfigManager
         features.tickets = IsTicketsEnabled();
         features.supportCases = IsSupportCasesEnabled();
         features.deathReports = IsDeathReportingEnabled();
+        features.deathReportOverlay = m_ServerConfig.DeathReportAutomaticOverlay;
         return features;
     }
 

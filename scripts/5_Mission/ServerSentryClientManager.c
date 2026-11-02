@@ -11,6 +11,8 @@ class ServerSentryClientManager: CF_ModuleWorld
 {
     // No local config reads or reporting objects: the server must explicitly opt in.
     protected bool m_DeathReportsEnabled;
+    protected ref ServerSentryDeathReports m_DeathReports;
+    ServerSentryDeathReports GetDeathReports() { return m_DeathReports; }
     protected bool m_TicketsEnabled;
     protected bool m_SupportCasesEnabled;
     bool IsTicketsEnabled() { return m_TicketsEnabled; }
@@ -79,6 +81,32 @@ class ServerSentryClientManager: CF_ModuleWorld
         m_TicketsEnabled = features.tickets;
         m_SupportCasesEnabled = features.supportCases;
         m_DeathReportsEnabled = features.deathReports;
+        if (features.deathReports)
+        {
+            if (!m_DeathReports) m_DeathReports = new ServerSentryDeathReports;
+            m_DeathReports.Start(features.deathReportOverlay);
+            GetRPCManager().AddRPC("ServerSentryBot", "DeathReportContext", this, SingleplayerExecutionType.Client);
+            GetRPCManager().AddRPC("ServerSentryBot", "DeathReportReceipt", this, SingleplayerExecutionType.Client);
+        }
+        else
+        {
+            if (m_DeathReports) m_DeathReports.Stop();
+            m_DeathReports = null;
+        }
+    }
+
+    void DeathReportContext(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    {
+        if (type != CallType.Client || !m_DeathReportsEnabled || !m_DeathReports) return;
+        Param2<int, string> response;
+        if (ctx.Read(response) && response) m_DeathReports.ReceiveContext(response.param1, response.param2);
+    }
+
+    void DeathReportReceipt(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    {
+        if (type != CallType.Client || !m_DeathReportsEnabled || !m_DeathReports) return;
+        Param3<string, bool, string> response;
+        if (ctx.Read(response) && response) m_DeathReports.ReceiveReceipt(response.param1, response.param2, response.param3);
     }
 
     /**
@@ -230,6 +258,8 @@ class ServerSentryClientManager: CF_ModuleWorld
     {
         super.OnMissionFinish(sender, args);
         m_DeathReportsEnabled = false;
+        if (m_DeathReports) m_DeathReports.Stop();
+        m_DeathReports = null;
         CancelReimbursementRequest();
         m_CF_Bindings.m_Head = null;
         m_TicketsEnabled = false;

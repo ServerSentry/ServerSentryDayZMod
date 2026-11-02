@@ -17,7 +17,7 @@ def chunk(tag: bytes, data: bytes) -> bytes:
 
 def build(source: Path) -> None:
     root = Path(__file__).resolve().parent.parent
-    picker = root / "gui/emoji/EmojiPicker.txt"
+    picker = root / "gui/emoji/EmojiPicker.tsv"
     rows = [line.split("\t")[:5] for line in picker.read_text(encoding="utf-8").splitlines()]
     first_glyph = 0xE000
     if first_glyph + len(rows) > 0xF000:

@@ -21,6 +21,7 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
     protected bool m_WasCheckingLink;
     protected bool m_WasCreating;
     protected bool m_HasViewState;
+    protected bool m_OpenedCreatedTicket;
 
     override Widget Init()
     {
@@ -61,6 +62,7 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
     override void Update(float timeslice)
     {
         super.Update(timeslice);
+        if (IsClosing() || GetGame().GetUIManager().GetMenu() != this) return;
         m_InfoSwitch.Update();
         if (GetUApi().GetInputByID(UAUIBack).LocalPress())
         {
@@ -68,6 +70,8 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
             return;
         }
         RefreshView();
+        if (!m_OpenedCreatedTicket && m_CreationResult && m_CreationResult.success)
+            OpenCreatedTicket();
     }
 
     protected void CheckAccountLink(bool refreshOptions = false)
@@ -247,13 +251,7 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
         ServerSentryClientManager manager = ServerSentryClientManager.Get();
         if (manager && m_CreationResult && m_CreationResult.success)
         {
-            ServerSentryTicketSummary ticket = new ServerSentryTicketSummary;
-            ticket.ticketId = m_CreationResult.ticketId;
-            ServerSentryTicketOption option = GetSelectedTicketType();
-            ticket.ticketTypeName = "Support";
-            if (option) ticket.ticketTypeName = option.label;
-            ServerSentryTicketConversationMenu menu = ServerSentryTicketConversationMenu.Cast(GetGame().GetUIManager().EnterScriptedMenu(ServerSentryTicketConversationMenu.MENU_ID, this));
-            if (menu) menu.SetTicket(ticket);
+            OpenCreatedTicket();
             return;
         }
         if (!manager || !m_LinkStatus || !m_LinkStatus.success || !m_LinkStatus.discordLinked || m_WasCheckingLink)
@@ -272,6 +270,21 @@ class ServerSentrySupportDeskMenu extends ServerSentrySupportMenuBase
         manager.SubmitTicket(GetSelectedTicketType(), message, m_IncludePlayerInfo.IsChecked());
         m_HasViewState = false;
         RefreshView();
+    }
+
+    protected void OpenCreatedTicket()
+    {
+        if (!m_CreationResult || !m_CreationResult.success || m_CreationResult.ticketId == "") return;
+        ServerSentryTicketSummary ticket = new ServerSentryTicketSummary;
+        ticket.ticketId = m_CreationResult.ticketId;
+        ServerSentryTicketOption option = GetSelectedTicketType();
+        ticket.ticketTypeName = "Support";
+        if (option) ticket.ticketTypeName = option.label;
+        ServerSentryTicketConversationMenu menu = ServerSentryTicketConversationMenu.Cast(GetGame().GetUIManager().EnterScriptedMenu(ServerSentryTicketConversationMenu.MENU_ID, this));
+        if (!menu) return;
+        menu.SetTicket(ticket);
+        // Returning to the completed form must not reopen the conversation in a loop.
+        m_OpenedCreatedTicket = true;
     }
 
     protected void SetTicketStatus(string text, string mark, int color)

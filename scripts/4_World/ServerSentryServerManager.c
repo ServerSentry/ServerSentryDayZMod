@@ -9,6 +9,7 @@
 */
 class ServerSentryServerManager: CF_ModuleWorld
 {
+    protected ref ServerSentryDeathReportBridge m_DeathReportBridge;
     protected ref ServerSentryTicketLinkBridge m_TicketLinkBridge;
     protected ref ServerSentryTicketCreationBridge m_TicketCreationBridge;
     protected ref ServerSentryTicketConversationBridge m_TicketConversationBridge;
@@ -23,6 +24,12 @@ class ServerSentryServerManager: CF_ModuleWorld
 
         EnableMissionFinish();
         if (!GetGame().IsServer()) return;
+        if (ServerSentryConfigManager.Get().IsDeathReportingEnabled())
+        {
+            m_DeathReportBridge = new ServerSentryDeathReportBridge;
+            GetRPCManager().AddRPC("ServerSentryBot", "GetDeathReportContext", this, SingleplayerExecutionType.Server);
+            GetRPCManager().AddRPC("ServerSentryBot", "SubmitDeathReport", this, SingleplayerExecutionType.Server);
+        }
         if (ServerSentryConfigManager.Get().IsTicketsEnabled())
         {
             m_TicketLinkBridge = new ServerSentryTicketLinkBridge;
@@ -65,10 +72,29 @@ class ServerSentryServerManager: CF_ModuleWorld
     {
         super.OnMissionFinish(sender, args);
         ServerSentryDeathReportStore.Clear();
+        if (m_DeathReportBridge) m_DeathReportBridge.Stop();
         if (m_TicketLinkBridge) m_TicketLinkBridge.Stop();
         if (m_TicketCreationBridge) m_TicketCreationBridge.Stop();
         if (m_TicketConversationBridge) m_TicketConversationBridge.Stop();
         if (m_TicketNotifications) m_TicketNotifications.Stop();
+    }
+
+    void GetDeathReportContext(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    {
+        if (type != CallType.Server || !sender || !m_DeathReportBridge || !ServerSentryConfigManager.Get().IsDeathReportingEnabled()) return;
+        Param1<int> request;
+        if (!ctx.Read(request) || !request) return;
+        string eventId = "";
+        ServerSentryDeathReportCommand command = ServerSentryDeathReportStore.Current(sender.GetPlainId());
+        if (command) eventId = command.killEventId;
+        GetRPCManager().SendRPC("ServerSentryBot", "DeathReportContext", new Param2<int, string>(request.param1, eventId), true, sender);
+    }
+
+    void SubmitDeathReport(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    {
+        if (type != CallType.Server || !sender || !m_DeathReportBridge || !ServerSentryConfigManager.Get().IsDeathReportingEnabled()) return;
+        Param1<string> request;
+        if (ctx.Read(request) && request) m_DeathReportBridge.Request(sender, request.param1);
     }
 
     void GetTicketLinkStatus(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)

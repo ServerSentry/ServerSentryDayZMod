@@ -62,7 +62,7 @@ $picker = @($choices | Sort-Object Order | ForEach-Object {
     $_.Code, $_.Name, $_.Category, $_.Atlas, $_.Image, $glyph -join "`t"
 })
 $utf8 = [Text.UTF8Encoding]::new($false)
-[IO.File]::WriteAllLines((Join-Path $root 'gui/emoji/EmojiPicker.txt'), $picker, $utf8)
+[IO.File]::WriteAllLines((Join-Path $root 'gui/emoji/EmojiPicker.tsv'), $picker, $utf8)
 [IO.File]::WriteAllLines($atlasCatalog, $agent, $utf8)
 Write-Host "Built $($choices.Count) picker choices, including $(@($choices | Where-Object Category -eq 8).Count) flags."
 Write-Host 'Copy the updated EmojiCatalog.tsv to the Agent when updating the picker.'

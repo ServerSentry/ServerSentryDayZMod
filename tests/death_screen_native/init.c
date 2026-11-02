@@ -1,31 +1,13 @@
-/** Test-only button with its own handler: no dependency on a death menu's OnClick. */
-class DeathReportProbeButton extends ScriptedWidgetEventHandler
+/** Synthetic transport boundary; all widgets below are the production component. */
+class DeathReportReviewState extends ServerSentryDeathReports
 {
-    protected Widget m_Root;
-    protected Widget m_Button;
-    protected DeathScreenReviewMission m_Mission;
-    protected ref ServerSentryRoundedSurface m_Surface;
-
-    void DeathReportProbeButton(DeathScreenReviewMission mission, Widget parent = null)
+    DeathScreenReviewMission mission;
+    void Configure() { m_Dead = true; m_KillEventId = "local-fixture-only"; m_Sending = false; m_Confirming = false; }
+    override void Submit()
     {
-        m_Mission = mission;
-        m_Root = GetGame().GetWorkspace().CreateWidgets("$mission:ReportOverlay.layout", parent);
-        m_Root.SetSort(100000);
-        m_Button = m_Root.FindAnyWidget("ReportProbeButton");
-        m_Button.SetHandler(this);
-        TextWidget.Cast(m_Root.FindAnyWidget("ReportProbeLabel")).SetTextExactSize(20);
-        TextWidget.Cast(m_Root.FindAnyWidget("ProbeStatus")).SetTextExactSize(14);
-        m_Surface = new ServerSentryRoundedSurface(m_Root.FindAnyWidget("ReportProbeFill"));
-        m_Surface.SetColor(ARGB(255, 20, 51, 64));
-    }
-
-    void Detach() { if (m_Root) m_Root.Unlink(); }
-
-    override bool OnClick(Widget w, int x, int y, int button)
-    {
-        if (w != m_Button) return false;
-        m_Mission.ReportPressed();
-        return true;
+        if (!CanSubmit()) return;
+        m_Sending = true;
+        mission.ReportPressed();
     }
 }
 
@@ -42,7 +24,8 @@ class UnrelatedDeathMenu extends UIScriptedMenu
 
 class DeathScreenReviewMission extends MissionGameplay
 {
-    protected ref DeathReportProbeButton m_ReportButton;
+    protected ref ServerSentryDeathReportButton m_ReportButton;
+    protected ref DeathReportReviewState m_Reports;
     protected ref UnrelatedDeathMenu m_CustomMenu;
     protected int m_Clicks;
 
@@ -67,7 +50,11 @@ class DeathScreenReviewMission extends MissionGameplay
         player.SetHealth("", "Health", 0);
         player.SimulateDeath(true);
         player.ShowDeadScreen(true, 0);
-        m_ReportButton = new DeathReportProbeButton(this);
+        m_Reports = new DeathReportReviewState;
+        m_Reports.mission = this;
+        m_Reports.Configure();
+        m_ReportButton = new ServerSentryDeathReportButton(m_Reports);
+        GetGame().GetUIManager().ShowCursor(true);
         Print("[DeathScreenReview] Ready vanilla; native fade=" + GetGame().GetUIManager().ScreenFadeVisible());
     }
 
@@ -77,7 +64,11 @@ class DeathScreenReviewMission extends MissionGameplay
         Print("[DeathScreenReview] CLICK stage=" + m_Clicks + " native fade=" + GetGame().GetUIManager().ScreenFadeVisible());
         if (m_Clicks == 1) GetGame().GetCallQueue(CALL_CATEGORY_GUI).CallLater(ShowCustom, 1000, false);
         if (m_Clicks == 2) GetGame().GetCallQueue(CALL_CATEGORY_GUI).CallLater(ShowAdapter, 1000, false);
-        if (m_Clicks == 3) Print("[DeathScreenReview] Finished clicks=3; no reports sent");
+        if (m_Clicks == 3)
+        {
+            m_Reports.ReceiveReceipt("local-fixture-only", true, "Local receipt fixture; no CMS report was created.");
+            Print("[DeathScreenReview] Finished clicks=3; no reports sent");
+        }
     }
 
     void ShowCustom()
@@ -85,6 +76,10 @@ class DeathScreenReviewMission extends MissionGameplay
         m_CustomMenu = new UnrelatedDeathMenu;
         m_CustomMenu.SetID(4771490);
         GetGame().GetUIManager().ShowScriptedMenu(m_CustomMenu, null);
+        // A custom death-screen owner must render its own root above the native fade.
+        m_CustomMenu.GetLayoutRoot().SetSort(90000);
+        m_Reports.Configure();
+        m_ReportButton.Refresh();
         Print("[DeathScreenReview] Ready custom menu; report button is still an independent root");
     }
 
@@ -92,7 +87,8 @@ class DeathScreenReviewMission extends MissionGameplay
     {
         m_ReportButton.Detach();
         Widget slot = m_CustomMenu.GetLayoutRoot().FindAnyWidget("ProvidedReportSlot");
-        m_ReportButton = new DeathReportProbeButton(this, slot);
+        m_Reports.Configure();
+        m_ReportButton = m_Reports.AttachButton(slot);
         Print("[DeathScreenReview] Ready explicit adapter; same component attached to the owner's provided slot");
     }
 }

@@ -15,8 +15,13 @@ Commit the generated PAA and imageset files together with the matching Agent cat
 Picker names and categories: Unicode 17.0 emoji-test.txt
 https://www.unicode.org/Public/17.0.0/emoji/emoji-test.txt
 Copyright Unicode, Inc. See LICENSE-UNICODE.txt.
-EmojiPicker.txt contains the 3,953 standard keyboard entries; legacy non-RGI images
+EmojiPicker.tsv contains the 3,953 standard keyboard entries; legacy non-RGI images
 remain available for displaying existing messages. All 270 flags have their own tab.
+
+The catalog is UTF-8 TSV without a header. Its six columns are shortcode, name,
+category, atlas number, sprite name and editable glyph. ServerSentryEmojiCatalog
+loads it once with OpenFile/FGets, splits each line on tabs and retains the lookup
+maps in memory. Keep the .tsv file in the PBO alongside the imagesets and textures.
 
 After regenerating atlases, download emoji-test.txt to
 .workbench/emoji-source/emoji-test-17.0.txt and run workbench/Build-EmojiPicker.ps1

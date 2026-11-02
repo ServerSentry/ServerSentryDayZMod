@@ -21,8 +21,13 @@ class ServerSentryEmojiCatalog
         s_Choices = {};
         s_Codes = new map<string, ref ServerSentryEmojiChoice>;
         s_Glyphs = new map<string, ref ServerSentryEmojiChoice>;
-        FileHandle file = OpenFile("ServerSentryDayZMod/gui/emoji/EmojiPicker.txt", FileMode.READ);
-        if (!file) return s_Choices;
+        FileHandle file = OpenFile("ServerSentryDayZMod/gui/emoji/EmojiPicker.tsv", FileMode.READ);
+        if (!file)
+        {
+            Print("[ServerSentry] Emoji catalog could not be opened. Include gui/emoji/EmojiPicker.tsv when packing the mod.");
+            return s_Choices;
+        }
+        // Columns: shortcode, name, category, atlas, sprite, editable glyph.
         string line;
         while (FGets(file, line) > 0)
         {

@@ -70,6 +70,13 @@ cd ServerSentryDayZMod
 
 Use DayZ Tools/Addon Builder or your existing mod build pipeline to pack the project as a PBO. The source root containing `config.cpp` must become the `ServerSentryDayZMod` PBO prefix expected by the script paths.
 
+Include `gui/emoji/EmojiPicker.tsv`: this tab-separated table is runtime data for
+the emoji picker and composer. The accompanying license notices belong with the
+bundled images. Include `.c`, `.xml`, `.layout`, `.styles`, `.imageset`, `.edds`,
+`.paa`, `.fnt`, `.tsv` and the license notices. When excluding `.cpp`, enable config
+conversion so the PBO contains `config.bin`. Verify release builds in the normal client without
+`-filePatching`; loose Workbench files can conceal missing PBO resources.
+
 ## Configuration
 
 On first start, the mod creates:
@@ -87,6 +94,7 @@ The configuration controls the main runtime features and individual telemetry ca
 | `EnableTelemtryLogging` | Enables structured event/telemetry logging. The property name intentionally matches the current source schema. |
 | `EnableLiveDataLogging` | Enables live snapshots and the live-action poller. |
 | `EnableDeathReports` | Opt-in death reporting; defaults to `false`. Requires telemetry and player-kill logging. Restart the server after changing it. |
+| `DeathReportAutomaticOverlay` | Shows the additive report button when reporting is enabled; defaults to `true`. Set to `false` when a custom death screen integrates the component/action itself. |
 | `EnableTickets` | Enables in-game tickets, chat and notifications; defaults to `true`. Disabled tickets create no client chat state or server ticket bridges. |
 | `EnableSupportCases` | Enables in-game refunds/support-case delivery; defaults to `true`. Disabled cases cannot be claimed or provisioned through the updated Agent. |
 | `LiveDataUpdateIntervalSeconds` | Controls how often the live snapshot is refreshed. |

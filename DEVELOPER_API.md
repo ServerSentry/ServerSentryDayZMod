@@ -453,3 +453,51 @@ immediate callback. Existing historical records cannot be backfilled reliably.
 
 Base-damage events also capture a physical source item when still available.
 These additive fields pass through the existing Agent JSON transport unchanged.
+
+## Death reports
+
+Enable `EnableDeathReports` in `$profile:ServerSentry/config.json`, together with
+`EnableTelemtryLogging` and `LogPlayerKills`, then restart. Reporting defaults off.
+Disabled clients create no reporting widgets/state/timers; disabled servers create
+no reporting cache/bridge and register no report RPCs. Ordinary telemetry retains
+its own settings. Self-deaths have no report button; unresolved explosions never
+borrow a device owner's identity or blast position for the killer.
+
+The server-owned death reference lasts until respawn, disconnect or mission end.
+The authenticated server validates the client's selected event and writes only:
+
+```json
+{"reportedSteamId64":"76561198000000001","killEventId":"emitted-telemetry-event-id"}
+```
+
+The Agent adds its configured server ID. GUID `.json` files followed by `.ready`
+markers live under `$profile:ServerSentry/reports/requests`; correlated receipts
+use `reports/responses`. A pending kill upload or transport error retains the
+command across respawn/restarts. The 60-second UI wait is not a command expiry.
+Success means CMS persistence. Retries deduplicate by server/kill. No ticket or
+Discord link is involved.
+
+### Custom death screens
+
+The additive overlay preserves native fade/respawn callbacks and never hides the
+mouse. Set `DeathReportAutomaticOverlay=false` to let a custom screen own placement:
+
+```c
+ServerSentryDeathReports reports = ServerSentryDeathReports.Get();
+if (reports)
+    m_ReportComponent = reports.AttachButton(layoutRoot);
+```
+
+Keep a `ref ServerSentryDeathReportButton` and call `Detach()` when the owning
+screen closes. Supply a visible layout area above the native fade; the component
+uses relative coordinates, owns its handler and updates its own state.
+For an owner's own button, use `CanShow()`, `CanSubmit()` and `Submit()` on the same
+runtime. `Get()` is null before server capabilities arrive or when disabled.
+Never send a client-selected suspect, victim, location or invented event ID.
+Compatibility with every third-party input/layout implementation is not guaranteed.
+
+The matching CMS exposes DayZ → Players & Access → Cheater reports at
+`/admin/dayz/death-reports`. Staff need `dayz.death_reports.view` and, for assessments,
+`dayz.death_reports.review`, plus existing dashboard/server access. Position actions
+reuse confirmed online-admin self-teleport with its existing permissions and Steam
+link. They use historical coordinates, not current player tracking.

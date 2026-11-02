@@ -44,4 +44,20 @@ modded class NotificationSystem
         }
         else m_Instance.m_DeferredArray.Insert(data);
     }
+
+    /** Remove only the opened ticket's popup and let the native UI fade it out. */
+    static void DismissTicketNotification(ServerSentryTicketNotificationRuntime data)
+    {
+        if (!m_Instance || !data) return;
+        m_Instance.m_DeferredArray.RemoveItem(data);
+        if (m_Instance.m_TimeArray.Find(data) < 0) return;
+        m_Instance.m_TimeArray.RemoveItem(data);
+        m_Instance.m_OnNotificationRemoved.Invoke(data);
+        if (m_Instance.m_DeferredArray.Count() == 0) return;
+        int next = m_Instance.m_DeferredArray.Count() - 1;
+        NotificationRuntimeData deferred = m_Instance.m_DeferredArray.Get(next);
+        m_Instance.m_DeferredArray.Remove(next);
+        m_Instance.m_TimeArray.Insert(deferred);
+        m_Instance.m_OnNotificationAdded.Invoke(deferred);
+    }
 }

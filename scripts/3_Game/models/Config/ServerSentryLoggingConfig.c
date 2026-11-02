@@ -24,6 +24,8 @@ class ServerSentryLoggingConfig
     bool EnableLiveDataLogging;
     /** \brief Enables death reporting; opt-in and independent from ordinary combat logging. */
     bool EnableDeathReports;
+    /** \brief Disable when another mod supplies the report button through the public adapter. */
+    bool DeathReportAutomaticOverlay;
     /** \brief Enables in-game Discord tickets and notifications. */
     bool EnableTickets;
     /** \brief Enables support-case delivery and in-game refund claims. */
@@ -121,6 +123,7 @@ class ServerSentryLoggingConfig
         EnableTelemtryLogging = true;
         EnableLiveDataLogging = true;
         EnableDeathReports = false;
+        DeathReportAutomaticOverlay = true;
         EnableTickets = true;
         EnableSupportCases = true;
         LiveDataUpdateIntervalSeconds = 10;

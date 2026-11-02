@@ -1,0 +1,114 @@
+FrameWidgetClass DeathReportRoot {
+ ignorepointer 1
+ size 1 1
+ hexactsize 0
+ vexactsize 0
+ {
+  ButtonWidgetClass DeathReportButton {
+   position .28 .70
+   size .44 .065
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   style Empty
+   {
+    FrameWidgetClass DeathReportFill {
+     ignorepointer 1
+     size 1 1
+     hexactsize 0
+     vexactsize 0
+    }
+    TextWidgetClass DeathReportLabel {
+     ignorepointer 1
+     size 1 1
+     hexactsize 0
+     vexactsize 0
+     style Normal_SDF
+     font "gui/fonts/sdf_MetronBook72"
+     "exact text" 1
+     text "Report suspected cheating"
+     "text halign" center
+     "text valign" center
+     color .9 .97 1 1
+    }
+   }
+  }
+  FrameWidgetClass DeathReportConfirmation {
+   ignorepointer 1
+   position .28 .70
+   size .44 .065
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   {
+    ButtonWidgetClass DeathReportCancel {
+     size .46 1
+     hexactsize 0
+     vexactsize 0
+     style Empty
+     {
+      TextWidgetClass DeathReportCancelLabel {
+       ignorepointer 1
+       size 1 1
+       hexactsize 0
+       vexactsize 0
+       style Normal_SDF
+       font "gui/fonts/sdf_MetronBook72"
+       "exact text" 1
+       text "Cancel"
+       "text halign" center
+       "text valign" center
+      }
+     }
+    }
+    ButtonWidgetClass DeathReportSend {
+     position .50 0
+     size .50 1
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     style Empty
+     {
+      FrameWidgetClass DeathReportSendFill {
+       ignorepointer 1
+       size 1 1
+       hexactsize 0
+       vexactsize 0
+      }
+      TextWidgetClass DeathReportSendLabel {
+       ignorepointer 1
+       size 1 1
+       hexactsize 0
+       vexactsize 0
+       style Normal_SDF
+       font "gui/fonts/sdf_MetronBook72"
+       "exact text" 1
+       text "Send report"
+       "text halign" center
+       "text valign" center
+       color .9 .97 1 1
+      }
+     }
+    }
+   }
+  }
+  TextWidgetClass DeathReportStatus {
+   ignorepointer 1
+   position .15 .78
+   size .70 .10
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "text halign" center
+   text ""
+   color .7 .8 .9 1
+  }
+ }
+}

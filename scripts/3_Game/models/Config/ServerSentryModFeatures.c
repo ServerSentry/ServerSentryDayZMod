@@ -4,4 +4,5 @@ class ServerSentryModFeatures
     bool tickets;
     bool supportCases;
     bool deathReports;
+    bool deathReportOverlay;
 }

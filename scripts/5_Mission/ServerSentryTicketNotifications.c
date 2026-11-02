@@ -17,6 +17,8 @@ class ServerSentryTicketNotifications
         }
         m_Listening = false;
         m_Active = null;
+        foreach (ServerSentryTicketNotificationRuntime notification : m_OwnNotifications)
+            NotificationSystem.DismissTicketNotification(notification);
         m_OwnNotifications.Clear();
         m_Seen.Clear();
     }
@@ -84,5 +86,10 @@ class ServerSentryTicketNotifications
         return m_Active.ticket;
     }
 
-    void Consume() { m_Active = null; }
+    void Consume()
+    {
+        ServerSentryTicketNotificationRuntime notification = m_Active;
+        m_Active = null;
+        NotificationSystem.DismissTicketNotification(notification);
+    }
 }

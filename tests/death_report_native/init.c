@@ -22,6 +22,17 @@ class DeathReportFactoryReview : ServerSentryCombatFactory
     }
 }
 
+class DeathReportBridgeReview : ServerSentryDeathReportBridge
+{
+    bool PublishFixture(ServerSentryDeathReportCommand command)
+    {
+        ServerSentryPendingDeathReport pending = new ServerSentryPendingDeathReport;
+        pending.requestId = "11111111-2222-4333-8444-555555555555";
+        pending.killEventId = command.killEventId;
+        return Publish(pending, command);
+    }
+}
+
 class DeathReportReview
 {
     protected static int s_Failures;
@@ -79,6 +90,10 @@ class DeathReportReview
         Check(first.actorPosition.x == 7400 && first.actorPosition.y == 30 && first.actorPosition.z == 7700 && first.targetPosition.x == 7500 && first.targetPosition.y == 20 && first.targetPosition.z == 7600, "existing telemetry keeps distinct killer and victim positions");
         Check(first.combat.hitZone == "Torso" && first.combat.hitComponentNames.Count() == 2 && first.combat.damage == 100, "existing telemetry keeps hitmap component names and damage");
         CheckPayload(stored);
+        DeathReportBridgeReview bridge = new DeathReportBridgeReview;
+        Check(bridge.PublishFixture(stored), "production bridge publishes the native two-field command and ready marker");
+        bridge.Stop();
+        Check(FileExist("$profile:ServerSentry/reports/requests/11111111-2222-4333-8444-555555555555.ready"), "queued reports survive bridge shutdown");
         Check(!ServerSentryDeathReportStore.Find(KILLER, first.eventId), "another Steam account cannot select the victim's death");
         Check(!ServerSentryDeathReportStore.Find(VICTIM, "invented-id"), "invented telemetry IDs are rejected");
 

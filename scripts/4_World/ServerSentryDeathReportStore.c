@@ -17,6 +17,10 @@ class ServerSentryDeathReportStore
         if (!GetGame() || !GetGame().IsServer() || !combatEvent || combatEvent.eventType != "combat_kill") return;
         if (!ServerSentryConfigManager.Get().IsDeathReportingEnabled()) return;
         if (combatEvent.eventId == "" || !combatEvent.target || combatEvent.target.type != "player" || combatEvent.target.steamId == "") return;
+        if (combatEvent.actor && combatEvent.actor.steamId == combatEvent.target.steamId) return;
+        bool playerSource = combatEvent.actor && combatEvent.actor.type == "player" && combatEvent.actor.steamId != "";
+        bool unknownExplosion = combatEvent.combat && combatEvent.combat.isExplosion && (!combatEvent.actor || combatEvent.actor.steamId == "");
+        if (!playerSource && !unknownExplosion) return;
 
         if (!s_Deaths) s_Deaths = new map<string, ref ServerSentryDeathReportCommand>;
         string steamId = combatEvent.target.steamId;
@@ -29,6 +33,14 @@ class ServerSentryDeathReportStore
         if (combatEvent.actor && combatEvent.actor.type == "player")
             command.reportedSteamId64 = combatEvent.actor.steamId;
         s_Deaths.Set(steamId, command);
+    }
+
+    /** Sends only the owner's opaque event reference to the client, never suspect details. */
+    static ServerSentryDeathReportCommand Current(string steamId)
+    {
+        if (!GetGame() || !GetGame().IsServer() || steamId == "" || !s_Deaths) return null;
+        if (!ServerSentryConfigManager.Get().IsDeathReportingEnabled()) return null;
+        return s_Deaths.Get(steamId);
     }
 
     /** Callers must use the authenticated RPC sender's Steam ID, never a client-supplied identity. */
