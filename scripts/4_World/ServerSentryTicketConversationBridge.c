@@ -27,6 +27,37 @@ class ServerSentryTicketConversationBridge
         Stop();
     }
 
+    /** Closing a menu cancels reads only; an accepted write may already be on Discord. */
+    void CancelRead(PlayerIdentity identity, string requestId)
+    {
+        for (int index = m_Pending.Count() - 1; index >= 0; index--)
+        {
+            ServerSentryPendingTicketConversation pending = m_Pending[index];
+            if (pending.identity != identity || pending.requestId != requestId || pending.sending) continue;
+            Cleanup(pending);
+            m_Pending.Remove(index);
+        }
+        StopIdlePoll();
+    }
+
+    void ForgetPlayer(PlayerIdentity identity)
+    {
+        for (int index = m_Pending.Count() - 1; index >= 0; index--)
+        {
+            ServerSentryPendingTicketConversation pending = m_Pending[index];
+            if (pending.identity != identity) continue;
+            Cleanup(pending);
+            m_Pending.Remove(index);
+        }
+        StopIdlePoll();
+    }
+
+    protected void StopIdlePoll()
+    {
+        if (m_Pending.Count() == 0)
+            GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).Remove(Poll);
+    }
+
     void Request(PlayerIdentity identity, ServerSentryTicketConversationRequest submission)
     {
         if (!ServerSentryConfigManager.Get().IsTicketsEnabled()) return;
@@ -124,8 +155,7 @@ class ServerSentryTicketConversationBridge
             m_Pending.Remove(i);
             Reply(pending.identity, pending.requestId, result);
         }
-        if (m_Pending.Count() == 0)
-            GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).Remove(Poll);
+        StopIdlePoll();
     }
 
     protected void Cleanup(ServerSentryPendingTicketConversation pending)

@@ -143,7 +143,7 @@ class ServerSentryBackupEntityState
     */
     protected bool ValidCartridge(ServerSentryBackupCartridge round)
     {
-        return round && round.Damage >= 0 && round.Damage <= 1 && round.Type != "" && GetGame().ConfigIsExisting("CfgAmmo " + round.Type);
+        return round && ServerSentryBackupMagazineReader.ValidRound(round.Damage, round.Type);
     }
 
     /**
@@ -154,7 +154,7 @@ class ServerSentryBackupEntityState
     {
         if (HasEnergy && (!(Energy >= 0 && Energy < 1.0e30) || EnergySource < -1))
             return false;
-        if (Type == "" || !Damage || Damage.Count() < 1 || Damage.Count() > 256 || !Rounds || Rounds.Count() > 100000 || !Muzzles || Muzzles.Count() > 32)
+        if (Type == "" || !Damage || Damage.Count() < 1 || Damage.Count() > 256 || !Rounds || Rounds.Count() > ServerSentryBackupMagazineReader.MAX_ROUNDS || !Muzzles || Muzzles.Count() > 32)
             return false;
         foreach (ServerSentryBackupDamage damage : Damage)
         {
@@ -173,7 +173,7 @@ class ServerSentryBackupEntityState
         }
         foreach (ServerSentryBackupMuzzle muzzle : Muzzles)
         {
-            if (!muzzle || !muzzle.Rounds || muzzle.Rounds.Count() > 100000)
+            if (!muzzle || !muzzle.Rounds || muzzle.Rounds.Count() > ServerSentryBackupMagazineReader.MAX_ROUNDS)
                 return false;
             if (muzzle.Chamber && !ValidCartridge(muzzle.Chamber))
                 return false;
@@ -195,8 +195,9 @@ class ServerSentryBackupEntityState
         \param entities \p preorder list containing the player at index zero.
         \return \p true when the full state can be captured.
     */
-    bool Capture(EntityAI entity, PlayerBase player, array<EntityAI> entities)
+    bool Capture(EntityAI entity, PlayerBase player, array<EntityAI> entities, map<EntityAI, int> indices = null, ServerSentryBackupReadBudget budget = null)
     {
+        if (!entity || entity.IsSetForDeletion() || !player || !entities) return false;
         Type = entity.GetType();
         AllowDamage = entity.GetAllowDamage();
         ComponentEnergyManager energyManager = entity.GetCompEM();
@@ -206,15 +207,15 @@ class ServerSentryBackupEntityState
             Energy = energyManager.GetEnergy();
             EnergyOn = energyManager.IsSwitchedOn();
             EnergyPassive = energyManager.IsPassive();
-            EnergySource = entities.Find(energyManager.GetEnergySource());
+            EnergySource = FindEntity(energyManager.GetEnergySource(), entities, indices);
         }
         if (entity != player)
         {
             InventoryLocation location = new InventoryLocation();
             if (!entity.GetInventory().GetCurrentInventoryLocation(location))
                 return false;
-            Parent = entities.Find(location.GetParent());
-            if (Parent < 0 || Parent >= entities.Find(entity))
+            Parent = FindEntity(location.GetParent(), entities, indices);
+            if (Parent < 0 || Parent >= FindEntity(entity, entities, indices))
                 return false;
             Location = location.GetType();
             AttachmentSlot = location.GetSlot();
@@ -230,6 +231,7 @@ class ServerSentryBackupEntityState
         array<string> zones = new array<string>();
         entity.GetDamageZones(zones);
         zones.InsertAt("", 0);
+        if (zones.Count() > 256) return false;
         foreach (string zone : zones)
         {
             ServerSentryBackupDamage damage = new ServerSentryBackupDamage();
@@ -240,20 +242,25 @@ class ServerSentryBackupEntityState
         Magazine magazine = Magazine.Cast(entity);
         if (magazine)
         {
-            for (int roundIndex = 0; roundIndex < magazine.GetAmmoCount(); roundIndex++)
-            {
-                ServerSentryBackupCartridge round = new ServerSentryBackupCartridge();
-                if (!magazine.GetCartridgeAtIndex(roundIndex, round.Damage, round.Type))
-                    return false;
-                Rounds.Insert(round);
-            }
+            ServerSentryBackupMagazineReader reader = new ServerSentryBackupMagazineReader;
+            if (!reader.Read(magazine, Rounds, false, budget)) return false;
         }
 
         Weapon_Base weapon = Weapon_Base.Cast(entity);
         if (weapon)
         {
-            for (int muzzleIndex = 0; muzzleIndex < weapon.GetMuzzleCount(); muzzleIndex++)
+            string reason;
+            if (!ServerSentryBackupMagazineReader.Ready(weapon, reason))
             {
+                ServerSentryBackupMagazineReader.Log(weapon, "capture-weapon", "rejected: " + reason);
+                return false;
+            }
+            int muzzleCount = weapon.GetMuzzleCount();
+            if (muzzleCount < 0 || muzzleCount > 32) return false;
+            for (int muzzleIndex = 0; muzzleIndex < muzzleCount; muzzleIndex++)
+            {
+                int count = weapon.GetInternalMagazineCartridgeCount(muzzleIndex);
+                if (!ServerSentryBackupMagazineReader.ValidCount(count, weapon.GetInternalMagazineMaxCartridgeCount(muzzleIndex)) || (budget && !budget.Reserve(count + 1))) return false;
                 ServerSentryBackupMuzzle muzzle = new ServerSentryBackupMuzzle();
                 muzzle.Fired = weapon.IsChamberFiredOut(muzzleIndex);
                 if (!weapon.IsChamberEmpty(muzzleIndex) && !muzzle.Fired)
@@ -261,18 +268,29 @@ class ServerSentryBackupEntityState
                     muzzle.Chamber = new ServerSentryBackupCartridge();
                     if (!weapon.GetCartridgeInfo(muzzleIndex, muzzle.Chamber.Damage, muzzle.Chamber.Type))
                         return false;
+                    if (!ValidCartridge(muzzle.Chamber)) return false;
                 }
-                for (int internalIndex = 0; internalIndex < weapon.GetInternalMagazineCartridgeCount(muzzleIndex); internalIndex++)
+                for (int internalIndex = 0; internalIndex < count; internalIndex++)
                 {
+                    if (weapon.IsSetForDeletion() || (budget && Math.ModFloat(internalIndex, 32) == 0 && !budget.HasTime())) return false;
                     ServerSentryBackupCartridge internalRound = new ServerSentryBackupCartridge();
                     if (!weapon.GetInternalMagazineCartridgeInfo(muzzleIndex, internalIndex, internalRound.Damage, internalRound.Type))
                         return false;
+                    if (!ValidCartridge(internalRound)) return false;
                     muzzle.Rounds.Insert(internalRound);
                 }
                 Muzzles.Insert(muzzle);
             }
         }
         return true;
+    }
+
+    protected int FindEntity(EntityAI entity, array<EntityAI> entities, map<EntityAI, int> indices)
+    {
+        if (!indices) return entities.Find(entity);
+        int index;
+        if (entity && indices.Find(entity, index)) return index;
+        return -1;
     }
 
     /**
@@ -347,18 +365,10 @@ class ServerSentryBackupEntityState
         \param magazine \p recreated magazine.
         \return \p true when every cartridge matches.
     */
-    protected bool VerifyMagazine(Magazine magazine)
+    protected bool VerifyMagazine(Magazine magazine, ServerSentryBackupReadBudget budget)
     {
-        if (magazine.GetAmmoCount() != Rounds.Count())
-            return false;
-        for (int i = 0; i < Rounds.Count(); i++)
-        {
-            float damage;
-            string type;
-            if (!magazine.GetCartridgeAtIndex(i, damage, type) || type != Rounds[i].Type || Math.AbsFloat(damage - Rounds[i].Damage) > 0.0001)
-                return false;
-        }
-        return true;
+        ServerSentryBackupMagazineReader reader = new ServerSentryBackupMagazineReader;
+        return reader.Read(magazine, Rounds, true, budget);
     }
 
     /**
@@ -366,26 +376,35 @@ class ServerSentryBackupEntityState
         \param magazine \p recreated magazine.
         \return \p true when restoration succeeds.
     */
-    protected bool ApplyMagazine(Magazine magazine)
+    protected bool ApplyMagazine(Magazine magazine, ServerSentryBackupReadBudget budget)
     {
-        if (Rounds.Count() > magazine.GetAmmoMax())
+        string reason;
+        if (!ServerSentryBackupMagazineReader.Ready(magazine, reason))
+        {
+            ServerSentryBackupMagazineReader.Log(magazine, "restore", "rejected: " + reason);
             return false;
+        }
+        if (!ServerSentryBackupMagazineReader.ValidCount(Rounds.Count(), magazine.GetAmmoMax()))
+            return false;
+        if (budget && !budget.HasTime()) return false;
         magazine.ServerSetAmmoCount(Rounds.Count());
-        if (VerifyMagazine(magazine))
+        if (VerifyMagazine(magazine, budget))
             return true;
         // Native magazine types differ in their push/index ordering.
         for (int direction = 0; direction < 2; direction++)
         {
+            if (budget && !budget.HasTime()) return false;
             magazine.ServerSetAmmoCount(0);
             for (int i = 0; i < Rounds.Count(); i++)
             {
+                if (budget && Math.ModFloat(i, 32) == 0 && !budget.HasTime()) return false;
                 int index = i;
                 if (direction == 1)
                     index = Rounds.Count() - 1 - i;
                 if (!magazine.ServerStoreCartridge(Rounds[index].Damage, Rounds[index].Type))
                     return false;
             }
-            if (VerifyMagazine(magazine))
+            if (VerifyMagazine(magazine, budget))
                 return true;
         }
         return false;
@@ -396,8 +415,14 @@ class ServerSentryBackupEntityState
         \param weapon \p recreated weapon.
         \return \p true when all native ammunition operations succeed.
     */
-    protected bool ApplyWeapon(Weapon_Base weapon)
+    protected bool ApplyWeapon(Weapon_Base weapon, ServerSentryBackupReadBudget budget)
     {
+        string reason;
+        if (!ServerSentryBackupMagazineReader.Ready(weapon, reason))
+        {
+            ServerSentryBackupMagazineReader.Log(weapon, "restore-weapon", "rejected: " + reason);
+            return false;
+        }
         if (Muzzles.Count() != weapon.GetMuzzleCount())
             return false;
         for (int i = 0; i < Muzzles.Count(); i++)
@@ -405,13 +430,16 @@ class ServerSentryBackupEntityState
             ServerSentryBackupMuzzle muzzle = Muzzles[i];
             if (!muzzle || !muzzle.Rounds || muzzle.Rounds.Count() > weapon.GetInternalMagazineMaxCartridgeCount(i))
                 return false;
+            int count = weapon.GetInternalMagazineCartridgeCount(i);
+            if (!ServerSentryBackupMagazineReader.ValidCount(count, weapon.GetInternalMagazineMaxCartridgeCount(i))) return false;
+            if (budget && !budget.Reserve(count + muzzle.Rounds.Count() + 1)) return false;
             float damage;
             string type;
             if (!weapon.IsChamberEmpty(i) && !weapon.PopCartridgeFromChamber(i, damage, type))
                 return false;
-            int count = weapon.GetInternalMagazineCartridgeCount(i);
             for (int removeIndex = 0; removeIndex < count; removeIndex++)
             {
+                if (budget && Math.ModFloat(removeIndex, 32) == 0 && !budget.HasTime()) return false;
                 if (!weapon.PopCartridgeFromInternalMagazine(i, damage, type))
                     return false;
             }
@@ -423,12 +451,14 @@ class ServerSentryBackupEntityState
                 {
                     for (int clearIndex = 0; clearIndex < muzzle.Rounds.Count(); clearIndex++)
                     {
+                        if (budget && Math.ModFloat(clearIndex, 32) == 0 && !budget.HasTime()) return false;
                         if (!weapon.PopCartridgeFromInternalMagazine(i, damage, type))
                             return false;
                     }
                 }
                 for (int roundIndex = 0; roundIndex < muzzle.Rounds.Count(); roundIndex++)
                 {
+                    if (budget && Math.ModFloat(roundIndex, 32) == 0 && !budget.HasTime()) return false;
                     int sourceIndex = roundIndex;
                     if (direction == 1)
                         sourceIndex = muzzle.Rounds.Count() - 1 - roundIndex;
@@ -439,6 +469,7 @@ class ServerSentryBackupEntityState
                 matched = true;
                 for (int verifyIndex = 0; verifyIndex < muzzle.Rounds.Count(); verifyIndex++)
                 {
+                    if (budget && Math.ModFloat(verifyIndex, 32) == 0 && !budget.HasTime()) return false;
                     ServerSentryBackupCartridge expected = muzzle.Rounds[verifyIndex];
                     if (!weapon.GetInternalMagazineCartridgeInfo(i, verifyIndex, damage, type) || type != expected.Type || Math.AbsFloat(damage - expected.Damage) > 0.0001)
                         matched = false;
@@ -466,15 +497,15 @@ class ServerSentryBackupEntityState
         \param entity \p recreated entity.
         \return \p true when the entity exactly supports the saved native state.
     */
-    bool Apply(EntityAI entity)
+    bool Apply(EntityAI entity, ServerSentryBackupReadBudget budget = null)
     {
         if (!entity || Type != entity.GetType() || !IsValid())
             return false;
         Magazine magazine = Magazine.Cast(entity);
         Weapon_Base weapon = Weapon_Base.Cast(entity);
-        if (magazine && !ApplyMagazine(magazine))
+        if (magazine && !ApplyMagazine(magazine, budget))
             return false;
-        if (weapon && !ApplyWeapon(weapon))
+        if (weapon && !ApplyWeapon(weapon, budget))
             return false;
         bool previousDamagePermission = entity.GetAllowDamage();
         entity.SetAllowDamage(true);

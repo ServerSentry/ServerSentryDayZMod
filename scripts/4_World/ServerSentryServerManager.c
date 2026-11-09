@@ -38,6 +38,7 @@ class ServerSentryServerManager: CF_ModuleWorld
             m_TicketNotifications = new ServerSentryTicketNotificationBridge;
             m_TicketNotifications.Start();
             GetRPCManager().AddRPC("ServerSentryBot", "TicketConversation", this, SingleplayerExecutionType.Server);
+            GetRPCManager().AddRPC("ServerSentryBot", "CancelTicketConversation", this, SingleplayerExecutionType.Server);
             GetRPCManager().AddRPC("ServerSentryBot", "GetTicketLinkStatus", this, SingleplayerExecutionType.Server);
             GetRPCManager().AddRPC("ServerSentryBot", "CreateTicket", this, SingleplayerExecutionType.Server);
         }
@@ -124,6 +125,19 @@ class ServerSentryServerManager: CF_ModuleWorld
         Param1<ServerSentryTicketConversationRequest> request;
         if (ctx.Read(request) && request && request.param1)
             m_TicketConversationBridge.Request(sender, request.param1);
+    }
+
+    void CancelTicketConversation(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    {
+        if (type != CallType.Server || !sender || !m_TicketConversationBridge) return;
+        Param1<string> request;
+        if (ctx.Read(request) && request && ServerSentryTicketSubmission.IsValidRequestId(request.param1))
+            m_TicketConversationBridge.CancelRead(sender, request.param1);
+    }
+
+    void ForgetPlayerTicketConversations(PlayerIdentity identity)
+    {
+        if (identity && m_TicketConversationBridge) m_TicketConversationBridge.ForgetPlayer(identity);
     }
 
     void SpawnSupportCase(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)

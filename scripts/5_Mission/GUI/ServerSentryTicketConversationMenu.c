@@ -19,6 +19,11 @@ class ServerSentryTicketConversationMenu extends ServerSentrySupportMenuBase
     protected string m_SendLabel;
     protected string m_StatusText;
 
+    void ~ServerSentryTicketConversationMenu()
+    {
+        ClearMessages();
+    }
+
     override Widget Init()
     {
         layoutRoot = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/TicketConversation.layout");
@@ -41,13 +46,28 @@ class ServerSentryTicketConversationMenu extends ServerSentrySupportMenuBase
         TextWidget.Cast(layoutRoot.FindAnyWidget("TitleLabel")).SetText(ticket.ticketTypeName);
         RefreshTicketStatus();
         m_LastDelivery = m_Chat.GetDelivery();
-        m_Composer.SetText(m_Chat.GetDraft(ticket.ticketId));
-        ServerSentryTicketConversationRequest reply = m_Chat.GetReply();
-        if (reply && reply.ticketId == ticket.ticketId && m_Chat.HasUnconfirmedReply() && m_Composer.GetText() == "")
-            m_Composer.SetText(reply.message);
+        RestoreDraft();
         m_RefreshIn = 10;
-        m_Chat.Read(ticket.ticketId);
+        m_Chat.OpenConversation(ticket.ticketId);
         RefreshChat();
+    }
+
+    override void OnShow()
+    {
+        super.OnShow();
+        if (!m_Ticket) return;
+        RestoreDraft();
+        m_RefreshIn = 10;
+        m_Chat.OpenConversation(m_Ticket.ticketId);
+        RefreshChat();
+    }
+
+    protected void RestoreDraft()
+    {
+        m_Composer.SetText(m_Chat.GetDraft(m_Ticket.ticketId));
+        ServerSentryTicketConversationRequest reply = m_Chat.GetReply();
+        if (reply && reply.ticketId == m_Ticket.ticketId && m_Chat.HasUnconfirmedReply() && m_Composer.GetText() == "")
+            m_Composer.SetText(reply.message);
     }
 
     protected void RefreshTicketStatus()
@@ -67,6 +87,7 @@ class ServerSentryTicketConversationMenu extends ServerSentrySupportMenuBase
 
     override void Update(float timeslice)
     {
+        if (GetGame().GetUIManager().GetMenu() != this) return;
         super.Update(timeslice);
         if (!m_Ticket) return;
         if (GetUApi().GetInputByID(UAUIBack).LocalPress())
@@ -102,14 +123,24 @@ class ServerSentryTicketConversationMenu extends ServerSentrySupportMenuBase
         if (!m_Ticket) return;
         ServerSentryTicketConversationResult history = m_Chat.GetHistory();
         ServerSentryTicketConversationResult delivery = m_Chat.GetDelivery();
+        if (delivery && delivery.ticketId == m_Ticket.ticketId && delivery.isClosed)
+        {
+            HandleClosedTicket();
+            return;
+        }
         if (history && history.ticketId == m_Ticket.ticketId && history != m_LastHistory)
         {
+            if (history.isClosed)
+            {
+                HandleClosedTicket();
+                return;
+            }
             if (history.success && history.hasReplyStatus)
             {
                 m_Ticket.isWaitingForPlayer = history.isWaitingForPlayer;
                 RefreshTicketStatus();
             }
-            if (history.success && !SameMessages(m_LastHistory, history)) RenderMessages(history);
+            if (history.success) RenderMessages(history);
             m_LastHistory = history;
         }
         if (delivery && delivery.ticketId == m_Ticket.ticketId && delivery != m_LastDelivery)
@@ -122,6 +153,15 @@ class ServerSentryTicketConversationMenu extends ServerSentrySupportMenuBase
             }
         }
         RefreshComposer();
+    }
+
+    protected void HandleClosedTicket()
+    {
+        m_Chat.ForgetTicket(m_Ticket.ticketId);
+        m_Ticket = null;
+        m_Composer.SetText("");
+        ClearMessages();
+        Close();
     }
 
     protected void ApplyDelivery(ServerSentryTicketConversationResult delivery)
@@ -178,65 +218,101 @@ class ServerSentryTicketConversationMenu extends ServerSentrySupportMenuBase
         SetSupportButtonEnabled(discord, m_LastHistory && m_LastHistory.discordUrl != "");
     }
 
-    protected bool SameMessages(ServerSentryTicketConversationResult previous, ServerSentryTicketConversationResult current)
+    protected map<string, ref ServerSentryTicketMessageView> IndexMessageViews()
     {
-        if (!previous || !previous.success || !previous.messages || !current.messages) return false;
-        if (previous.messages.Count() != current.messages.Count()) return false;
-        for (int i = 0; i < current.messages.Count(); i++)
+        map<string, ref ServerSentryTicketMessageView> previous = new map<string, ref ServerSentryTicketMessageView>;
+        foreach (ServerSentryTicketMessageView oldView : m_MessageViews)
         {
-            ServerSentryTicketMessage oldMessage = previous.messages[i];
-            ServerSentryTicketMessage message = current.messages[i];
-            if (oldMessage.messageId != message.messageId || oldMessage.text != message.text || oldMessage.author != message.author || oldMessage.isOwn != message.isOwn || !SameRuns(oldMessage.runs, message.runs))
-                return false;
+            string id = oldView.GetMessageId();
+            if (id == "" || previous.Contains(id)) oldView.Dispose();
+            else previous.Set(id, oldView);
         }
-        return true;
+        return previous;
     }
 
-    protected bool SameRuns(array<ref ServerSentryTicketTextRun> previous, array<ref ServerSentryTicketTextRun> current)
+    protected ServerSentryTicketMessageView ReconcileMessage(map<string, ref ServerSentryTicketMessageView> previous, ServerSentryTicketMessage message, inout int nextSort, out bool changed)
     {
-        if (!previous || !current) return previous == current;
-        if (previous.Count() != current.Count()) return false;
-        for (int i = 0; i < current.Count(); i++)
+        ServerSentryTicketMessageView view;
+        if (previous.Find(message.messageId, view))
         {
-            ServerSentryTicketTextRun oldRun = previous[i];
-            ServerSentryTicketTextRun run = current[i];
-            if (oldRun.text != run.text || oldRun.style != run.style || oldRun.size != run.size || oldRun.url != run.url || oldRun.spoiler != run.spoiler || oldRun.emojiSet != run.emojiSet || oldRun.emojiName != run.emojiName)
-                return false;
+            previous.Remove(message.messageId);
+            changed = view.UpdateMessage(message);
         }
-        return true;
+        else
+        {
+            view = new ServerSentryTicketMessageView(m_Messages, message);
+            view.GetRow().SetSort(nextSort, false);
+            nextSort++;
+            changed = true;
+        }
+        return view;
+    }
+
+    /** Appending or removing old rows preserves order without renumbering native widgets. */
+    protected bool EnsureMessageOrder(array<ref ServerSentryTicketMessageView> ordered)
+    {
+        for (int position = 1; position < ordered.Count(); position++)
+        {
+            if (ordered[position - 1].GetRow().GetSort() < ordered[position].GetRow().GetSort()) continue;
+            foreach (int index, ServerSentryTicketMessageView view : ordered)
+            {
+                if (view.GetRow().GetSort() != index) view.GetRow().SetSort(index, false);
+            }
+            return true;
+        }
+        return false;
     }
 
     protected void RenderMessages(ServerSentryTicketConversationResult history)
     {
-        m_SavedScroll = m_Scroll.GetVScrollPos();
-        m_StickToBottom = !m_LastHistory || m_Scroll.GetVScrollPos01() > 0.95;
-        m_MessageViews.Clear();
-        Widget child = m_Messages.GetChildren();
-        while (child)
-        {
-            Widget next = child.GetSibling();
-            child.Unlink();
-            child = next;
-        }
+        float savedScroll = m_Scroll.GetVScrollPos();
+        bool stickToBottom = !m_LastHistory || m_Scroll.GetVScrollPos01() > 0.95;
+        int nextSort;
+        if (m_MessageViews.Count() > 0)
+            nextSort = m_MessageViews[m_MessageViews.Count() - 1].GetRow().GetSort() + 1;
+        map<string, ref ServerSentryTicketMessageView> previous = IndexMessageViews();
+        array<ref ServerSentryTicketMessageView> ordered = {};
+        bool changed;
         if (history.messages)
         {
             foreach (ServerSentryTicketMessage message : history.messages)
-                AddMessage(message);
+            {
+                if (!message) continue;
+                bool messageChanged;
+                ServerSentryTicketMessageView view = ReconcileMessage(previous, message, nextSort, messageChanged);
+                if (messageChanged) changed = true;
+                ordered.Insert(view);
+            }
         }
+        foreach (string removedId, ServerSentryTicketMessageView removed : previous)
+        {
+            removed.Dispose();
+            changed = true;
+        }
+        if (ordered.Count() != m_MessageViews.Count()) changed = true;
+        if (EnsureMessageOrder(ordered)) changed = true;
+        m_MessageViews = ordered;
+        if (!changed) return;
+        m_SavedScroll = savedScroll;
+        m_StickToBottom = stickToBottom;
         m_Messages.Update();
         m_Scroll.Update();
         // Native text measurements become valid after the first layout pass.
         m_LayoutFrames = 3;
     }
 
-    protected void AddMessage(ServerSentryTicketMessage message)
+    protected void ClearMessages()
     {
-        m_MessageViews.Insert(new ServerSentryTicketMessageView(m_Messages, message));
+        foreach (ServerSentryTicketMessageView view : m_MessageViews) view.Dispose();
+        m_MessageViews.Clear();
+        m_LastHistory = null;
+        m_LastDelivery = null;
+        m_LayoutFrames = 0;
     }
 
     protected void ResizeMessages()
     {
-        foreach (ServerSentryTicketMessageView view : m_MessageViews) view.Layout(true);
+        foreach (ServerSentryTicketMessageView view : m_MessageViews) view.Layout();
         m_Messages.Update();
         m_Scroll.Update();
         if (m_StickToBottom) m_Scroll.VScrollToPos01(1);
@@ -253,7 +329,9 @@ class ServerSentryTicketConversationMenu extends ServerSentrySupportMenuBase
             string text;
             text = m_Composer.GetText();
             m_Chat.SetDraft(m_Ticket.ticketId, text);
+            m_Chat.CloseConversation(m_Ticket.ticketId);
         }
+        ClearMessages();
         super.OnHide();
     }
 

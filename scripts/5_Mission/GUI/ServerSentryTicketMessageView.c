@@ -30,20 +30,86 @@ class ServerSentryTicketMessageView
                 LoadWidgetImageSet("ServerSentryDayZMod/gui/emoji/ServerSentryEmoji" + atlas.ToString() + ".imageset");
             s_ImagesLoaded = true;
         }
-        m_Message = message;
-        m_Row = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/components/TicketMessage.layout", parent);
+        m_Row = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/components/TicketMessage.layout", parent, false);
         m_Body = m_Row.FindAnyWidget("MessageBody");
-        m_MeasureRoot = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/components/TicketTextMeasure.layout", m_Body);
+        m_MeasureRoot = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/components/TicketTextMeasure.layout", m_Body, false);
         m_MeasureRoot.SetAlpha(0);
+        UpdateMessage(message);
+    }
+
+    void ~ServerSentryTicketMessageView()
+    {
+        Dispose();
+    }
+
+    Widget GetRow() { return m_Row; }
+    int GetSpanCount() { return m_Spans.Count(); }
+    string GetMessageId()
+    {
+        if (!m_Message) return "";
+        return m_Message.messageId;
+    }
+
+    /** A changed spoiler group must be hidden again; unchanged messages keep their reveal state. */
+    bool UpdateMessage(ServerSentryTicketMessage message)
+    {
+        if (!message || !m_Row) return false;
+        bool sameContent = m_Message && m_Message.text == message.text && SameRuns(m_Message.runs, message.runs);
+        if (sameContent && m_Message.messageId == message.messageId && m_Message.author == message.author && m_Message.createdAtUtc == message.createdAtUtc && m_Message.isOwn == message.isOwn)
+        {
+            m_Message = message;
+            return false;
+        }
+        m_Message = message;
         string time = ServerSentryTicketTime.LocalDisplay(message.createdAtUtc);
         TextWidget.Cast(m_Row.FindAnyWidget("MessageAuthor")).SetText(message.author + "  /  " + time);
         Widget bubble = m_Row.FindAnyWidget("Bubble");
         bubble.SetColor(ARGB(255, 10, 15, 26));
         if (message.isOwn) bubble.SetColor(ARGB(255, 17, 22, 45));
+        if (!sameContent)
+        {
+            m_Revealed.Clear();
+            m_Dirty = true;
+        }
+        return true;
     }
 
-    Widget GetRow() { return m_Row; }
-    int GetSpanCount() { return m_Spans.Count(); }
+    protected bool SameRuns(array<ref ServerSentryTicketTextRun> previous, array<ref ServerSentryTicketTextRun> current)
+    {
+        if (!previous || !current) return previous == current;
+        if (previous.Count() != current.Count()) return false;
+        for (int i = 0; i < current.Count(); i++)
+        {
+            ServerSentryTicketTextRun oldRun = previous[i];
+            ServerSentryTicketTextRun run = current[i];
+            if (!oldRun || !run)
+            {
+                if (oldRun != run) return false;
+                continue;
+            }
+            if (oldRun.text != run.text || oldRun.style != run.style || oldRun.size != run.size || oldRun.url != run.url || oldRun.spoiler != run.spoiler || oldRun.emojiSet != run.emojiSet || oldRun.emojiName != run.emojiName)
+                return false;
+        }
+        return true;
+    }
+
+    /** Release the complete row, including measurement widgets and message data. */
+    void Dispose()
+    {
+        if (m_Row) m_Row.Unlink();
+        m_Row = null;
+        m_Body = null;
+        m_MeasureRoot = null;
+        m_Message = null;
+        m_Spans.Clear();
+        m_Links.Clear();
+        m_Spoilers.Clear();
+        m_Revealed.Clear();
+        m_CurrentSpan = null;
+        m_CurrentText = null;
+        m_CurrentFormat = null;
+        m_CurrentValue = "";
+    }
 
     protected void ConfigureText(TextWidget text, ServerSentryTicketTextRun format)
     {
@@ -77,11 +143,14 @@ class ServerSentryTicketMessageView
         m_Links.Clear();
         m_Spoilers.Clear();
         m_CurrentSpan = null;
+        m_CurrentText = null;
         m_CurrentFormat = null;
+        m_CurrentValue = "";
     }
 
     void Layout(bool force = false)
     {
+        if (!m_Row || !m_Message) return;
         float width, height;
         m_Row.GetScreenSize(width, height);
         if (!force && !m_Dirty && width == m_LastWidth) return;
@@ -190,7 +259,7 @@ class ServerSentryTicketMessageView
 
     protected float CreateSpan(ServerSentryTicketTextRun run, float width, bool emoji)
     {
-        Widget span = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/components/TicketTextSpan.layout", m_Body);
+        Widget span = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/components/TicketTextSpan.layout", m_Body, false);
         m_Spans.Insert(span);
         float height = Math.Max(24, run.size + 8);
         m_LineHeight = Math.Max(m_LineHeight, height);

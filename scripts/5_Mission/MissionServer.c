@@ -144,6 +144,8 @@ modded class MissionServer
     override void OnClientDisconnectedEvent(PlayerIdentity identity, PlayerBase player, int logoutTime, bool authFailed)
     {
         if (identity) ServerSentryDeathReportStore.Forget(identity.GetPlainId());
+        ServerSentryServerManager manager = ServerSentryServerManager.Cast(CF_ModuleCoreManager.Get(ServerSentryServerManager));
+        if (manager) manager.ForgetPlayerTicketConversations(identity);
         super.OnClientDisconnectedEvent(identity, player, logoutTime, authFailed);
     }
 

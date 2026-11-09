@@ -56,6 +56,7 @@ class ServerSentryTicketConversationResult
     string ticketId;
     bool sending;
     bool success;
+    bool isClosed;
     string message;
     bool hasOlderMessages;
     bool canEdit;

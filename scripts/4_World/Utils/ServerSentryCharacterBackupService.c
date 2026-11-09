@@ -265,8 +265,10 @@ class ServerSentryCharacterBackupService
         }
         m_Busy = true;
         string temporary = directory + "/pending.tmp";
-        bool saved = SavePlayerState(player, temporary, true);
-        ServerSentryBackupItemManifest manifest = ServerSentryBackupItemManifest.Capture(inventory);
+        bool saved = SavePlayerState(player, temporary, true, inventory);
+        ServerSentryBackupItemManifest manifest;
+        if (saved)
+            manifest = ServerSentryBackupItemManifest.Capture(inventory);
         if (saved)
             saved = manifest && ServerSentryBackupItemIndex.WriteManifest(path, manifest);
         message = "Cannot serialize complete character state to " + temporary;
@@ -311,13 +313,33 @@ class ServerSentryCharacterBackupService
         return entities;
     }
 
+    /** \brief Indexes the preorder tree once instead of scanning it for every parent lookup. */
+    protected map<EntityAI, int> CaptureIndices(array<EntityAI> entities)
+    {
+        map<EntityAI, int> indices = new map<EntityAI, int>();
+        for (int index = 0; index < entities.Count(); index++)
+        {
+            EntityAI entity = entities[index];
+            if (!entity || indices.Contains(entity))
+                return null;
+            indices.Set(entity, index);
+        }
+        return indices;
+    }
+
+    protected void LogCaptureResult(ServerSentryBackupReadBudget budget, int count, bool success, string reason)
+    {
+        float elapsedMs = budget.ElapsedMs();
+        Print("[ServerSentry][CharacterBackup] Capture entities=" + count.ToString() + " elapsedMs=" + elapsedMs.ToString() + " success=" + success.ToString() + " reason=" + reason);
+    }
+
     /**
         \brief Writes a complete versioned snapshot including script persistence for every entity.
         \param player \p living character with an authenticated identity.
         \param path \p private output path below the server profile.
         \return \p true when all explicit writes and stream terminators succeed.
     */
-    bool SavePlayerState(PlayerBase player, string path, bool death = false)
+    bool SavePlayerState(PlayerBase player, string path, bool death = false, array<EntityAI> inventory = null)
     {
         if (!GetGame().IsServer() || !player || !IsSteamId(BackupOwnerId(player)))
             return false;
@@ -325,9 +347,26 @@ class ServerSentryCharacterBackupService
         bool isAlive = player.IsAlive();
         if ((!death && !isAlive) || (death && isAlive))
             return false;
-        array<EntityAI> entities = CharacterInventory(player);
-        if (entities.Count() > MAX_ENTITIES)
+        ServerSentryBackupReadBudget budget = new ServerSentryBackupReadBudget();
+        if (ServerSentryBackupMagazineReader.InventoryBusy(player))
+        {
+            LogCaptureResult(budget, 0, false, "inventory_action_in_progress");
             return false;
+        }
+        array<EntityAI> entities = inventory;
+        if (!entities)
+            entities = CharacterInventory(player);
+        if (entities.Count() < 1 || entities.Count() > MAX_ENTITIES || entities[0] != player)
+        {
+            LogCaptureResult(budget, entities.Count(), false, "inventory_bounds");
+            return false;
+        }
+        map<EntityAI, int> indices = CaptureIndices(entities);
+        if (!indices)
+        {
+            LogCaptureResult(budget, entities.Count(), false, "invalid_inventory_tree");
+            return false;
+        }
         ServerSentryCharacterBackupHeader header = new ServerSentryCharacterBackupHeader();
         if (death)
             header.Version = 3;
@@ -350,8 +389,12 @@ class ServerSentryCharacterBackupService
 
         FileSerializer file = new FileSerializer();
         if (!file.Open(path, FileMode.WRITE))
+        {
+            LogCaptureResult(budget, entities.Count(), false, "open_failed");
             return false;
+        }
         bool success = file.Write(header);
+        string failure = "serialization_failed";
         foreach (EntityAI entity : entities)
         {
             if (!success || !entity)
@@ -359,8 +402,14 @@ class ServerSentryCharacterBackupService
                 success = false;
                 break;
             }
+            if (!budget.HasTime())
+            {
+                failure = "time_budget_exceeded";
+                success = false;
+                break;
+            }
             ServerSentryBackupEntityState state = new ServerSentryBackupEntityState();
-            success = state.Capture(entity, player, entities);
+            success = state.Capture(entity, player, entities, indices, budget);
             if (success && death && entity == player)
             {
                 foreach (ServerSentryBackupDamage damage : state.Damage)
@@ -380,11 +429,18 @@ class ServerSentryCharacterBackupService
                 success = file.Write(STREAM_END);
             }
         }
+        if (success && !budget.HasTime())
+        {
+            failure = "time_budget_exceeded";
+            success = false;
+        }
         if (success)
             success = file.Write(STREAM_END);
         file.Close();
         if (!success)
             DeleteFile(path);
+        if (success) failure = "complete";
+        LogCaptureResult(budget, entities.Count(), success, failure);
         return success;
     }
 
@@ -493,9 +549,10 @@ class ServerSentryCharacterBackupService
         if (!success)
             Print("[ServerSentry][CharacterBackup] Invalid or incompatible persistence stream in " + path);
         // Children must exist before weapon/energy/container post-load callbacks run.
+        ServerSentryBackupReadBudget ammoBudget = new ServerSentryBackupReadBudget();
         for (int index = entities.Count() - 1; success && index >= 0; index--)
         {
-            success = states[index].Apply(entities[index]);
+            success = ammoBudget.HasTime() && states[index].Apply(entities[index], ammoBudget);
             if (success && index > 0)
                 entities[index].AfterStoreLoad();
             if (!success)
@@ -838,18 +895,28 @@ class ServerSentryCharacterBackupService
             GetGame().ObjectDelete(staged);
             return false;
         }
-        if (!SavePlayerState(player, rollback))
+        array<EntityAI> original = CharacterInventory(player);
+        if (!SavePlayerState(player, rollback, false, original))
         {
             GetGame().ObjectDelete(staged);
             return false;
         }
-        array<EntityAI> original = CharacterInventory(player);
+        ServerSentryBackupReadBudget originalBudget = new ServerSentryBackupReadBudget();
+        map<EntityAI, int> originalIndices = CaptureIndices(original);
+        if (!originalIndices)
+        {
+            LogCaptureResult(originalBudget, original.Count(), false, "invalid_restore_inventory_tree");
+            GetGame().ObjectDelete(staged);
+            DeleteFile(rollback);
+            return false;
+        }
         array<ref ServerSentryBackupEntityState> originalStates = new array<ref ServerSentryBackupEntityState>();
         foreach (EntityAI originalEntity : original)
         {
             ServerSentryBackupEntityState originalState = new ServerSentryBackupEntityState();
-            if (!originalState.Capture(originalEntity, player, original))
+            if (!originalBudget.HasTime() || !originalState.Capture(originalEntity, player, original, originalIndices, originalBudget))
             {
+                LogCaptureResult(originalBudget, original.Count(), false, "restore_state_failed_or_budget_exceeded");
                 GetGame().ObjectDelete(staged);
                 DeleteFile(rollback);
                 return false;

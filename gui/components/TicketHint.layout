@@ -1,0 +1,58 @@
+PanelWidgetClass ServerSentryTicketHint {
+ ignorepointer 1
+ priority 100
+ position 0.025 0.045
+ size 312 74
+ halign right_ref
+ hexactpos 0
+ vexactpos 0
+ hexactsize 1
+ vexactsize 1
+ style ServerSentryRound
+ color .065 .095 .15 .96
+ {
+  ImageWidgetClass Logo {
+   ignorepointer 1
+   position 14 0
+   size 44 44
+   hexactpos 1
+   hexactsize 1
+   vexactsize 1
+   valign center_ref
+   image0 "ServerSentryDayZMod/gui/skin/serversentry_logo.edds"
+   mode blend
+   "src alpha" 1
+   stretch 1
+  }
+  TextWidgetClass Title {
+   ignorepointer 1
+   position 70 11
+   size 232 24
+   hexactpos 1
+   vexactpos 1
+   hexactsize 1
+   vexactsize 1
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "exact text size" 18
+   "text valign" center
+   color .94 .97 1 1
+  }
+  TextWidgetClass Detail {
+   ignorepointer 1
+   position 70 39
+   size 232 22
+   hexactpos 1
+   vexactpos 1
+   hexactsize 1
+   vexactsize 1
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "exact text size" 14
+   "text valign" center
+   color .65 .8 .96 1
+  }
+ }
+}

@@ -1,25 +1,15 @@
-/** The latest visible ticket notification owns the shortcut for ten seconds. */
+/** The visible reply hint and its shortcut share one real-time deadline. */
 class ServerSentryTicketNotifications
 {
+    protected static const float DISPLAY_SECONDS = 10;
     protected ref array<string> m_Seen = {};
-    protected ref array<ref ServerSentryTicketNotificationRuntime> m_OwnNotifications = {};
-    protected ServerSentryTicketNotificationRuntime m_Active;
-    protected int m_Deadline;
-    protected bool m_Listening;
+    protected Widget m_Hint;
+    protected ref ServerSentryTicketSummary m_Ticket;
+    protected float m_VisibleUntil;
 
     void Stop()
     {
-        NotificationSystem system = NotificationSystem.GetInstance();
-        if (system && m_Listening)
-        {
-            system.m_OnNotificationAdded.Remove(OnAdded);
-            system.m_OnNotificationRemoved.Remove(OnRemoved);
-        }
-        m_Listening = false;
-        m_Active = null;
-        foreach (ServerSentryTicketNotificationRuntime notification : m_OwnNotifications)
-            NotificationSystem.DismissTicketNotification(notification);
-        m_OwnNotifications.Clear();
+        Consume();
         m_Seen.Clear();
     }
 
@@ -29,24 +19,27 @@ class ServerSentryTicketNotifications
         if (m_Seen.Find(notification.messageId) >= 0) return false;
         m_Seen.Insert(notification.messageId);
         if (m_Seen.Count() > 64) m_Seen.Remove(0);
-        if (alreadyOpen) return true;
-        NotificationSystem system = NotificationSystem.GetInstance();
-        if (!system) return false;
-        if (!m_Listening)
+        if (alreadyOpen)
         {
-            system.m_OnNotificationAdded.Insert(OnAdded);
-            system.m_OnNotificationRemoved.Insert(OnRemoved);
-            m_Listening = true;
+            if (m_Ticket && m_Ticket.ticketId == notification.ticket.ticketId) Consume();
+            return true;
         }
+        if (!m_Hint)
+        {
+            ServerSentryRoundedSurface.LoadStyles();
+            m_Hint = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/components/TicketHint.layout");
+            if (!m_Hint) return false;
+            GetGame().GetUpdateQueue(CALL_CATEGORY_GUI).Insert(Update);
+        }
+        m_Ticket = notification.ticket;
+        m_VisibleUntil = GetGame().GetTickTime() + DISPLAY_SECONDS;
         string key = ShortcutLabel();
-        string detail = "New reply in your support ticket.";
-        if (key != "") detail += " Press [" + key + "] to open.";
-        else detail += " Open Tickets in the Support menu.";
-        NotificationData appearance = new NotificationData("ServerSentryDayZMod/gui/skin/serversentry_logo.edds", notification.ticket.GetReference());
-        ServerSentryTicketNotificationRuntime runtime = new ServerSentryTicketNotificationRuntime(10, appearance, detail);
-        runtime.ticket = notification.ticket;
-        m_OwnNotifications.Insert(runtime);
-        NotificationSystem.AddTicketNotification(runtime);
+        string detail = "Open Tickets in the Support menu.";
+        if (key != "") detail = "Press [" + key + "] to open.";
+        string title = "New support reply";
+        if (m_Ticket.ticketNumber != "") title = "New reply in Ticket " + m_Ticket.ticketNumber;
+        TextWidget.Cast(m_Hint.FindAnyWidget("Title")).SetText(title);
+        TextWidget.Cast(m_Hint.FindAnyWidget("Detail")).SetText(detail);
         return true;
     }
 
@@ -64,32 +57,23 @@ class ServerSentryTicketNotifications
         return label;
     }
 
-    protected void OnAdded(NotificationRuntimeData data)
+    protected void Update(float timeslice)
     {
-        ServerSentryTicketNotificationRuntime runtime = ServerSentryTicketNotificationRuntime.Cast(data);
-        if (!runtime || m_OwnNotifications.Find(runtime) < 0) return;
-        m_Active = runtime;
-        m_Deadline = GetGame().GetTime() + 10000;
-    }
-
-    protected void OnRemoved(NotificationRuntimeData data)
-    {
-        ServerSentryTicketNotificationRuntime runtime = ServerSentryTicketNotificationRuntime.Cast(data);
-        if (!runtime) return;
-        m_OwnNotifications.RemoveItem(runtime);
-        if (m_Active == runtime) m_Active = null;
+        if (GetGame().GetTickTime() >= m_VisibleUntil) Consume();
     }
 
     ServerSentryTicketSummary GetTicket()
     {
-        if (!m_Active || GetGame().GetTime() >= m_Deadline || m_Active.GetRemainingTime() <= 0) return null;
-        return m_Active.ticket;
+        if (m_Ticket && GetGame().GetTickTime() >= m_VisibleUntil) Consume();
+        return m_Ticket;
     }
 
     void Consume()
     {
-        ServerSentryTicketNotificationRuntime notification = m_Active;
-        m_Active = null;
-        NotificationSystem.DismissTicketNotification(notification);
+        m_Ticket = null;
+        if (!m_Hint) return;
+        GetGame().GetUpdateQueue(CALL_CATEGORY_GUI).Remove(Update);
+        m_Hint.Unlink();
+        m_Hint = null;
     }
 }

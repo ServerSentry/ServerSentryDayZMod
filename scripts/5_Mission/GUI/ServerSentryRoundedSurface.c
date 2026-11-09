@@ -6,13 +6,16 @@ class ServerSentryRoundedSurface
 
     void ServerSentryRoundedSurface(Widget parent, string layoutName = "RoundedSurface")
     {
-        if (!s_Loaded)
-        {
-            s_Loaded = LoadWidgetImageSet("ServerSentryDayZMod/gui/skin/Support.imageset");
-            LoadWidgetStyles("ServerSentryDayZMod/gui/skin/Support.styles");
-        }
+        LoadStyles();
         m_Root = GetGame().GetWorkspace().CreateWidgets("ServerSentryDayZMod/gui/components/" + layoutName + ".layout", parent);
         m_Root.ClearFlags(WidgetFlags.NOFILTER);
+    }
+
+    static void LoadStyles()
+    {
+        if (s_Loaded) return;
+        s_Loaded = LoadWidgetImageSet("ServerSentryDayZMod/gui/skin/Support.imageset");
+        LoadWidgetStyles("ServerSentryDayZMod/gui/skin/Support.styles");
     }
 
     void SetColor(int color) { m_Root.SetColor(color); }
