@@ -54,9 +54,8 @@ modded class PlayerBase
             targetName = targetIdentity.GetName();
         }
 
-        super.EEHitBy(damageResult, damageType, source, component, dmgZone, ammo, modelPos, speedCoef);
-
         ServerSentryHitRequest request = new ServerSentryHitRequest(this, GetSSCombatState(), damageResult, damageType, source, component, dmgZone, ammo);
+        super.EEHitBy(damageResult, damageType, source, component, dmgZone, ammo, modelPos, speedCoef);
         request.CapturePostHitState();
 
         bool logHits = ServerSentryConfigManager.Get().IsAllowedToLogPlayerHits();

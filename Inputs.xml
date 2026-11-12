@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-<!-- Defines the ServerSentry support-menu input action and its default key binding. -->
 <modded_inputs>
-    <!-- Declares actions exposed to the DayZ input settings menu. -->
     <inputs>
         <actions>
             <input name="UAToggleSupportMenu" loc="Support Menu" />
+            <input name="UAOpenSupportNotification" loc="Open notified support ticket" />
         </actions>
-        <sorting name="sentry" loc="ServerSentry">
+        <sorting name="ServerSentry" loc="ServerSentry">
             <input name="UAToggleSupportMenu" />
+            <input name="UAOpenSupportNotification" />
         </sorting>
     </inputs>
-    <!-- Assigns the default keyboard binding. -->
     <preset>
         <input name="UAToggleSupportMenu">
             <btn name="kL" />
+        </input>
+        <input name="UAOpenSupportNotification">
+            <btn name="kJ" />
         </input>
     </preset>
 </modded_inputs>

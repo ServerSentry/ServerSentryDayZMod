@@ -1,0 +1,12 @@
+PanelWidgetClass ComposerCaret {
+ scaled 0
+ ignorepointer 1
+ inheritalpha 0
+ size 1 16
+ hexactpos 1
+ vexactpos 1
+ hexactsize 1
+ vexactsize 1
+ style rover_sim_colorable
+ color .91 .95 .98 1
+}

@@ -1,0 +1,79 @@
+ButtonWidgetClass TicketTextSpan {
+ size 100 24
+ hexactpos 1
+ vexactpos 1
+ hexactsize 1
+ vexactsize 1
+ style Empty
+ "no focus" 1
+ {
+  PanelWidgetClass CodeFill {
+   ignorepointer 1
+   size 1 1
+   hexactsize 0
+   vexactsize 0
+   color .025 .037 .05 1
+   style rover_sim_colorable
+  }
+  TextWidgetClass SpanText {
+   ignorepointer 1
+   position 0 0
+   size 1 1
+   hexactsize 0
+   vexactsize 0
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "exact text size" 16
+   "size to text h" 1
+   "text valign" center
+   color .87 .92 .96 1
+  }
+  TextWidgetClass CodeText {
+   ignorepointer 1
+   position 0 0
+   size 1 1
+   hexactsize 0
+   vexactsize 0
+   style Normal_SDF
+   font "gui/fonts/robotomono_msdf_28"
+   "exact text" 1
+   "exact text size" 16
+   "size to text h" 1
+   "text valign" center
+   color .87 .92 .96 1
+  }
+  PanelWidgetClass Underline {
+   ignorepointer 1
+   hexactpos 1
+   vexactpos 1
+   size 1 1
+   hexactsize 0
+   vexactsize 1
+   color .87 .92 .96 1
+   style rover_sim_colorable
+  }
+  PanelWidgetClass Strikethrough {
+   ignorepointer 1
+   hexactpos 1
+   vexactpos 1
+   size 1 1
+   hexactsize 0
+   vexactsize 1
+   color .87 .92 .96 1
+   style rover_sim_colorable
+  }
+  ImageWidgetClass EmojiImage {
+   ignorepointer 1
+   mode blend
+   "src alpha" 1
+   stretch 1
+   hexactpos 1
+   vexactpos 1
+   size 20 20
+   hexactsize 1
+   vexactsize 1
+   color 1 1 1 1
+  }
+ }
+}

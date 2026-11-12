@@ -32,6 +32,8 @@ class ServerSentryLiveActionResultDto
     	\brief Human-readable result or error message.
     */
     string message;
+    /** \brief Optional typed response; empty for actions without response data. */
+    string dataJson;
     /**
     	\brief Stores the executed at utc.
     */
@@ -48,6 +50,7 @@ class ServerSentryLiveActionResultDto
         targetObjectId = "";
         success = false;
         message = "";
+        dataJson = "";
         executedAtUtc = "";
     }
 }

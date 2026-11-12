@@ -8,6 +8,8 @@
 */
 class ServerSentryLoggingConfig
 {
+    /** \brief Persisted schema version; zero identifies an unversioned configuration. */
+    int ConfigVersion;
     /**
     	\brief Indicates whether enable item export.
     */
@@ -20,10 +22,20 @@ class ServerSentryLoggingConfig
     	\brief Indicates whether enable live data logging.
     */
     bool EnableLiveDataLogging;
+    /** \brief Enables death reporting; opt-in and independent from ordinary combat logging. */
+    bool EnableDeathReports;
+    /** \brief Disable when another mod supplies the report button through the public adapter. */
+    bool DeathReportAutomaticOverlay;
+    /** \brief Enables in-game Discord tickets and notifications. */
+    bool EnableTickets;
+    /** \brief Enables support-case delivery and in-game refund claims. */
+    bool EnableSupportCases;
     /**
     	\brief Stores the live data update interval seconds.
     */
     int LiveDataUpdateIntervalSeconds;
+    /** \brief Maximum base-detail age in seconds; zero rebuilds on every snapshot. */
+    int LiveBaseDetailsCacheSeconds;
     /**
     	\brief Indicates whether log animal hits.
     */
@@ -76,6 +88,8 @@ class ServerSentryLoggingConfig
     	\brief Indicates whether log base building.
     */
     bool LogBaseBuilding;
+    /** \brief Enables damage events independently of base-building actions. */
+    bool LogBaseDamage;
     /**
     	\brief Indicates whether log action dismantle part.
     */
@@ -85,6 +99,8 @@ class ServerSentryLoggingConfig
     */
     bool LogActionDestroyPart;
 
+    /** \brief Character backup policy, initialized before JSON overrides are applied. */
+    ref ServerSentryCharBackupConfig CharBackupConfig;
 
     /**
     	\brief Initializes a new ServerSentryLoggingConfig instance.
@@ -92,8 +108,8 @@ class ServerSentryLoggingConfig
     void ServerSentryLoggingConfig()
     {
         // JsonFileLoader constructs this class before applying values from disk.
-        // Initializing here keeps newly-added settings enabled for older config.json
-        // files where those properties do not exist yet. Explicit false values in
+        // Initializing here applies each setting's default for older config.json
+        // files where those properties do not exist yet. Explicit values in
         // the JSON are still applied afterwards.
         InitDefaultValues();
     }
@@ -106,7 +122,12 @@ class ServerSentryLoggingConfig
         EnableItemExport = true;
         EnableTelemtryLogging = true;
         EnableLiveDataLogging = true;
+        EnableDeathReports = false;
+        DeathReportAutomaticOverlay = true;
+        EnableTickets = true;
+        EnableSupportCases = true;
         LiveDataUpdateIntervalSeconds = 10;
+        LiveBaseDetailsCacheSeconds = 30;
         LogAnimalHits = true;
         LogAnimalKills = true;
         LogZombieHits = true;
@@ -119,5 +140,10 @@ class ServerSentryLoggingConfig
         LogInventoryMovement = true;
         LogPlayerHits = true;
         LogPlayerKills = true;
+        LogBaseBuilding = false;
+        LogBaseDamage = false;
+        LogActionDismantlePart = false;
+        LogActionDestroyPart = false;
+        CharBackupConfig = new ServerSentryCharBackupConfig();
     }
 }

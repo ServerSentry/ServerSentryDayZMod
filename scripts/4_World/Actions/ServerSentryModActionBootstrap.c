@@ -24,6 +24,11 @@ class ServerSentryModActionBootstrap
         }
 
         m_Registered = true;
+        ServerSentryModActionRegistry.Register(new ServerSentryCharacterBackupAction("backups"));
+        ServerSentryModActionRegistry.Register(new ServerSentryCharacterBackupAction("restore"));
+        ServerSentryModActionRegistry.Register(new ServerSentryInventoryAction("snapshot"));
+        ServerSentryModActionRegistry.Register(new ServerSentryInventoryAction("add"));
+        ServerSentryModActionRegistry.Register(new ServerSentryInventoryAction("remove"));
         ServerSentryModActionRegistry.Register(new ServerSentryInspectObjectAction());
         ServerSentryModActionRegistry.Register(new ServerSentryHealPlayerAction());
         ServerSentryModActionRegistry.Register(new ServerSentrySpawnItemPlayerAction());

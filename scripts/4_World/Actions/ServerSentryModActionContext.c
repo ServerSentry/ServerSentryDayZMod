@@ -48,6 +48,8 @@ class ServerSentryModActionContext
     	\brief Action-specific input encoded as JSON.
     */
     string inputJson;
+    /** \brief Optional typed action response encoded as JSON. */
+    string resultDataJson;
     /**
     	\brief Stores the requested by.
     */
@@ -68,6 +70,7 @@ class ServerSentryModActionContext
         className = "";
         position = new ServerSentryVectorDto();
         inputJson = "{}";
+        resultDataJson = "";
         requestedBy = "";
     }
 

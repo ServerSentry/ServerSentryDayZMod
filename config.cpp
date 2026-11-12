@@ -28,6 +28,7 @@ class CfgMods
 		author = "Krypton91";
 		authorID = "0";
 		version = "1.4.8";
+		storageVersion = 1;
 		extra = 0;
 		type = "mod";
 		inputs = "ServerSentryDayZMod/Inputs.xml";
@@ -49,7 +50,7 @@ class CfgMods
 			class missionScriptModule
 			{
 				value = "";
-				files[] = {"TM/Trader/scripts/defines", "ServerSentryDayZMod/scripts/5_Mission"};
+				files[] = {"ServerSentryDayZMod/scripts/5_Mission"};
 			};
 		};
 	};

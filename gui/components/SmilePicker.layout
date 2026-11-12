@@ -1,0 +1,145 @@
+FrameWidgetClass SmilePicker {
+   clipchildren 1
+ visible 0
+ position 0 .11
+ size .96 .78
+ hexactpos 0
+ vexactpos 0
+ hexactsize 0
+ vexactsize 0
+ priority 100
+ {
+  FrameWidgetClass PickerFill {
+   ignorepointer 1
+   size 1 1
+   hexactsize 0
+   vexactsize 0
+  }
+  TextWidgetClass PickerTitle {
+   ignorepointer 1
+   position .035 .035
+   size .8 26
+   hexactsize 0
+   vexactsize 1
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "exact text size" 20
+   text "Emojis"
+   color .9 .95 .98 1
+  }
+
+  ButtonWidgetClass EmojiClose {
+   position .90 .025
+   size 36 36
+   hexactpos 0
+   vexactpos 0
+   hexactsize 1
+   vexactsize 1
+   style Empty
+   "no focus" 1
+   {
+    FrameWidgetClass EmojiClose_Fill {
+     ignorepointer 1
+     size 1 1
+     hexactsize 0
+     vexactsize 0
+    }
+    ImageWidgetClass EmojiClose_Icon {
+     ignorepointer 1
+     position 0 0
+     size 32 32
+     scaled 0
+     hexactpos 1
+     vexactpos 1
+     hexactsize 1
+     vexactsize 1
+     halign center_ref
+     valign center_ref
+     image0 "ServerSentryDayZMod/gui/skin/close.edds"
+     mode blend
+     "src alpha" 1
+     stretch 1
+    }
+   }
+  }
+  TextWidgetClass SearchLabel {
+   ignorepointer 1
+   position .035 .13
+   size .9 18
+   hexactsize 0
+   vexactsize 1
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "exact text size" 13
+   text "Search by name"
+   color .55 .67 .75 1
+  }
+  PanelWidgetClass SearchFill {
+   ignorepointer 1
+   position .035 .19
+   size .93 30
+   hexactsize 0
+   vexactsize 1
+   color .025 .05 .065 1
+   style rover_sim_colorable
+  }
+  EditBoxWidgetClass EmojiSearch {
+   position .035 .19
+   size .93 30
+   hexactsize 0
+   vexactsize 1
+   style ServerBrowser
+   "limit visible" 1
+   font "gui/fonts/MetronBook"
+   "exact text" 1
+   "exact text size" 16
+   color .9 .95 .98 1
+  }
+  FrameWidgetClass EmojiCategories {
+   position .035 .28
+   size .93 60
+   hexactsize 0
+   vexactsize 1
+  }
+  ScrollWidgetClass EmojiScroll {
+   clipchildren 1
+   position .035 .42
+   size .93 .46
+   hexactsize 0
+   vexactsize 0
+   style blank
+   color .16 .23 .28 1
+   "Scrollbar V" 1
+   {
+    WrapSpacerWidgetClass EmojiGrid {
+     ignorepointer 1
+     size .97 0
+     hexactsize 0
+     vexactsize 1
+     Padding 4
+     Margin 0
+     "Size To Content V" 1
+    }
+   }
+  }
+
+
+
+
+  TextWidgetClass EmojiCaption {
+   ignorepointer 1
+   position .035 .91
+   size .93 20
+   hexactsize 0
+   vexactsize 1
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "exact text size" 13
+   text "Select an emoji to insert it."
+   color .64 .67 .91 1
+  }
+ }
+}

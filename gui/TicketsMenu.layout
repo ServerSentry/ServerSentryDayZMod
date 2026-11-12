@@ -1,0 +1,490 @@
+FrameWidgetClass ServerSentryTicketsRoot {
+ size 1 1
+ hexactpos 0
+ vexactpos 0
+ hexactsize 0
+ vexactsize 0
+ {
+  PanelWidgetClass BackgroundDim {
+   ignorepointer 1
+   position 0 0
+   size 1 1
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   color 0 0 0 .82
+   style rover_sim_colorable
+  }
+  PanelWidgetClass SupportWindow {
+   ignorepointer 1
+   size .74 .76
+   halign center_ref
+   valign center_ref
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   color .008 .011 .017 1
+   style rover_sim_colorable
+   {
+    PanelWidgetClass Sidebar {
+     ignorepointer 1
+     position 0 0
+     size 0.2 1
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     color .004 .006 .010 1
+     style rover_sim_colorable
+     {
+
+      ImageWidgetClass Monogram {
+       ignorepointer 1
+       position 0 28
+       size 128 128
+       halign center_ref
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       scaled 0
+       color 1 1 1 1
+       image0 "ServerSentryDayZMod/gui/skin/serversentry_logo.edds"
+       mode blend
+       "src alpha" 1
+       stretch 1
+      }
+
+      TextWidgetClass BrandTop {
+       scaled 0
+       ignorepointer 1
+       position .07 170
+       size .86 28
+       hexactpos 0
+       vexactpos 1
+       hexactsize 0
+       vexactsize 1
+       style Normal_SDF
+       font "gui/fonts/sdf_MetronBook72"
+       text "ServerSentry"
+       "exact text" 1
+       "exact text size" 20
+       "text halign" center
+       "text valign" center
+       color .91 .95 1 1
+      }
+
+      TextWidgetClass BrandBottom {
+       scaled 0
+       ignorepointer 1
+       position .07 206
+       size .86 20
+       hexactpos 0
+       vexactpos 1
+       hexactsize 0
+       vexactsize 1
+       style Normal_SDF
+       font "gui/fonts/sdf_MetronBook72"
+       text "PLAYER SUPPORT"
+       "exact text" 1
+       "exact text size" 11
+       "text halign" center
+       "text valign" center
+       color .42 .51 .63 1
+      }
+
+      FrameWidgetClass ActiveSection {
+       scaled 0
+       ignorepointer 1
+       position .08 260
+       size .84 48
+       hexactpos 0
+       vexactpos 1
+       hexactsize 0
+       vexactsize 1
+       {
+        FrameWidgetClass ActiveSection_Fill {
+         ignorepointer 1
+         size 1 1
+         hexactsize 0
+         vexactsize 0
+        }
+        ImageWidgetClass ActiveIcon {
+         scaled 0
+         ignorepointer 1
+         position .07 0
+         size 32 32
+         hexactpos 0
+         vexactpos 1
+         hexactsize 1
+         vexactsize 1
+         valign center_ref
+         image0 "ServerSentryDayZMod/gui/skin/ticket.edds"
+         color .5 .76 1 1
+         mode blend
+         "src alpha" 1
+         stretch 1
+        }
+        TextWidgetClass ActiveLabel {
+         ignorepointer 1
+         position .29 0
+         size .65 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         style Normal_SDF
+         font "gui/fonts/sdf_MetronBook72"
+         text "My tickets"
+         "exact text" 1
+         "exact text size" 14
+         "text valign" center
+         color .85 .9 .98 1
+        }
+       }
+      }
+     }
+    }
+    PanelWidgetClass SidebarDivider {
+     ignorepointer 1
+     position 0.2 0
+     size 0.0008 1
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     color .032 .045 .060 1
+     style rover_sim_colorable
+    }
+    FrameWidgetClass Content {
+     position 0.246 0
+     size 0.707 1
+     hexactpos 0
+     vexactpos 0
+     hexactsize 0
+     vexactsize 0
+     ignorepointer 1
+     {
+      TextWidgetClass Breadcrumb {
+ style Normal_SDF
+ priority 10
+       ignorepointer 1
+       position 0 0.055
+       size 0.82 0.03
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "SUPPORT  /  MY TICKETS"
+       font "gui/fonts/sdf_MetronBook72"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 11
+       "text valign" center
+      }
+
+      ButtonWidgetClass SupportClose {
+       position .948 .044
+       size 36 36
+       hexactpos 0
+       vexactpos 0
+       hexactsize 1
+       vexactsize 1
+       style Empty
+       "no focus" 1
+       {
+        FrameWidgetClass SupportClose_Fill {
+         ignorepointer 1
+         size 1 1
+         hexactsize 0
+         vexactsize 0
+        }
+        ImageWidgetClass SupportClose_Icon {
+         ignorepointer 1
+         position 0 0
+         size 32 32
+         scaled 0
+         hexactpos 1
+         vexactpos 1
+         hexactsize 1
+         vexactsize 1
+         halign center_ref
+         valign center_ref
+         image0 "ServerSentryDayZMod/gui/skin/close.edds"
+         mode blend
+         "src alpha" 1
+         stretch 1
+        }
+       }
+      }
+      TextWidgetClass TitleLabel {
+ style Normal_SDF
+ priority 10
+       ignorepointer 1
+       position 0 0.109
+       size 0.94 0.065
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "Your support tickets"
+       font "gui/fonts/sdf_MetronBook72"
+       color .85 .90 .95 1
+       "exact text" 1
+       "exact text size" 30
+       "text valign" center
+      }
+      MultilineTextWidgetClass IntroLabel {
+ style None
+ priority 10
+       ignorepointer 1
+       position 0 0.185
+       size 1 0.045
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "View your open requests or contact your server team."
+       font "gui/fonts/sdf_MetronBook72"
+       color .28 .36 .45 1
+       "exact text" 1
+       "exact text size" 15
+       wrap 1
+      }
+      PanelWidgetClass HeaderDivider {
+       ignorepointer 1
+       position 0 0.253
+       size 1 0.0012
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .032 .045 .060 1
+       style rover_sim_colorable
+      }
+      ScrollWidgetClass TicketsScroll {
+       position 0 0.285
+       size 1 0.44
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style blank
+       "Scrollbar V" 1
+       {
+        WrapSpacerWidgetClass TicketsList {
+         ignorepointer 1
+         size 1 0
+         hexactpos 0
+         vexactpos 1
+         hexactsize 0
+         vexactsize 1
+         Padding 5
+         Margin 0
+         "Size To Content V" 1
+        }
+       }
+      }
+      MultilineTextWidgetClass TicketListStatus {
+ style None
+ priority 10
+       ignorepointer 1
+       position 0 0.77
+       size 1 0.095
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       text "Loading your tickets..."
+       font "gui/fonts/sdf_MetronBook72"
+       color .58 .68 .77 1
+       "exact text" 1
+       "exact text size" 14
+       wrap 1
+      }
+      PanelWidgetClass FooterDivider {
+       ignorepointer 1
+       position 0 0.888
+       size 1 0.0012
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       color .032 .045 .060 1
+       style rover_sim_colorable
+      }
+      ButtonWidgetClass BtnClose {
+       position 0 0.912
+       size 0.26 0.055
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       {
+        FrameWidgetClass BtnClose_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .019 .027 .038 1
+
+        }
+        TextWidgetClass BtnClose_Label {
+ style Normal_SDF
+ priority 10
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Back"
+         font "gui/fonts/sdf_MetronBook72"
+         color .85 .90 .95 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+      ButtonWidgetClass BtnRefresh {
+       position 0.28 0.912
+       size 0.28 0.055
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       disabled 1
+       {
+        FrameWidgetClass BtnRefresh_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .013 .019 .027 1
+
+        }
+        TextWidgetClass BtnRefresh_Label {
+ style Normal_SDF
+ priority 10
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Refresh"
+         font "gui/fonts/sdf_MetronBook72"
+         color .28 .36 .45 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+      ButtonWidgetClass BtnLinkAccount {
+       position 0.59 0.912
+       size 0.41 0.055
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       visible 0
+       {
+        FrameWidgetClass BtnLinkAccount_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .013 .019 .027 1
+
+        }
+        TextWidgetClass BtnLinkAccount_Label {
+ style Normal_SDF
+ priority 10
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "Link account  >"
+         font "gui/fonts/sdf_MetronBook72"
+         color .28 .36 .45 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+      ButtonWidgetClass BtnNewTicket {
+       position 0.59 0.912
+       size 0.41 0.055
+       hexactpos 0
+       vexactpos 0
+       hexactsize 0
+       vexactsize 0
+       style Empty
+       color 1 1 1 1
+       disabled 1
+       {
+        FrameWidgetClass BtnNewTicket_Fill {
+         ignorepointer 1
+         position 0 0
+         size 1 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         color .013 .019 .027 1
+
+        }
+        TextWidgetClass BtnNewTicket_Label {
+ style Normal_SDF
+ priority 10
+         ignorepointer 1
+         position 0.04 0
+         size 0.92 1
+         hexactpos 0
+         vexactpos 0
+         hexactsize 0
+         vexactsize 0
+         text "New ticket  >"
+         font "gui/fonts/sdf_MetronBook72"
+         color .28 .36 .45 1
+         "exact text" 1
+         "exact text size" 15
+         "text valign" center
+         "text halign" center
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

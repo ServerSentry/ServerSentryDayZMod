@@ -1,4 +1,4 @@
-enum ServerSentryRPCs
+class ServerSentryRPCs
 {
-    VEHICLE_KICK = 734921
+    const static int VEHICLE_KICK = 734921;
 }

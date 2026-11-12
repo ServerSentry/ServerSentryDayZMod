@@ -16,6 +16,8 @@ class ServerSentryWeapon
     	\brief Stores the display name.
     */
     string displayName;
+    /** \brief Canonical DayZ item PID of the verified source; never a runtime or explosive UUID. */
+    string persistentId;
     /**
     	\brief Stores the ammo type.
     */
@@ -33,6 +35,7 @@ class ServerSentryWeapon
     {
         className = "";
         displayName = "";
+        persistentId = "";
         ammoType = "";
         distance = 0;
     }

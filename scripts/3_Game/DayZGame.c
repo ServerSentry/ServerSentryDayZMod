@@ -17,6 +17,6 @@ modded class DayZGame
     {
         super.OnUpdate(doSim, timeslice);
 
-        ServerSentryPerformance.Tick();
+        ServerSentryPerformance.Tick(doSim, timeslice);
     }
 }

@@ -1,0 +1,42 @@
+FrameWidgetClass TicketMessage
+{
+ ignorepointer 1
+ size 1 100
+ hexactsize 0
+ vexactsize 1
+ {
+  PanelWidgetClass Bubble
+  {
+   style rover_sim_colorable
+   ignorepointer 1
+   size .98 1
+   hexactsize 0
+   vexactsize 0
+  }
+  TextWidgetClass MessageAuthor
+  {
+ style Normal_SDF
+ priority 10
+   ignorepointer 1
+   position .025 10
+   size .95 22
+   hexactpos 0
+   vexactpos 1
+   hexactsize 0
+   vexactsize 1
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "exact text size" 13
+   color .38 .78 1 1
+  }
+  FrameWidgetClass MessageBody {
+   ignorepointer 1
+   position .025 37
+   size .95 24
+   hexactpos 0
+   vexactpos 1
+   hexactsize 0
+   vexactsize 1
+  }
+ }
+}

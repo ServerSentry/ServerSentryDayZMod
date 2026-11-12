@@ -16,6 +16,8 @@ class ServerSentryHitContext
     	\brief Stores the target.
     */
     ref ServerSentryTarget target;
+    /** \brief Shared explosive provenance, copied before resolving hit or kill classification. */
+    ref ServerSentryExplosiveAttribution explosive;
 
     /**
     	\brief Stores the hit ID.
@@ -30,6 +32,8 @@ class ServerSentryHitContext
     	\brief Stores the weapon class name.
     */
     string weaponClassName;
+    /** \brief Owned physical source snapshot captured during this callback. */
+    ref ServerSentryItem sourceItem;
     /**
     	\brief Stores the ammo type.
     */
@@ -38,6 +42,9 @@ class ServerSentryHitContext
     	\brief Stores the hit zone.
     */
     string hitZone;
+
+    /** \brief Exact named selections from the hit component in fire geometry. */
+    ref array<string> hitComponentNames;
 
     /**
     	\brief Stores the health damage.
@@ -125,6 +132,7 @@ class ServerSentryHitContext
         weaponClassName = "";
         ammoType = "";
         hitZone = "";
+        hitComponentNames = new array<string>();
 
         healthDamage = 0;
         bloodDamage = 0;

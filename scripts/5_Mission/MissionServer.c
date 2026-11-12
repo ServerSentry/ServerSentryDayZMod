@@ -19,7 +19,10 @@ modded class MissionServer
     override void OnMissionStart()
     {
         super.OnMissionStart();
+        ServerSentryConfigManager.Get().PublishModFeatures();
+        ServerSentryCharacterBackupService.Get().Start();
         ServerSentryItemLifecycle.Start();
+        // ServerSentryDamageZoneExporter.Reset(); // Development diagnostics only; disabled in production.
     }
 
     /**
@@ -27,18 +30,25 @@ modded class MissionServer
     */
     override void OnMissionFinish()
     {
+        ServerSentryLiveApi.Stop();
+        ServerSentryCharacterBackupService.Get().Stop();
         ServerSentryItemLifecycle.Stop();
+        ServerSentryMapMarkers.Clear();
         if (ServerSentryConfigManager.Get().IsAllowedToStartTelemetryLogging())
             ServerSentryLogger.Get().Flush();
         super.OnMissionFinish();
     }
 
     /**
-        \brief Keeps deletion logging disabled if the mission is destroyed directly.
+        \brief Stops deletion tracking and clears markers if the mission is destroyed directly.
     */
     void ~MissionServer()
     {
+        ServerSentryLiveApi.Stop();
+        if (GetGame() && GetGame().IsServer())
+            ServerSentryCharacterBackupService.Get().Stop();
         ServerSentryItemLifecycle.Stop();
+        ServerSentryMapMarkers.Clear();
     }
 
     /**
@@ -46,6 +56,7 @@ modded class MissionServer
     */
     override void OnInit()
     {
+        ServerSentryBackupItemIndex.BeginMission();
         super.OnInit();
 
         m_ServerSentryLoginEmitted = new map<string, bool>;
@@ -57,12 +68,19 @@ modded class MissionServer
             Print("[Server Sentry] -> Item Export Finished!");
         }
 
-        if (ServerSentryConfigManager.Get().IsAllowedToStartLiveLogging())
+        // Character restoration uses the same trusted file bridge even without live telemetry.
+        bool liveLoggingEnabled = ServerSentryConfigManager.Get().IsAllowedToStartLiveLogging();
+        bool characterBackupsEnabled = ServerSentryConfigManager.Get().IsAllowedToDoCharacterBackup();
+        if (liveLoggingEnabled || characterBackupsEnabled)
+        {
+            ServerSentryModActionBootstrap.Get().RegisterDefaults();
+            ServerSentryModActionPoller.Start();
+        }
+
+        if (liveLoggingEnabled)
         {
             Print("[Server Sentry] -> Live Logging is enabled, starting module!");
-            ServerSentryModActionBootstrap.Get().RegisterDefaults();
             ServerSentryLiveBaseDetailBootstrap.Get().RegisterDefaults();
-            ServerSentryModActionPoller.Start();
             ServerSentryLiveApi.Start();
             Print("[Server Sentry] -> Live Logging module started!");
         }
@@ -84,6 +102,10 @@ modded class MissionServer
     {
         super.OnClientReadyEvent(identity, player);
 
+        if (identity)
+            GetRPCManager().SendRPC("ServerSentryBot", "ModFeatures", new Param1<ServerSentryModFeatures>(ServerSentryConfigManager.Get().GetModFeatures()), true, identity);
+
+        // ServerSentryDamageZoneExporter.Observe(player); // Development diagnostics only; disabled in production.
         ServerSentryApplyVoiceMuteState(player, identity);
         ServerSentryEmitLoginOnce(player, identity);
     }
@@ -95,7 +117,12 @@ modded class MissionServer
     */
     override void OnClientRespawnEvent(PlayerIdentity identity, PlayerBase player)
     {
+        // Inherited respawn handling can kill/detach the old character.
+        string steamId = "";
+        if (identity) steamId = identity.GetPlainId();
         super.OnClientRespawnEvent(identity, player);
+        ServerSentryDeathReportStore.Forget(steamId);
+        // ServerSentryDamageZoneExporter.Observe(player); // Development diagnostics only; disabled in production.
         
 
         GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.ServerSentryApplyVoiceMuteState, 15000, false, player, identity);
@@ -110,7 +137,16 @@ modded class MissionServer
     {
         super.OnClientReconnectEvent(identity, player);
 
+        // ServerSentryDamageZoneExporter.Observe(player); // Development diagnostics only; disabled in production.
         ServerSentryApplyVoiceMuteState(player, identity);
+    }
+
+    override void OnClientDisconnectedEvent(PlayerIdentity identity, PlayerBase player, int logoutTime, bool authFailed)
+    {
+        if (identity) ServerSentryDeathReportStore.Forget(identity.GetPlainId());
+        ServerSentryServerManager manager = ServerSentryServerManager.Cast(CF_ModuleCoreManager.Get(ServerSentryServerManager));
+        if (manager) manager.ForgetPlayerTicketConversations(identity);
+        super.OnClientDisconnectedEvent(identity, player, logoutTime, authFailed);
     }
 
     /**

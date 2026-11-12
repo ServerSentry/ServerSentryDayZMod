@@ -8,6 +8,8 @@
 */
 class ServerSentryCombat
 {
+    /** \brief Explosive provenance shared by hit and kill events, null for other damage. */
+    ref ServerSentryExplosiveAttribution explosive;
     /**
     	\brief Stores the hit ID.
     */
@@ -51,6 +53,9 @@ class ServerSentryCombat
     	\brief Stores the hit zone.
     */
     string hitZone;
+
+    /** \brief Exact named selections from the hit component in fire geometry. */
+    ref array<string> hitComponentNames;
 
     /**
     	\brief Indicates whether target alive after.
@@ -123,6 +128,7 @@ class ServerSentryCombat
         damageType = 0;
         component = 0;
         hitZone = "";
+        hitComponentNames = new array<string>();
         targetAliveAfter = true;
         isHeadshot = false;
         isMelee = false;

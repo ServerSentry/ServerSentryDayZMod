@@ -1,0 +1,32 @@
+ButtonWidgetClass EmojiCategory {
+ size .19 28
+ hexactpos 0
+ vexactpos 1
+ hexactsize 0
+ vexactsize 1
+ style Empty
+ "no focus" 1
+ {
+  PanelWidgetClass CategoryFill {
+   ignorepointer 1
+   size 1 1
+   hexactsize 0
+   vexactsize 0
+   style rover_sim_colorable
+   color .025 .045 .055 1
+  }
+  TextWidgetClass CategoryLabel {
+   ignorepointer 1
+   size 1 1
+   hexactsize 0
+   vexactsize 0
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "exact text size" 13
+   "text halign" center
+   "text valign" center
+   color .7 .8 .85 1
+  }
+ }
+}

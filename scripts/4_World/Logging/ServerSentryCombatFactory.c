@@ -25,6 +25,7 @@ class ServerSentryCombatFactory
         }
 
         EntityAI victim = request.victim;
+        // ServerSentryDamageZoneExporter.Observe(victim); // Development diagnostics only; disabled in production.
         TotalDamageResult damageResult = request.damageResult;
         int damageType = request.damageType;
         EntityAI source = request.source;
@@ -40,8 +41,16 @@ class ServerSentryCombatFactory
         ctx.occurredAtUtc = ServerSentryTime.NowUtc();
         ctx.hitId = "hit-" + ctx.eventSequence.ToString() + "-" + timestampMs.ToString();
         ctx.damageType = damageType;
+        ctx.sourceItem = request.sourceItem;
         ctx.component = component;
         ctx.hitZone = ResolveHitZone(victim, component, dmgZone);
+        // EEHitBy component indices refer to fire geometry. Preserve every
+        // named selection: the first name alone may only be a broad damage zone.
+        // No inference from position or skeleton; damage/headshot logic is unchanged.
+        if (component >= 0)
+        {
+            victim.GetActionComponentNameList(component, ctx.hitComponentNames, "fire");
+        }
         ctx.ammoType = ammo;
         ctx.victimPosition = victim.GetPosition();
 
@@ -74,8 +83,22 @@ class ServerSentryCombatFactory
 
         ctx.isLethal = IsLethalHit(ctx);
         ctx.isHeadshot = IsHeadshotZone(ctx.hitZone);
-        ctx.isExplosion = ammo.Contains("Explosion") || ammo.Contains("Grenade");
+        ctx.isExplosion = damageType == DamageType.EXPLOSION;
         ctx.isMelee = damageType == DT_CLOSE_COMBAT;
+
+        if (ctx.isExplosion)
+        {
+            ServerSentryEventFactory.CopyActor(request.explosionActor, ctx.attacker);
+            ctx.explosive = request.explosive;
+            ctx.isMelee = false;
+            ctx.weaponClassName = request.explosionSourceClass;
+            if (request.hasExplosionPosition)
+                ctx.distance = vector.Distance(request.explosionPosition, ctx.victimPosition);
+
+            CaptureExplosiveAttackerPosition(ctx);
+
+            return ctx;
+        }
 
         if (!source)
         {
@@ -133,6 +156,21 @@ class ServerSentryCombatFactory
         ctx.weaponClassName = ResolveWeaponClassName(source, null, ctx.isMelee);
         ServerSentryEventFactory.FillActorFromEntity(ctx.attacker, source);
         return ctx;
+    }
+
+    /** Captures the resolved killer's position for player deaths, separately from the blast origin. */
+    protected static void CaptureExplosiveAttackerPosition(ServerSentryHitContext ctx)
+    {
+        if (!ServerSentryConfigManager.Get().IsDeathReportingEnabled()) return;
+        if (!ctx.isLethal || ctx.target.type != "player") return;
+        if (ctx.attacker.type != "player" || ctx.attacker.steamId == "") return;
+        ServerSentryModActionContext lookup = new ServerSentryModActionContext;
+        lookup.steamId = ctx.attacker.steamId;
+        PlayerBase attacker = ServerSentryLiveActionResolver.FindPlayer(lookup);
+        if (!attacker) return;
+
+        ctx.attackerPosition = attacker.GetPosition();
+        ctx.hasAttackerPosition = true;
     }
 
     /**

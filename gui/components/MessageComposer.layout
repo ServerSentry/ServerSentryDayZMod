@@ -1,0 +1,132 @@
+FrameWidgetClass MessageComposer {
+ clipchildren 1
+ ignorepointer 1
+ size 1 1
+ hexactsize 0
+ vexactsize 0
+ {
+  FrameWidgetClass ComposerFill {
+   ignorepointer 1
+   size 1 1
+   hexactsize 0
+   vexactsize 0
+  }
+  ScrollWidgetClass ComposerScroll {
+   "no focus" 1
+   clipchildren 1
+   position .03 .08
+   size .94 .54
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 0
+   style blank
+   color 1 1 1 0
+   "Scrollbar V" 1
+   {
+    MultilineEditBoxWidgetClass ComposerInput {
+     ignorepointer 1
+     "no focus" 1
+     clipchildren 1
+     inheritalpha 0
+     position 0 0
+     size 1 100
+     hexactpos 1
+     vexactpos 1
+     hexactsize 0
+     vexactsize 1
+     scaled 0
+     style DayZNormal
+     font "ServerSentryDayZMod/gui/fonts/Composer16"
+     color .91 .95 .98 1
+     "exact text" 1
+     "italic text" 0
+     "bold text" 0
+     lines 1
+     "limit visible" 0
+    }
+    FrameWidgetClass ComposerSelectionLayer {
+     ignorepointer 1
+     size 1 100
+     hexactsize 0
+     vexactsize 1
+    }
+    FrameWidgetClass ComposerEmojis {
+     ignorepointer 1
+     size 1 100
+     hexactsize 0
+     vexactsize 1
+    }
+   }
+  }
+  EditBoxWidgetClass ComposerKeyboard {
+   ignorepointer 1
+   position 0 0
+   size 1 1
+   hexactpos 1
+   vexactpos 1
+   hexactsize 1
+   vexactsize 1
+   color 1 1 1 0
+   text ""
+  }
+  TextWidgetClass ComposerPlaceholder {
+   ignorepointer 1
+   position .03 .08
+   size .9 24
+   hexactpos 0
+   vexactpos 0
+   hexactsize 0
+   vexactsize 1
+   style Normal_SDF
+   font "gui/fonts/sdf_MetronBook72"
+   "exact text" 1
+   "exact text size" 16
+   text "Message support..."
+   color .42 .51 .58 1
+  }
+  TextWidgetClass ComposerMeasure {
+   scaled 0
+   ignorepointer 1
+   color 1 1 1 0
+   size 100 16
+   hexactsize 1
+   vexactsize 1
+   font "ServerSentryDayZMod/gui/fonts/Composer16"
+   "size to text h" 1
+  }
+  ButtonWidgetClass BtnEmoji {
+   scaled 0
+   position .03 8
+   size 36 36
+   hexactpos 0
+   vexactpos 1
+   hexactsize 1
+   vexactsize 1
+   valign bottom_ref
+   style Empty
+   "no focus" 1
+   {
+    FrameWidgetClass BtnEmoji_Fill {
+     ignorepointer 1
+     size 1 1
+     hexactsize 0
+     vexactsize 0
+    }
+    ImageWidgetClass BtnEmoji_Icon {
+     scaled 0
+     ignorepointer 1
+     size 32 32
+     hexactsize 1
+     vexactsize 1
+     halign center_ref
+     valign center_ref
+     image0 "ServerSentryDayZMod/gui/skin/smile.edds"
+     mode blend
+     "src alpha" 1
+     stretch 1
+    }
+   }
+  }
+ }
+}

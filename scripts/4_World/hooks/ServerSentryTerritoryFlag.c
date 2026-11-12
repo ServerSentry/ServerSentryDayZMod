@@ -9,6 +9,38 @@
 modded class TerritoryFlag
 {
     /**
+        \brief Invalidates details when raising, lowering, or refreshing the flag.
+        \param fraction \p change in normalized refresher lifetime.
+    */
+    override void AddRefresherTime01(float fraction)
+    {
+        super.AddRefresherTime01(fraction);
+        ServerSentryLiveApi.InvalidateBaseDetails(this);
+    }
+
+    /**
+        \brief Refreshes cached details after an attachment was added.
+        \param item \p attached entity.
+        \param slot_name \p attachment slot.
+    */
+    override void EEItemAttached(EntityAI item, string slot_name)
+    {
+        super.EEItemAttached(item, slot_name);
+        ServerSentryLiveApi.InvalidateBaseDetails(this);
+    }
+
+    /**
+        \brief Refreshes cached details after an attachment was removed.
+        \param item \p detached entity.
+        \param slot_name \p attachment slot.
+    */
+    override void EEItemDetached(EntityAI item, string slot_name)
+    {
+        super.EEItemDetached(item, slot_name);
+        ServerSentryLiveApi.InvalidateBaseDetails(this);
+    }
+
+    /**
         \brief Returns the normalized Vanilla flag refresher value.
         \return \p a value from zero to one, where one represents a fully raised flag.
     */

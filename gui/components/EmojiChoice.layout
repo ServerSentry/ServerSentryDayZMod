@@ -1,0 +1,31 @@
+ButtonWidgetClass EmojiChoice {
+ size .115 40
+ hexactsize 0
+ vexactsize 1
+ style Empty
+ "no focus" 1
+ {
+  PanelWidgetClass ChoiceFill {
+   ignorepointer 1
+   size 1 1
+   hexactsize 0
+   vexactsize 0
+   style rover_sim_colorable
+   color .025 .045 .055 1
+  }
+  ImageWidgetClass ChoiceImage {
+   ignorepointer 1
+   position 0 0
+   size 28 28
+   hexactpos 0
+   vexactpos 0
+   hexactsize 1
+   vexactsize 1
+   halign center_ref
+   valign center_ref
+   mode blend
+   "src alpha" 1
+   stretch 1
+  }
+ }
+}

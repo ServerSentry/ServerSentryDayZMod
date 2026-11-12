@@ -22,6 +22,7 @@ The mod is designed to be consumed by an external Server Sentry service or by cu
 - **Idempotent shop fulfillment** with persistent operation receipts
 - **Item catalog export** for weapons, magazines, inventory items, vehicles, slots, attachments, and compatible magazines
 - **Support-case delivery menu** with the default `L` key binding
+- **Character backups** with per-player retention and administrator-controlled CMS restoration
 - **Extensible developer API** for custom events, live markers, actions, and shop products
 - **Optional integration hooks and models** for systems such as Trader, safe zones, CodeLock, breaching charges, LBmaster groups/ATM, and custom mods
 
@@ -69,6 +70,13 @@ cd ServerSentryDayZMod
 
 Use DayZ Tools/Addon Builder or your existing mod build pipeline to pack the project as a PBO. The source root containing `config.cpp` must become the `ServerSentryDayZMod` PBO prefix expected by the script paths.
 
+Include `gui/emoji/EmojiPicker.tsv`: this tab-separated table is runtime data for
+the emoji picker and composer. The accompanying license notices belong with the
+bundled images. Include `.c`, `.xml`, `.layout`, `.styles`, `.imageset`, `.edds`,
+`.paa`, `.fnt`, `.tsv` and the license notices. When excluding `.cpp`, enable config
+conversion so the PBO contains `config.bin`. Verify release builds in the normal client without
+`-filePatching`; loose Workbench files can conceal missing PBO resources.
+
 ## Configuration
 
 On first start, the mod creates:
@@ -81,10 +89,16 @@ The configuration controls the main runtime features and individual telemetry ca
 
 | Setting | Purpose |
 | --- | --- |
+| `ConfigVersion` | Managed config schema version; currently `1`. Do not increase it manually. |
 | `EnableItemExport` | Enables generation of the item catalog files. |
 | `EnableTelemtryLogging` | Enables structured event/telemetry logging. The property name intentionally matches the current source schema. |
 | `EnableLiveDataLogging` | Enables live snapshots and the live-action poller. |
+| `EnableDeathReports` | Opt-in death reporting; defaults to `false`. Requires telemetry and player-kill logging. Restart the server after changing it. |
+| `DeathReportAutomaticOverlay` | Shows the additive report button when reporting is enabled; defaults to `true`. Set to `false` when a custom death screen integrates the component/action itself. |
+| `EnableTickets` | Enables in-game tickets, chat and notifications; defaults to `true`. Disabled tickets create no client chat state or server ticket bridges. |
+| `EnableSupportCases` | Enables in-game refunds/support-case delivery; defaults to `true`. Disabled cases cannot be claimed or provisioned through the updated Agent. |
 | `LiveDataUpdateIntervalSeconds` | Controls how often the live snapshot is refreshed. |
+| `LiveBaseDetailsCacheSeconds` | Reuses base/provider details for 30 seconds by default; `0` disables caching. |
 | `LogAnimalHits` / `LogAnimalKills` | Controls animal combat events. |
 | `LogZombieHits` / `LogZombieKills` | Controls infected combat events. |
 | `LogVehicleEngineStart` / `LogVehicleEngineStop` | Controls vehicle engine events. |
@@ -93,10 +107,57 @@ The configuration controls the main runtime features and individual telemetry ca
 | `LogInventoryMovement` | Controls player inventory movement events. |
 | `LogPlayerHits` / `LogPlayerKills` | Controls player combat events. |
 | `LogBaseBuilding` | Controls base-building events. |
+| `LogBaseDamage` | Records only hits that ruin a base entity or damage zone; defaults to `false`. Requires `EnableTelemtryLogging`. |
 | `LogActionDismantlePart` | Controls dismantle events. |
 | `LogActionDestroyPart` | Controls destroy-part events. |
 
-The generated file should be treated as the authoritative schema for the installed version. Newly added settings are initialized by the mod when older configurations are loaded.
+The client shows one ticket reply hint in the upper right. A new reply updates the hint and starts its ten-second shortcut window again. The hint expires even with a menu open and closes immediately when the player uses the shortcut. It passes mouse input through to the game and works with custom notification HUDs such as DayZ Expansion.
+
+Conversation rows are reused only inside the visible menu. Each refresh still reads Discord's latest 100 public messages, so edits and deletions update existing rows correctly. Hiding or closing the conversation disposes its widgets, releases its history and cancels read-only requests; late responses cannot refill a closed view. Notification prefetch expires after ten seconds. No conversation cache files are created on the client or server. Unsent drafts and uncertain send receipts stay in client memory so reopening cannot lose a draft or post a retry twice; a confirmed ticket closure or mission/feature shutdown clears that state. Durable backend delivery receipts remain part of duplicate-send protection.
+
+Use the updated CMS, Agent and mod together for typed closed-ticket responses and canceled-request cleanup. The server consumes bridge request/response files on completion, cancellation, disconnect or timeout. The Agent checks ownership around response publication and removes temporary files even when publication fails; bounded expiry cleanup also handles abandoned files after a restart.
+
+The mod migrates existing configurations on startup. Files without `ConfigVersion` are version `0`; the current schema is version `1`. Missing settings are written with their current defaults, including fields inside nested sections. Existing values, explicit `false` or `0`, and unknown properties are preserved. For example, an absent `LiveBaseDetailsCacheSeconds` is added as `30`, while an existing `0` remains `0`.
+
+Missing fields are repaired even when `ConfigVersion` is already current. An unchanged configuration is not rewritten. Before replacing a changed file, the mod verifies a temporary copy and preserves the previous contents as `config.json.before-v<previous-version>` (for example, `config.json.before-v0`). A later repair of the same version refreshes that backup. Invalid JSON and unsupported newer versions are not rewritten. Startup logs report migration success or the reason it could not be saved.
+
+### Character backups
+
+`CharBackupConfig` in `$profile:ServerSentry/config.json` controls character snapshots:
+
+```json
+"CharBackupConfig": {
+  "EnableCharacterBackup": true,
+  "MinCharacterLiveTimeSeconds": 3600,
+  "MinItemsInInventory": 1,
+  "MaxBackupFiles": 5,
+  "RestoreCooldownSeconds": 60
+}
+```
+
+Backups are captured **only when a player dies**, before vanilla death cleanup removes the character's persistence managers. `EnableCharacterBackup` must be enabled, the authenticated character must meet `MinCharacterLiveTimeSeconds` and `MinItemsInInventory`, and `MaxBackupFiles` must be positive. There are no interval, disconnect or shutdown captures. A character's death is processed once. Nested contents and held items count toward `MinItemsInInventory`; the player itself does not. The feature supports administrator recovery after suspected cheating; it does not automatically decide whether a death involved a cheater. Capture and restore work independently of telemetry/live logging.
+
+Ammunition capture rejects ruined/deleting magazines, active inventory or weapon actions, unstable weapon states, invalid ammunition configuration and inconsistent cartridge counts. An unsafe entity aborts the entire snapshot; partial output is removed and previously committed backups remain available. Restore checks the same conditions on its temporary copies before moving live inventory. Cartridge work is limited to 4,096 rounds per magazine/internal magazine and a shared budget of 8,192 cartridges per phase. Capture and ammunition restoration also check a 100 ms elapsed-time budget between operations. This is a best-effort limit: script cannot interrupt a native call, another mod's persistence callback or file I/O.
+
+The server script log writes `[ServerSentry][CharacterBackup] Ammo` entries immediately before and after each magazine read. They include the item class, network ID, parent weapon, owner Steam ID when available, count and capacity. A `read begin` without a matching `read complete` identifies the magazine being processed if a native crash occurs. Rejections include a reason; capture summaries include entity count and elapsed milliseconds. Successful cartridges are not logged individually. Public-state checks cannot detect every form of internal engine memory corruption, and native access violations cannot be caught by script.
+
+The versioned config migration also populates a missing or null `CharBackupConfig` and adds missing fields in an existing backup section. The default minimum character lifetime is **3600 seconds**. `BackupIntervalSeconds` is retained as an ignored legacy field; even an existing positive value never schedules a capture. A backup directory may therefore exist before any snapshot is eligible. Startup logs show the effective policy; skipped captures and failed writes report their reason.
+
+`MaxBackupFiles` is a limit **per Steam ID**. Oldest snapshots are removed after a successful capture and when the mission starts, including after reducing the limit. Zero (or a negative value) removes existing committed snapshots at startup and disables captures/restores. Disabling `EnableCharacterBackup` preserves files subject to the configured retention limit.
+
+For a disposable local test, set `MinCharacterLiveTimeSeconds` to `0` and optionally `RestoreCooldownSeconds` to `5`. Restart, connect with at least one item, and kill the test character. Respawn with the same survivor class before restoring. In the CMS, select that Game Server, open the player profile, choose **Restore**, select a backup and confirm. The player must be alive and idle on foot. Use the updated CMS, Agent and server mod together.
+
+New death snapshots (version 3) contain the death position/orientation and restore the player's health/blood/shock pools to full, without restraint, unconsciousness or active bleeding. They also contain persistent player statistics (including energy, water, temperature, blood type and specialty), stamina, lifespan data, diseases/modifiers, bleeding, stomach contents, damage permission/god mode, restraint/unconsciousness flags, quickbar bindings, and the complete carried inventory tree. Items retain their exact attachment/cargo/hand locations, damage, scripted persistence, quantities, liquids, wetness, food state, energy, internal electrical connections and ammunition (including mixed magazine rounds and internal magazines). Mod state participates when its `OnStoreSave`/`OnStoreLoad` callbacks persist it, including CF mod storage.
+
+The complete snapshot is first loaded into a temporary server character. Original items are retained until the replacement inventory and player state commit. A `.items.json` sidecar records persistent and mission-local identities alongside each new snapshot. Preserve it together with the `.bin` file. On a restore failure, original items are moved back and player state is loaded from a temporary rollback snapshot. An incomplete rollback keeps `restore.rollback` and logs its path. Further restores for this player refuse to overwrite that recovery file; originals that could not be moved back are retained on the ground or in the staging container; the server log identifies incomplete recovery. Temporary/rollback files are separate from committed `.bin` snapshots.
+
+Restoration currently requires a living player with the **same survivor class**, the same world and DayZ persistence version, and compatible installed mods. Respawn with a different survivor model is rejected before replacing inventory. Spent cartridge cases become empty chambers because the public native API has no safe setter for fired cases. The service does not rewind external databases such as bank balances, groups or bases, or arbitrary mod values that are not saved through entity persistence. It does not revive an existing corpse; restore a living respawn of the same survivor class instead. For new backups, identifiable loaded original items are moved back from corpses, world containers or other online players. Matching inventory subtrees are transferred intact, including weapons with attached magazines; only changed parent/slot relationships are moved. Gameplay-blocked original-item moves are rejected before replacing the recipient inventory. Existing originals keep their current ammunition, quantities, condition and scripted state; they are not refilled from the snapshot. Missing items are recreated. Unrelated cargo inside reclaimed containers is retained; if it blocks a saved location, the transaction rolls back instead of deleting it. Legacy version-2 snapshots lack item identities and cannot reconcile originals.
+
+This is best-effort duplication reduction, not a global persistence-database transaction. Items in offline inventories, unloaded containers, or storage controlled by another mod may be unavailable to the runtime lookup and therefore duplicated when replaced. No background world scan is performed. Only IDs referenced by retained backups are indexed; the index is initialized from sidecars and updated as those entities load or are deleted.
+
+Each backup is usable once. A `.restore-pending` marker is written before mutation and a `.restored` marker after success. Incomplete rollback or a crash leaves the backup locked for manual investigation; do not remove these guards without inspecting the server state. A successful rollback clears the pending marker. Retention prunes the snapshot, identity sidecar and restore markers together. Keep a complete backup directory when moving server profiles. Access remains restricted to authorized CMS administrators.
+
+The dedicated `character.backups` and `character.restore` actions use the Agent file bridge, with only the `character_backups` scope. They are not advertised for generic Live Map or shop execution. Listing reads at most ten native headers and their identity sidecars per page; it does not deserialize inventory script streams. An online living character receives a two-minute, one-use permit bound to the current player instance and compatible backups on that page. Restoration consumes the permit before any mutation; disconnect/respawn, expiry, another list request or a server restart invalidates it. `RestoreSelected(player, backupId, message)` accepts only generated filenames beneath that authenticated player's directory. The original world/save-version/survivor checks and rollback remain in effect.
 
 ## Generated files and directories
 
@@ -110,7 +171,10 @@ $profile:ServerSentry/
 ├── events/
 │   └── *.jsonl
 ├── live/
-│   └── state.json
+│   ├── state.json
+│   ├── bases-<session>-<revision>.json
+│   ├── events-<session>-<revision>.json
+│   └── actions-<session>-<revision>.json
 ├── actions/
 │   ├── inbox/
 │   │   └── *.json
@@ -121,6 +185,9 @@ $profile:ServerSentry/
 │       └── actions/
 ├── SupportCases/
 │   └── <steam-id>.json
+├── CharacterBackups/
+│   └── <steam-id>/
+│       └── <UTC timestamp>_<sequence>.bin
 └── voice-mutes/
     └── data.json
 ```
@@ -134,6 +201,36 @@ $profile:ServerSentry/events
 ```
 
 Every line is an independent JSON event. Events include schema information, a logical server ID, a boot ID, a sequence number, timestamps, actors, targets, actions, and event-specific data.
+
+### Base damage
+
+Enable `LogBaseDamage` and `EnableTelemtryLogging` to record only hits that change a base entity or one of its damage zones to ruined. This covers `BaseBuildingBase` and `BuildingBase`, including a destroyed fence section while the rest of the fence remains intact. Ordinary hits and further hits on already ruined zones produce no event. A qualifying `basebuilding_damage` event retains the damage type, source class and positive named-zone damage values. Explosive attribution uses the same resolver as combat hits and kills.
+
+See [Base damage logging](docs/BASE_DAMAGE_LOGGING.md) for the payload contract, integration steps, attribution limits and native test matrix.
+
+Building, dismantling and destroy-action logs remain independent of this final-hit filter. Direct scripted health changes without a hit callback do not produce a base-damage event.
+
+### Explosive attribution
+
+Fragmentation grenades, landmines, claymores, plastic explosives, IED charges and tripwire grenades retain separate placement, arming, live-release, remote/damage-detonation and triggering-victim identities. The common resolver uses explicit detonation provenance first, then a known live release, then the arming identity. A player stepping on a mine is not assigned their own death merely because they triggered it. Unknown actors remain unknown; current explosive carriers and nearby players are never used as guesses.
+
+Attribution appears in `combat.explosive` for hits/kills and `data.explosive` for base damage. Each physical detonation has a shared UUID and blast position; each activated IED charge has its own device/detonation identity and a parent-device link. Player IDs and names are copied at the server operation, so the responsible player can disconnect before the explosion. `weapon.distance` for explosion hits measures blast origin to victim; it does not claim the offline player's current position.
+
+Device roles persist in the isolated `ServerSentry` CF ModStorage stream (`CfgMods.ServerSentry.storageVersion = 1`). Vanilla persistence fields are unchanged. Existing devices without these records remain unattributed until a new observed arming/release operation. IED and tripwire roles are transferred before charges detach. Unsupported mod activation paths and later poison/bleeding deaths require a separate integration rather than invented attribution. See [Explosive attribution](docs/EXPLOSIVE_ATTRIBUTION.md) for the integration contract and native verification steps.
+
+### Live Map export performance
+
+Snapshot requests, including legacy marker upserts and prefix removal, are combined before building any DTOs. The exporter waits 250 ms for related updates and leaves at least one second between completed writes. A clear-and-repopulate operation therefore exports the final marker set once, rather than writing the empty and partially populated sets. Regular polling still exports current measurements; no full-state fingerprint is built.
+
+`LiveDataUpdateIntervalSeconds` defaults to 10 and is clamped to at least one second. `LiveBaseDetailsCacheSeconds` defaults to 30, accepts 0-300, and can be set to `0` to rebuild base details on every export. Cached provider details may lag until the next refresh/export. Position or orientation changes, Vanilla flag manipulation, attachment changes, provider/action registration, base removal, and mission shutdown invalidate the relevant entries.
+
+Integrations that change ownership or other provider output can call `ServerSentryLiveApi.InvalidateBaseDetails(entity)` or omit the argument to invalidate all entries. Providers are applied after Vanilla rows whenever an entry is rebuilt, preserving their overrides. Snapshot consumers should treat returned base DTOs as read-only.
+
+The schema-four file transport separates frequently changing players, vehicles and measurements from bases, events and action descriptors. `state.json` is a small complete frame with `sessionId`, `sequence`, and `basesRevision`/`eventsRevision`/`actionsRevision`. Each revision references a complete section file with the same session and revision. Slow sections are written only when their serialized contents change. Base serialization is also skipped while all cached base DTOs are still current.
+
+The first export writes all sections, verifies their contents, then publishes the manifest. Later exports retain the current and previous committed section generations. The Agent validates every reference and rereads the manifest before accepting a frame; it retries missing, partial or inconsistent reads. Skipping frames is safe because referenced sections are complete states, including explicit empty collections. Native file replacement is not atomic. The Agent conservatively removes old-session section files after acknowledgement; the Mod performs no directory search.
+
+Deploy this Mod with the coordinated Agent/CMS update. The Agent computes updates and explicit deletions against its last acknowledged CMS state. The CMS commits the revision and changed entity rows together in `dayz_live_state` and `dayz_live_entities`, and the browser requests changes since its applied revision. Session changes or unavailable baselines trigger a complete resynchronization. Mod timestamps remain separate from receipt timestamps, so a retry cannot make stale game data appear fresh.
 
 ### Inventory attachments
 
@@ -159,13 +256,13 @@ Payloads contain the actor identity/position, lock and parent object information
 
 ### Live state
 
-The current live snapshot is written to:
+The current live manifest is written to:
 
 ```text
 $profile:ServerSentry/live/state.json
 ```
 
-The snapshot can include:
+The manifest and its referenced section files together contain:
 
 - online players;
 - vehicles;
@@ -247,8 +344,8 @@ The key binding is declared as `UAToggleSupportMenu` in `Inputs.xml` and can be 
 
 The repository includes two API documents:
 
-- [`API_OVERVIEW.md`](API_OVERVIEW.md) — modules and primary extension points
-- [`DEVELOPER_API.md`](DEVELOPER_API.md) — complete Enforce Script examples and compatibility rules
+- [`API_OVERVIEW.md`](API_OVERVIEW.md) - modules and primary extension points
+- [`DEVELOPER_API.md`](DEVELOPER_API.md) - complete Enforce Script examples and compatibility rules
 
 ### Script modules
 

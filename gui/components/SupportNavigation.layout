@@ -1,0 +1,124 @@
+FrameWidgetClass SupportNavigation {
+ ignorepointer 1
+ size 1 1
+ hexactsize 0
+ vexactsize 0
+ {
+  ButtonWidgetClass NavSupport {
+   scaled 0
+   position .08 260
+   size .84 48
+   hexactpos 0
+   vexactpos 1
+   hexactsize 0
+   vexactsize 1
+   style Empty
+   "no focus" 1
+   {
+    FrameWidgetClass NavSupport_Fill {
+     ignorepointer 1
+     size 1 1
+     hexactsize 0
+     vexactsize 0
+    }
+    FrameWidgetClass NavSupport_Content {
+     scaled 0
+     ignorepointer 1
+     size 94 32
+     hexactsize 1
+     vexactsize 1
+     halign center_ref
+     valign center_ref
+     {
+      ImageWidgetClass NavSupport_Icon {
+       scaled 0
+       ignorepointer 1
+       size 32 32
+       hexactsize 1
+       vexactsize 1
+       image0 "ServerSentryDayZMod/gui/skin/ticket.edds"
+       mode blend
+       "src alpha" 1
+       stretch 1
+      }
+      TextWidgetClass NavSupport_Label {
+       scaled 0
+       ignorepointer 1
+       position 38 0
+       size 56 32
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       style Normal_SDF
+       font "gui/fonts/sdf_MetronBook72"
+       text "Tickets"
+       "exact text" 1
+       "exact text size" 14
+       "text halign" center
+       "text valign" center
+      }
+     }
+    }
+   }
+  }
+  ButtonWidgetClass NavReimbursements {
+   scaled 0
+   position .08 316
+   size .84 48
+   hexactpos 0
+   vexactpos 1
+   hexactsize 0
+   vexactsize 1
+   style Empty
+   "no focus" 1
+   {
+    FrameWidgetClass NavReimbursements_Fill {
+     ignorepointer 1
+     size 1 1
+     hexactsize 0
+     vexactsize 0
+    }
+    FrameWidgetClass NavReimbursements_Content {
+     scaled 0
+     ignorepointer 1
+     size 104 32
+     hexactsize 1
+     vexactsize 1
+     halign center_ref
+     valign center_ref
+     {
+      ImageWidgetClass NavReimbursements_Icon {
+       scaled 0
+       ignorepointer 1
+       size 32 32
+       hexactsize 1
+       vexactsize 1
+       image0 "ServerSentryDayZMod/gui/skin/reimbursement.edds"
+       mode blend
+       "src alpha" 1
+       stretch 1
+      }
+      TextWidgetClass NavReimbursements_Label {
+       scaled 0
+       ignorepointer 1
+       position 38 0
+       size 66 32
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       style Normal_SDF
+       font "gui/fonts/sdf_MetronBook72"
+       text "Refunds"
+       "exact text" 1
+       "exact text size" 14
+       "text halign" center
+       "text valign" center
+      }
+     }
+    }
+   }
+  }
+ }
+}

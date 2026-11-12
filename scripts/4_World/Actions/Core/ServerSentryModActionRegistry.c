@@ -56,6 +56,7 @@ class ServerSentryModActionRegistry
 
         s_Handlers.Set(descriptor.id, handler);
         s_Descriptors.Set(descriptor.id, descriptor);
+        ServerSentryLiveApi.InvalidateBaseDetails();
         Print("[ServerSentry][LiveAction] Registered action handler id=" + descriptor.id + " targetType=" + descriptor.targetType + " label=" + descriptor.label);
         return true;
     }

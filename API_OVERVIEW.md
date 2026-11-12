@@ -69,3 +69,9 @@ See `DEVELOPER_API.md` for complete examples and `DOCUMENTATION_STYLE.md` for so
 - `ServerSentryLiveBaseDetailBootstrap`: extension registration hook for integration PBOs.
 
 See `DEVELOPER_API.md` for a complete FlagPole group-name and override example.
+
+### Map markers from `3_Game`
+
+`ServerSentryMapMarkers.Create`, `CreateCircle`, and `CreateLine` register server-side markers and return a `ServerSentryMapMarker` handle. The handle provides `SetPosition`, `SetRadius`, `SetPoints`, `AppendPoint`, `IsActive`, and `Remove`. Both classes and their shared registry live in `3_Game`; they have no World entity or file-export dependency.
+
+`ServerSentryLiveApi` reads the same registry when building World snapshots. Existing advanced DTO-based World calls remain adapters to that registry. See the map marker examples and lifecycle rules in `DEVELOPER_API.md`.

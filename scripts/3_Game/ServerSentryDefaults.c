@@ -372,7 +372,7 @@ class ServerSentryDefaults
     */
     static int LiveSchemaVersion()
     {
-        return 3;
+        return 4;
     }
 
     /**
